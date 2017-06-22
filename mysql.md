@@ -42,9 +42,13 @@
         - [2.7.1. 创建表时指定外键](#271-创建表时指定外键)
     - [2.8. 查询](#28-查询)
         - [2.8.1. limit](#281-limit)
-    - [2.9. 导入与导出](#29-导入与导出)
-        - [2.9.1. 导入sql文件](#291-导入sql文件)
-        - [2.9.2. 导出特定表结构和数据](#292-导出特定表结构和数据)
+    - [2.9. 索引](#29-索引)
+        - [添加索引](#添加索引)
+        - [查看使用了什么索引](#查看使用了什么索引)
+    - [2.10. 导入与导出](#210-导入与导出)
+        - [2.10.1. 导入sql文件](#2101-导入sql文件)
+        - [2.10.2. 导出特定表结构和数据](#2102-导出特定表结构和数据)
+        - [2.10.3. 将查询结果导出到文件](#2103-将查询结果导出到文件)
 
 <!-- /TOC -->
 
@@ -275,7 +279,7 @@ show table status from gewara like '%address%';
 
 ### 2.6.2. 创建表
 
-```bash
+```sql
 mysql> create table IF NOT EXISTS table1 (
     -> id int(4) not null primary key auto_increment,
     -> name char(20) not null,
@@ -286,13 +290,13 @@ mysql> create table IF NOT EXISTS table1 (
 
 创建表时指定字符集：
 
-```bash
+```sql
 create table (...) default charset=utf8;
 ```
 
 创建表时指定表和字段的注释：
 
-```bash
+```sql
 CREATE TABLE IF NOT EXISTS send_record ( 
 		id bigint not null primary key auto_increment comment '主键', 
 		uuid char(40) not null comment '备用，迁移时做外键', 
@@ -312,7 +316,7 @@ CREATE TABLE IF NOT EXISTS send_record (
 
 从已存在表创建并复制数据：
 
-```bash
+```sql
 create table newTable select * from oldTable;
 ```
 
@@ -558,15 +562,69 @@ SELECT * FROM articles WHERE  id >=
 ```
 
 
-## 2.9. 导入与导出
 
-### 2.9.1. 导入sql文件
+## 2.9. 索引
+
+### 添加索引
+
+```sql
+ALTER TABLE <表名> ADD INDEX (<字段>);
+```
+
+* 添加主键索引
+
+    ```sql
+    ALTER TABLE `table_name` ADD PRIMARY KEY ( `column` );
+    ```
+
+* 添加唯一索引
+
+    ```sql
+    ALTER TABLE `table_name` ADD UNIQUE (`column`);
+    ```
+
+* 添加普通索引
+
+    ```sql
+    ALTER TABLE `table_name` ADD INDEX index_name ( `column` );
+    ```
+
+* 添加全文索引
+
+    ```sql
+    ALTER TABLE `table_name` ADD FULLTEXT ( `column`) 
+    ```
+
+* 添加多列索引
+
+    ```sql
+    ALTER TABLE `table_name` ADD INDEX index_name ( `column1`, `column2`, `column3` )
+    ```
+
+    TODO: 多列索引和单列索引不同。
+
+
+### 查看使用了什么索引
+
+```sql
+explain select * from ...
+```
+
+结果中 key 字段对应了使用的索引名。
+
+
+
+
+
+## 2.10. 导入与导出
+
+### 2.10.1. 导入sql文件
 
 ```bash
 mysql -u root -p 数据库名 < sql文件路径
 ```
 
-### 2.9.2. 导出特定表结构和数据
+### 2.10.2. 导出特定表结构和数据
 
 ```bash
 mysqldump -h localhost -uroot -p 数据库名 表名 > /path/filename.sql
@@ -579,5 +637,18 @@ mysqldump -h localhost -uroot -p 数据库名 表名 > /path/filename.sql
 4. insert values
 
 
+### 2.10.3. 将查询结果导出到文件
+
+1. 在命令行下执行
+
+```sql
+select * from table_name into outfile '/home/aaa.out';
+```
+
+2. 在终端执行
+
+```bash
+mysql -uroot -p db_name -e "select * from table_name" > ./out.csv
+```
 
 
