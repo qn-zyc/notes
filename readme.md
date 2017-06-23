@@ -5,8 +5,9 @@
 
 ## 命令
 - [域名解析命令dig](commands/dig.md)
-- [shell编程](shell编程.md)
+- [shell编程](commands/shell编程.md)
 - [定时任务](commands/定时任务.md)
+- [awk](commands/awk.md)
 
 ## 编辑器
 - [vim](vim.md)
