@@ -1,6 +1,27 @@
+<!-- TOC -->
+
+- [1. 引号](#1-引号)
+- [2. 长度和下标访问](#2-长度和下标访问)
+- [3. 反向索引](#3-反向索引)
+- [4. 分片](#4-分片)
+- [5. 字符串连接](#5-字符串连接)
+- [6. 字符串查找](#6-字符串查找)
+    - [6.1. 在utf8字符串里查找](#61-在utf8字符串里查找)
+- [7. 不转义](#7-不转义)
+- [8. 转换](#8-转换)
+- [9. 格式化](#9-格式化)
+- [10. 字符串help](#10-字符串help)
+- [11. 模式匹配](#11-模式匹配)
+- [12. 编码](#12-编码)
+    - [12.1. 判断是否是unicode编码](#121-判断是否是unicode编码)
+    - [12.2. 编码转换](#122-编码转换)
+
+<!-- /TOC -->
+
+
 * 字符串不可变
 
-# 引号
+# 1. 引号
 
 单双引号都一样：
 
@@ -28,7 +49,7 @@ s = "hello 'world' !"
 
 
 
-# 长度和下标访问
+# 2. 长度和下标访问
 
 ```python
 >>> s = "hello"
@@ -54,7 +75,7 @@ IndexError: string index out of range
 6
 ```
 
-# 反向索引
+# 3. 反向索引
 
 ```python
 >>> s = "hello"
@@ -66,7 +87,7 @@ IndexError: string index out of range
 'o'
 ```
 
-# 分片
+# 4. 分片
 
 ```python
 >>> s = "abcdefg"
@@ -94,7 +115,7 @@ IndexError: string index out of range
 ```
 
 
-# 字符串连接
+# 5. 字符串连接
 
 ```python
 >>> s1 = "abc"
@@ -120,7 +141,7 @@ s + 9  # TypeError: cannot concatenate 'str' and 'int' objects
 'Meaning of Life'
 ```
 
-# 字符串查找
+# 6. 字符串查找
 
 ```python
 'a' in x
@@ -128,7 +149,7 @@ s.find("")  # 返回下标，如果找不到，返回-1
 s.index("")  # 返回下标，如果找不到，报错
 ```
 
-## 在utf8字符串里查找
+## 6.1. 在utf8字符串里查找
 
 ```python
     if not isinstance(content, unicode):
@@ -140,7 +161,7 @@ s.index("")  # 返回下标，如果找不到，报错
 
 
 
-# 不转义
+# 7. 不转义
 
 使用原始(raw)字符串常量，去掉反斜线转义机制。
 
@@ -150,7 +171,7 @@ s.index("")  # 返回下标，如果找不到，报错
 'C:\\new\\text.data'
 ```
 
-# 转换
+# 8. 转换
 
 ```python
 >>> int("42"), str(42)
@@ -168,7 +189,7 @@ ASCII码转换：
 's'
 ```
 
-# 格式化
+# 9. 格式化
 
 ```python
 >>> 'That is %d %s bird!' % (1, 'dead')
@@ -232,7 +253,7 @@ flags取值：
 
 
 
-# 字符串help
+# 10. 字符串help
 
 ```python
 >>> dir(s)
@@ -257,7 +278,7 @@ find(...)
 ```
 
 
-# 模式匹配
+# 11. 模式匹配
 
 ```python
 import re
@@ -270,9 +291,9 @@ print(match.group(1))  # python 0是整个字符串
 ```
 
 
-# 编码
+# 12. 编码
 
-## 判断是否是unicode编码
+## 12.1. 判断是否是unicode编码
 
 ```python
     if not isinstance(content, unicode):
@@ -281,7 +302,7 @@ print(match.group(1))  # python 0是整个字符串
 
 
 
-## 编码转换
+## 12.2. 编码转换
 
 ```python
 In [27]: s = '中'

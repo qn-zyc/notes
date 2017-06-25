@@ -24,6 +24,10 @@
         - [5.6.1. 动态宽度和精度](#561-动态宽度和精度)
         - [5.6.2. sprintf](#562-sprintf)
     - [5.7. 正则表达式](#57-正则表达式)
+        - [匹配符与不匹配符](#匹配符与不匹配符)
+        - [内置函数](#内置函数)
+            - [match](#match)
+        - [用正则提取字符片段](#用正则提取字符片段)
     - [5.8. 函数](#58-函数)
         - [5.8.1. 自定义函数](#581-自定义函数)
         - [5.8.2. 内置数字函数](#582-内置数字函数)
@@ -917,6 +921,43 @@ X{n,m}   匹配X 至少n次至多m次. 需要指定 --re-interval
 ```
 
 
+### 匹配符与不匹配符
+
++ `~`: 匹配
++ `!~` 或 `~!`: 不匹配
+
+```bash
+awk 'BEGIN{info="this is a test";if( info ~ /test/){print "ok"}}'
+```
+
+### 内置函数
+
+#### match
+
+match函数返回在字符串中正则表达式位置的索引，如果找不到指定的正则表达式则返回0。match函数会设置内建变量RSTART为字符串中子字符串的开始位置，RLENGTH为到子字符串末尾的字符个数。
+
+```bash
+awk 'BEGIN{info="this is a test2010test!";print match(info,/[0-9]+/)?"ok":"no found";}'
+awk '{start=match("this is a test",/[a-z]+$/); print start, RSTART, RLENGTH }'
+```
+
+```bash
+    info = "hello world, 1, 2, 3";
+    x = info;
+    while (match(x, "[0-9]") > 0) {
+        print substr(x, RSTART, RLENGTH);
+        x = substr(x, RSTART + RLENGTH);
+    }
+```
+
+### 用正则提取字符片段
+
+TODO:
+
+
+
+
+
 ## 5.8. 函数
 
 ### 5.8.1. 自定义函数
@@ -964,7 +1005,7 @@ gsub(r, s [, t])        同sub，贪婪模式，替换所有的
 gensub(r, s, h [, t])   在字符串 t 中查找正则表达式 r，找到后替换成 s，如果找到多个，参数 h 表示要替换哪个，g 表示替换所有的
 strtonum(str)           将字符串转成数字，如果数字以 0 开头，转成八进制数字，如果数字以 0x 开头，转成十六进制数字。
 sprintf(fmt, expr-list) 格式化字符串
-split(s, a [, r])       将字符串分隔成数组
+split(s, a [, r])       将字符串分隔成数组, 分割 s 存入 a，分割符是 r。
 asort(s [, d])          对数组 s 排序，将排序后的数组保存在 d 中，s 不变。如果没有指定 d，则修改原数组s
 asorti(s [, d])         对数组 s 下标排序
 ```
