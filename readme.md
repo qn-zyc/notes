@@ -13,7 +13,8 @@
 - [vim](vim.md)
 
 ## 数据库
-- [MySQL](mysql.md)
+- [MySQL](db/mysql.md)
+- [MongoDB](db/mongodb.md)
 
 ## git & github
 - [github](github.md)
