@@ -27,10 +27,14 @@
 - `supervisorctl stop all`，停止全部进程，注：start、restart、stop都不会载入最新的配置文件。
 - `supervisorctl reload`，载入最新的配置文件，停止原有进程并按新的配置启动、管理所有进程。
 - `supervisorctl update`，根据最新的配置文件，启动新配置或有改动的进程，配置没有改动的进程不会受影响而重启。
+- `supervisorctl reread`, 读取最新配置。
+- `supervisorctl add programxxx`, 添加并启动程序。
 
 注意：显示用stop停止掉的进程，用reload或者update都不会自动重启。
 
 ## 1.3. 配置
+
+位置: `/etc/supervisor`, `/etc/supervisord`
 
 示例：
 
@@ -40,7 +44,12 @@ command=/usr/bin/redis-server /usr/local/redis/redis.conf
 autorstart=true
 autorestart=true
 stdout_logfile=/tmp/supervisor.log
+directory=/home/a/b/c
+priority=999
+startsecs=1
+user=user_name
 ```
+
 
 
 
