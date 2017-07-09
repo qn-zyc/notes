@@ -11,6 +11,7 @@
 # JWT
 
 * Json Web Token
+* [原文](https://zhuanlan.zhihu.com/p/27370773?hmsr=toutiao.io&utm_medium=toutiao.io&utm_source=toutiao.io)
 
 ## 优点
 
