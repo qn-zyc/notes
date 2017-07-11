@@ -379,6 +379,12 @@ awk '{print $1}' access.log |sort|uniq -c|sort -nr|head -10
 ```
 
 
+## 查看连接数
+
+* 查看当前并发访问数: `netstat -an | grep ESTABLISHED | wc -l`
+* 统计某个端口的连接数: `netstat -ant | grep -i "80" | wc -l`
+
+
 
 
 # 5. 参考
