@@ -10,9 +10,13 @@
 - [命令](#命令)
     - [run](#run)
         - [参数](#参数)
+        - [执行run时Docker在后台执行的操作](#执行run时docker在后台执行的操作)
         - [启动容器并执行命令](#启动容器并执行命令)
             - [在容器中安装ping命令](#在容器中安装ping命令)
         - [以交互模式启动](#以交互模式启动)
+        - [后台运行](#后台运行)
+    - [start](#start)
+    - [终止容器](#终止容器)
     - [commit](#commit)
         - [如何构建自己的镜像](#如何构建自己的镜像)
     - [pull](#pull)
@@ -30,6 +34,7 @@
     - [rmi 删除镜像](#rmi-删除镜像)
         - [批量删除](#批量删除)
 - [操作容器](#操作容器)
+    - [启动容器](#启动容器)
     - [容器和主机间拷贝文件](#容器和主机间拷贝文件)
     - [在容器中构建服务并运行服务](#在容器中构建服务并运行服务)
     - [挂载数据卷](#挂载数据卷)
@@ -37,6 +42,12 @@
     - [进入容器](#进入容器)
         - [attach](#attach)
         - [exec](#exec)
+    - [导出和导入容器](#导出和导入容器)
+        - [导出容器](#导出容器)
+        - [导入容器](#导入容器)
+            - [load 和 import 的区别](#load-和-import-的区别)
+    - [删除容器](#删除容器)
+        - [清理所有处于终止状态的容器](#清理所有处于终止状态的容器)
 - [Dockerfile](#dockerfile)
     - [定制 nginx 服务](#定制-nginx-服务)
     - [FROM](#from)
@@ -149,13 +160,22 @@ Docker 最佳实践的要求是: **所有的文件写入操作应该使用数据
 
 使用 `docker help run` 查看参数
 
-`-i`: 保证容器中STDIN是开启的， 尽管我们并没有附着到容器中。 持久的标准输入是交互式shell的“半边天”.
-`-t`: 它告诉Docker为要创建的容器分配一个伪tty终端。 这样，新创建的容器才能提供一个交互式shell。
-`--name`: 指定别名，比如 `docker run --name bob_the_container -i -t ubuntu /bin/bash`。
-`-v`: 挂载目录到容器中，例如：`docker run -it --name testdata -v /home/chen/temp/data:/opt/webapp ubuntu /bin/bash`.
-`--rm`: 容器运行终止后立即删除容器，不能和 `-d` 同时使用。
-`-d`: 后台运行。
+* `-i`: 让容器的标准输入保持打开.
+* `-t`: 分配一个伪终端(pseudo-tty), 并绑定到容器的标准输入上.
+* `--name`: 指定别名，比如 `docker run --name bob_the_container -i -t ubuntu /bin/bash`。
+* `-v`: 挂载目录到容器中，例如：`docker run -it --name testdata -v /home/chen/temp/data:/opt/webapp ubuntu /bin/bash`.
+* `--rm`: 容器运行终止后立即删除容器，不能和 `-d` 同时使用。
+* `-d`: 后台运行。
 
+### 执行run时Docker在后台执行的操作
+
+* 检查本地是否存在指定的镜像，不存在就从公有仓库下载
+* 利用镜像创建并启动一个容器
+* 分配一个文件系统，并在只读的镜像层外面挂载一层可读写层
+* 从宿主主机配置的网桥接口中桥接一个虚拟接口到容器中去
+* 从地址池配置一个 ip 地址给容器
+* 执行用户指定的应用程序
+* 执行完毕后容器被终止
 
 ### 启动容器并执行命令
 
@@ -191,7 +211,30 @@ exit
 $
 ```
 
+### 后台运行
 
+通过添加 `-d` 参数使程序后台运行.
+
+```bash
+$ sudo docker run -d ubuntu:14.04 /bin/sh -c "while true; do echo hello world; sleep 1; done"
+77b2dc01fe0f3f1265df143181e7b9af5e05279a884f4776ee75350ea9d8017a
+```
+
+输出结果可以通过 `docker logs [container ID or NAMES]` 查看, 容器信息通过 `docker ps` 查看.
+
+
+
+## start
+
+使用 `docker start` 将一个已经终止的容器启动运行.
+
+
+## 终止容器
+
+* `docker stop` 终止容器.
+* 终止的容器可以使用 `docker ps -a` 来查看.
+* 终止的容器可以使用 `docker start` 重新启动.
+* `docker restart` 是运行中的容器终止,然后启动.
 
 
 
@@ -424,6 +467,11 @@ docker rmi [选项] <镜像1> [<镜像2> ...]
 
 # 操作容器
 
+## 启动容器
+
+1. 方式1: 执行命令然后终止容器 `sudo docker run ubuntu:14.04 /bin/echo 'Hello world'`
+2. 方式2: 以交互模式执行 `sudo docker run -t -i ubuntu:14.04 /bin/bash`
+
 
 ## 容器和主机间拷贝文件
 
@@ -506,6 +554,9 @@ server对应的IP可以通过 `/etc/hosts` 文件查看。
 
 ## 进入容器
 
+在使用 -d 参数时，容器启动后会进入后台。 某些时候需要进入容器进行操作.
+
+
 ### attach
 
 ```bash
@@ -513,6 +564,22 @@ docker attach 容器名
 ```
 
 **注意: 如果exit，那么容器也会退出。**
+
+示例:
+
+```shell
+$ sudo docker run -idt ubuntu
+243c32535da7d142fb0e6df616a3c3ada0b8ab417937c853a9e1c251f499f550
+$ sudo docker ps
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+243c32535da7        ubuntu:latest       "/bin/bash"         18 seconds ago      Up 17 seconds                           nostalgic_hypatia
+$sudo docker attach nostalgic_hypatia
+root@243c32535da7:/#
+```
+
+但是使用 attach 命令有时候并不方便。当多个窗口同时 attach 到同一个容器的时候，所有窗口都会同步显示。当某个窗口因命令阻塞时,其他窗口也无法执行操作了。
+
+
 
 ### exec
 
@@ -530,6 +597,60 @@ root@3729b97e8226:/# echo '<h1>Hello, Docker!</h1>' > /usr/share/nginx/html/inde
 root@3729b97e8226:/# exit
 exit
 ```
+
+
+## 导出和导入容器
+
+### 导出容器
+
+```shell
+$ sudo docker ps -a
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS                    PORTS               NAMES
+7691a814370e        ubuntu:14.04        "/bin/bash"         36 hours ago        Exited (0) 21 hours ago                       test
+$ sudo docker export 7691a814370e > ubuntu.tar
+```
+
+### 导入容器
+
+```shell
+$ cat ubuntu.tar | sudo docker import - test/ubuntu:v1.0
+$ sudo docker images
+REPOSITORY          TAG                 IMAGE ID            CREATED              VIRTUAL SIZE
+test/ubuntu         v1.0                9d37a6082e97        About a minute ago   171.3 MB
+```
+
+此外，也可以通过指定 URL 或者某个目录来导入，例如:
+
+```shell
+$sudo docker import http://example.com/exampleimage.tgz example/imagerepo
+```
+
+#### load 和 import 的区别
+
+用户既可以使用 docker load 来导入镜像存储文件到本地镜像库，也可以使用 docker import 来导入一个容器快照到本地镜像库。这两者的区别在于容器快照文件将丢弃所有的历史记录和元数据信息（即仅保存容器当时的快照状态），而镜像存储文件将保存完整记录，体积也要大。此外，从容器快照文件导入时可以重新指定标签等元数据信息.
+
+
+## 删除容器
+
+可以使用 `docker rm` 来删除一个处于终止状态的容器:
+
+```shell
+$sudo docker rm  trusting_newton
+trusting_newton
+```
+
+如果要删除一个运行中的容器，可以添加 `-f` 参数。Docker 会发送 SIGKILL 信号给容器。
+
+### 清理所有处于终止状态的容器
+
+```
+docker rm $(docker ps -a -q)
+```
+
+**注意：这个命令其实会试图删除所有的包括还在运行中的容器，不过 docker rm 默认并不会删除运行中的容器。**
+
+
+
 
 
 # Dockerfile
