@@ -37,7 +37,6 @@
     - [启动容器](#启动容器)
     - [容器和主机间拷贝文件](#容器和主机间拷贝文件)
     - [在容器中构建服务并运行服务](#在容器中构建服务并运行服务)
-    - [挂载数据卷](#挂载数据卷)
     - [容器互联](#容器互联)
     - [进入容器](#进入容器)
         - [attach](#attach)
@@ -48,6 +47,19 @@
             - [load 和 import 的区别](#load-和-import-的区别)
     - [删除容器](#删除容器)
         - [清理所有处于终止状态的容器](#清理所有处于终止状态的容器)
+- [数据管理](#数据管理)
+    - [数据卷](#数据卷)
+        - [创建数据卷](#创建数据卷)
+            - [挂载主机目录作为数据卷](#挂载主机目录作为数据卷)
+            - [挂载主机文件作为数据卷](#挂载主机文件作为数据卷)
+        - [删除数据卷](#删除数据卷)
+        - [查看数据卷信息](#查看数据卷信息)
+    - [数据卷容器](#数据卷容器)
+    - [备份和恢复](#备份和恢复)
+        - [备份](#备份)
+        - [恢复](#恢复)
+- [网络](#网络)
+    - [映射端口](#映射端口)
 - [Dockerfile](#dockerfile)
     - [定制 nginx 服务](#定制-nginx-服务)
     - [FROM](#from)
@@ -524,20 +536,6 @@ docker run -d -p 8080:8080 chen/testserver:v1
 `-d` 后台运行, `-p` 指定容器的8080端口和主机的8080端口互通
 
 
-## 挂载数据卷
-
-```
-docker run -it -v /home/chen/dkdata:/mnt/dbdata --name dbdata ubuntu /bin/bash
-```
-
-挂载主机的 `/home/chen/dkdata` 到容器的 `/mnt/dbdata`， 可以在容器中访问到主机的文件。
-
-```
-docker run -it --volumes-from dbdata --name db1 ubuntu
-```
-
-db1容器挂载了dbdata容器，这样在db1容器的 `/mnt/dbdata` 中就可以访问挂载的数据了。
-
 
 ## 容器互联
 
@@ -648,6 +646,140 @@ docker rm $(docker ps -a -q)
 ```
 
 **注意：这个命令其实会试图删除所有的包括还在运行中的容器，不过 docker rm 默认并不会删除运行中的容器。**
+
+
+
+# 数据管理
+
+## 数据卷
+
+数据卷是一个可供一个或多个容器使用的特殊目录，它绕过 UFS，可以提供很多有用的特性：
+* 数据卷可以在容器之间共享和重用
+* 对数据卷的修改会立马生效
+* 对数据卷的更新，不会影响镜像
+* 数据卷默认会一直存在，即使容器被删除
+
+**注意：数据卷的使用，类似于 Linux 下对目录或文件进行 mount，镜像中的被指定为挂载点的目录中的文件会隐藏掉，能显示看的是挂载的数据卷。**
+
+### 创建数据卷
+
+```shell
+$ sudo docker run -d -P --name web -v /webapp training/webapp python app.py
+```
+
+* 使用 `-v /webapp` 创建一个数据卷并挂载到**容器的/webapp目录**.
+* 可以多次使用 `-v` 挂载多个数据卷.
+* 在 Dockerfile 中使用 `VOLUME` 添加数据卷.
+
+#### 挂载主机目录作为数据卷
+
+```shell
+$ sudo docker run -d -P --name web -v /src/webapp:/opt/webapp training/webapp python app.py
+```
+
+* 将主机的 `/src/webapp` 目录挂载到容器的 `/opt/webapp` 目录.
+* 本地目录的路径必须是**绝对路径**, 不存在的话会自动创建.
+* Dockerfile 中不支持这种做法, 因为 Dockerfile 是为了移植和分享.
+
+Docker 挂载数据卷的默认权限是读写, 可以使用 `:ro` 指定为只读:
+
+```shell
+$ sudo docker run -d -P --name web -v /src/webapp:/opt/webapp:ro
+training/webapp python app.py
+```
+
+#### 挂载主机文件作为数据卷
+
+```shell
+$ sudo docker run --rm -it -v ~/.bash_history:/.bash_history ubuntu /bin/bash
+```
+
+这样就可以记录在容器中输入的命令了.
+
+**注意：如果直接挂载一个文件，很多文件编辑工具，包括 vi 或者 sed --in-place，可能会造成文件 inode 的改变，从 Docker 1.1 .0起，这会导致报错误信息。所以最简单的办法就直接挂载文件的父目录。**
+
+
+
+
+
+### 删除数据卷
+
+* 删除容器的同时移除数据卷: `docker rm -v`
+
+
+### 查看数据卷信息
+
+```shell
+docker inspect web
+```
+
+查看其中 `Volumes` 和 `VolumesRW` 的部分. 数据卷都是创建在主机的 `/var/lib/docker/volumes/` 目录下.
+
+Docker1.8.0 起, 数据卷配置在 `Mounts` 下, 创建在主机的 `/mnt/sda1/var/lib/docker/volumes/....` 下.
+
+
+
+## 数据卷容器
+
+其实就是一个正常的容器, 只是专门用来提供数据卷供其他容器挂载的, 使得数据可以在容器直接共享.
+
+创建名为 `dbdata` 的数据卷容器:
+
+```shell
+$ sudo docker run -d -v /dbdata --name dbdata training/postgres echo Data-only container for postgres
+```
+
+其他容器通过 `--volumes-from` 来挂载 dbdata 容器中的数据卷:
+
+```shell
+$ sudo docker run -d --volumes-from dbdata --name db1 training/postgres
+$ sudo docker run -d --volumes-from dbdata --name db2 training/postgres
+```
+
+可以使用多个 `--volumes-from` 从多个容器挂载不同的数据卷, 也可以从其他已经挂载了数据卷的容器来级联挂载数据卷:
+
+```shell
+$ sudo docker run -d --name db3 --volumes-from db1 training/postgres
+```
+
+**使用 --volumes-from 参数所挂载数据卷的容器自己并不需要保持在运行状态**(dbdata不需要运行起来)
+
+如果删除了挂载的容器（包括 dbdata、db1 和 db2），数据卷并不会被自动删除。如果要删除一个数据卷，必须在删除最后一个还挂载着它的容器时使用 docker rm -v 命令来指定同时删除关联的容器。 这可以让用户在容器之间升级和移动数据卷
+
+
+
+## 备份和恢复
+
+### 备份
+
+```shell
+$ sudo docker run --volumes-from dbdata -v $(pwd):/backup ubuntu tar cvf /backup/backup.tar /dbdata
+```
+
+先是挂载了 dbdata 容器, 然后将当前目录挂载到这个容器的 `/backup` 目录, 执行 `tar` 目录, 将挂载的 `/dbdata` 目录压缩到 `/backup` 目录, 在本机的当前目录就可以看到这个压缩文件了.
+
+### 恢复
+
+先创建一个带有空数据卷的容器 `dbdata2`:
+
+```shell
+$ sudo docker run -v /dbdata --name dbdata2 ubuntu /bin/bash
+```
+
+再创建一个容器, 挂载 `dbdata2`, 并将当前目录挂载到容器的 `/backup` 目录, 解压文件到 `dbdata2` 的 `/dbdata` 目录:
+
+```shell
+$ sudo docker run --volumes-from dbdata2 -v $(pwd):/backup busybox tar xvf
+/backup/backup.tar
+```
+
+
+
+# 网络
+
+## 映射端口
+
+
 
 
 
