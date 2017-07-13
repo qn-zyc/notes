@@ -37,7 +37,6 @@
     - [启动容器](#启动容器)
     - [容器和主机间拷贝文件](#容器和主机间拷贝文件)
     - [在容器中构建服务并运行服务](#在容器中构建服务并运行服务)
-    - [容器互联](#容器互联)
     - [进入容器](#进入容器)
         - [attach](#attach)
         - [exec](#exec)
@@ -60,6 +59,8 @@
         - [恢复](#恢复)
 - [网络](#网络)
     - [映射端口](#映射端口)
+    - [查看映射端口配置](#查看映射端口配置)
+    - [容器互联](#容器互联)
 - [Dockerfile](#dockerfile)
     - [定制 nginx 服务](#定制-nginx-服务)
     - [FROM](#from)
@@ -78,6 +79,8 @@
     - [USER 指定当前用户](#user-指定当前用户)
     - [HEALTHCHECK 健康检查](#healthcheck-健康检查)
     - [ONBUILD 为他人做嫁衣裳](#onbuild-为他人做嫁衣裳)
+- [项目](#项目)
+    - [redis](#redis)
 - [参考](#参考)
 
 <!-- /TOC -->
@@ -537,18 +540,6 @@ docker run -d -p 8080:8080 chen/testserver:v1
 
 
 
-## 容器互联
-
-先启动一个测试服务：`docker run -it --rm --name testserver chen/testserver:v1`， 监听8080端口， 这个容器没有使用`-p`绑定主机端口， 所以从外部访问不了里面的服务。
-
-再启动一个容器`runcurl`连接`testserver`容器： `docker run -it --name runcurl --link testserver:server chen/base /bin/bash`
-
-`--link` 的格式是 `name:alias`。
-
-测试一下是否连通了： `curl server:8080/a/b`
-
-server对应的IP可以通过 `/etc/hosts` 文件查看。
-
 
 ## 进入容器
 
@@ -778,6 +769,42 @@ $ sudo docker run --volumes-from dbdata2 -v $(pwd):/backup busybox tar xvf
 # 网络
 
 ## 映射端口
+
+* 可以通过 `-p` 或者 `-P` 参数指定端口映射.
+* `-P` 会随机映射一个 49000 ~ 49900 的端口到内部容器开放的网络端口.
+* `-p` 可以指定要映射的端口, 可以多次使用绑定多个端口.
+* 使用 `docker ps` 可以查看端口映射.
+
+映射所有接口的端口`hostPort:containerPort`: `sudo docker run -d -p 5000:5000 training/webapp python app.py`
+
+映射指定地址的端口`ip:hostPort:containerPort`: `sudo docker run -d -p 127.0.0.1:5000:5000 training/webapp python app.py`
+
+映射指定地址的任意端口`ip::containerPort`: `sudo docker run -d -p 127.0.0.1::5000 training/webapp python app.py`
+
+映射udp端口: `sudo docker run -d -p 127.0.0.1:5000:5000/udp training/webapp python app.py`
+
+## 查看映射端口配置
+
+```shell
+docker port nostalgic_morse 5000
+```
+
+
+## 容器互联
+
+* 连接系统根据容器的名称来执行, 所以容器启动时需要使用 `--name` 指定名称.
+* `--link` 参数的格式是 `--link name:alias`, name 是要连接的容器的名称, alias 是这个连接的别名.
+
+比如有一个数据库容器: `docker run -d --name db training/postgres`,
+然后创建一个新的容器并连接到db容器: `docker run -d -P --name web --link db:db training/webapp python app.py`
+
+Docker 在互联的容器之间创建了一个安全隧道, 而且不用映射它们的端口到宿主主机上.
+
+Docker 通过2种方式为容器公开连接信息:
+1. 环境变量. 可以在 web 容器中通过 `env` 命令查看 `DB_` 开头的环境变量(前缀是设置的别名的大写形式).
+2. `/etc/hosts` 文件. 形式为 `172.17.0.5 db`, 可以通过别名 `db` 来访问 `ping db`.
+
+
 
 
 
@@ -1181,6 +1208,21 @@ FROM my-node
 ```
 
 此时 `ONBUILD` 后的命令才会执行.
+
+
+
+# 项目
+
+## redis
+
+启动一个 redis 示例:
+
+```shell
+$ docker run --name some-redis -d redis
+```
+
+这个镜像使用了 `EXPOSE 6379`, 互联的容器可以直接使用, 绑定端口的话需要加 `-p 6379:6379`.
+
 
 
 
