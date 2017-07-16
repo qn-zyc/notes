@@ -81,6 +81,9 @@
     - [ONBUILD 为他人做嫁衣裳](#onbuild-为他人做嫁衣裳)
 - [项目](#项目)
     - [redis](#redis)
+        - [启动redis服务](#启动redis服务)
+        - [连接redis服务](#连接redis服务)
+        - [使用自己的配置](#使用自己的配置)
 - [参考](#参考)
 
 <!-- /TOC -->
@@ -1215,7 +1218,7 @@ FROM my-node
 
 ## redis
 
-启动一个 redis 示例:
+### 启动redis服务
 
 ```shell
 $ docker run --name some-redis -d redis
@@ -1223,7 +1226,43 @@ $ docker run --name some-redis -d redis
 
 这个镜像使用了 `EXPOSE 6379`, 互联的容器可以直接使用, 绑定端口的话需要加 `-p 6379:6379`.
 
+持久化存储:
 
+```shell
+$ docker run --name some-redis -d redis redis-server --appendonly yes
+```
+
+数据会存储在 `VOLUME/data`, 可以使用 `--volumes-from some-volume-container` 或者 `-v /docker/host/dir:/data` 映射到主机目录.
+
+### 连接redis服务
+
+从其他应用连接 redis 服务:
+
+```shell
+$ docker run --name some-app --link some-redis:redis -d application-that-uses-redis
+```
+
+使用 redis-cli:
+
+```shell
+$ docker run -it --link some-redis:redis --rm redis redis-cli -h redis -p 6379
+```
+
+### 使用自己的配置
+
+创建自己的 Dockerfile 将自己的配置添加到镜像中:
+
+```dockerfile
+FROM redis
+COPY redis.conf /usr/local/etc/redis/redis.conf
+CMD [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+```
+
+或者通过 `-v` 参数将配置映射到容器中, 启动服务时指定该配置:
+
+```shell
+$ docker run -v /myredis/conf/redis.conf:/usr/local/etc/redis/redis.conf --name myredis redis redis-server /usr/local/etc/redis/redis.conf
+```
 
 
 

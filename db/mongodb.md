@@ -24,6 +24,11 @@
     - [4.4. Delete Documents](#44-delete-documents)
         - [4.4.1. 删除所有文档](#441-删除所有文档)
         - [4.4.2. 删除符合条件的文档](#442-删除符合条件的文档)
+- [集合方法](#集合方法)
+    - [aggregate](#aggregate)
+        - [$group](#group)
+        - [示例](#示例)
+            - [统计一段时间内的总和](#统计一段时间内的总和)
 - [5. 参考](#5-参考)
 
 <!-- /TOC -->
@@ -150,6 +155,9 @@ db.inventory.find( {
 相当于：`SELECT * FROM inventory WHERE status = "A" AND ( qty < 30 OR item LIKE "p%")`
 
 
+
+
+
 ## 4.3. Update Documents
 
 ```
@@ -233,6 +241,19 @@ db.inventory.replaceOne(
 
 如果 `updateOne(), updateMany(), or replaceOne()` 包含了 `upsert: true` 选项，当不存在匹配的文档时将插入一个新的文档，存在时则替换它。
 
+示例:
+
+```js
+db.people.update(
+   { name: "Andy" },
+   {
+      name: "Andy",
+      rating: 1,
+      score: 1
+   },
+   { upsert: true }
+)
+```
 
 
 ## 4.4. Delete Documents
@@ -256,6 +277,45 @@ db.inventory.deleteMany({})
 db.inventory.deleteMany({ status : "A" })
 ```
 
+
+# 集合方法
+
+## aggregate
+
+做聚合和统计用的.
+
+定义: `db.collection.aggregate(pipeline, options)`
+
+* [文档](https://docs.mongodb.com/manual/reference/method/db.collection.aggregate/)
+* [pipeline文档](https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline/)
+
+### $group
+
+* `_id` 指定分组的关键字, 比如 `_id: {area: "$area", isp: "$isp"}`, 为 null 时则整个集合为一组.
+
+
+### 示例
+
+#### 统计一段时间内的总和
+
+```js
+db.col.aggregate(
+    [
+        {
+            $match: {
+                date: { $gt: 1, $lt: 9 }
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                totalNum: { $sum: "$fieldName1" },
+                count: { $sum: 1 }  // 计算个数
+            }
+        }
+    ]
+)
+```
 
 
 
