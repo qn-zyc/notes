@@ -84,6 +84,11 @@
         - [启动redis服务](#启动redis服务)
         - [连接redis服务](#连接redis服务)
         - [使用自己的配置](#使用自己的配置)
+    - [mongo](#mongo)
+        - [启动实例](#启动实例)
+        - [通过其他应用连接](#通过其他应用连接)
+        - [使用mongo连接](#使用mongo连接)
+        - [数据存储](#数据存储)
 - [参考](#参考)
 
 <!-- /TOC -->
@@ -1263,6 +1268,35 @@ CMD [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
 ```shell
 $ docker run -v /myredis/conf/redis.conf:/usr/local/etc/redis/redis.conf --name myredis redis redis-server /usr/local/etc/redis/redis.conf
 ```
+
+
+
+
+## mongo
+
+### 启动实例
+
+```shell
+$ docker run --name some-mongo -d mongo
+```
+
+暴露的端口为: `EXPOSE 27017`.
+
+### 通过其他应用连接
+
+```shell
+$ docker run --name some-app --link some-mongo:mongo -d application-that-uses-mongo
+```
+
+### 使用mongo连接
+
+```shell
+$ docker run -it --link some-mongo:mongo --rm mongo sh -c 'exec mongo "$MONGO_PORT_27017_TCP_ADDR:$MONGO_PORT_27017_TCP_PORT/test"'
+```
+
+### 数据存储
+
+数据存储在容器的 `/data/db` 目录下.
 
 
 

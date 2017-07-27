@@ -21,15 +21,16 @@
         - [4.3.3. updateMany](#433-updatemany)
         - [4.3.4. replaceOne](#434-replaceone)
         - [4.3.5. Upsert Option](#435-upsert-option)
+        - [4.3.6. inc 自增自减](#436-inc-自增自减)
     - [4.4. Delete Documents](#44-delete-documents)
         - [4.4.1. 删除所有文档](#441-删除所有文档)
         - [4.4.2. 删除符合条件的文档](#442-删除符合条件的文档)
-- [集合方法](#集合方法)
-    - [aggregate](#aggregate)
-        - [$group](#group)
-        - [示例](#示例)
-            - [统计一段时间内的总和](#统计一段时间内的总和)
-- [5. 参考](#5-参考)
+- [5. 集合方法](#5-集合方法)
+    - [5.1. aggregate](#51-aggregate)
+        - [5.1.3. $group](#513-group)
+        - [5.1.4. 示例](#514-示例)
+            - [5.1.4.1. 统计一段时间内的总和](#5141-统计一段时间内的总和)
+- [6. 参考](#6-参考)
 
 <!-- /TOC -->
 
@@ -122,8 +123,9 @@ db.inventory.find( { status: "D" } )
 
 ### 4.2.3. 使用查询操作符
 
-```mongodb
+```js
 db.inventory.find( { status: { $in: [ "A", "D" ] } } )
+db.inventory.find( { date: { $lt: 1, $gt: 2} } )
 ```
 
 [查看所有查询操作符](https://docs.mongodb.com/master/reference/operator/query/)
@@ -171,6 +173,8 @@ db.inventory.find( {
 [update operator](https://docs.mongodb.com/manual/reference/operator/update/), 比如 `$set` 等。
 
 
+
+
 ### 4.3.1. update
 
 修改已存在的文档。可以修改特定字段，或者整个文档，取决于 [update parameter](https://docs.mongodb.com/manual/reference/method/db.collection.update/#update-parameter)
@@ -183,7 +187,7 @@ db.inventory.find( {
 
 example1:
 
-```
+```js
 db.inventory.updateOne(
    { item: "paper" },
    {
@@ -256,6 +260,42 @@ db.people.update(
 ```
 
 
+### 4.3.6. inc 自增自减
+
+* `$inc` 可以接受正值和负值.
+* 如果字段不存在会创建它并设置值为指定值.
+* 在值为 null 的字段上使用 `$inc` 会产生一个错误.
+* `$inc` 在单个文档中是原子性操作.
+* [参考](https://docs.mongodb.com/manual/reference/operator/update/inc/#up._S_inc)
+
+示例:
+
+有如下文档:
+
+```js
+{
+  _id: 1,
+  sku: "abc123",
+  quantity: 10,
+  metrics: {
+    orders: 2,
+    ratings: 3.5
+  }
+}
+```
+
+现在想将 quantity 减 2, 将 metrics.orders 增 1:
+
+```js
+db.products.update(
+   { sku: "abc123" },
+   { $inc: { quantity: -2, "metrics.orders": 1 } }
+)
+```
+
+
+
+
 ## 4.4. Delete Documents
 
 ### 4.4.1. 删除所有文档
@@ -278,9 +318,9 @@ db.inventory.deleteMany({ status : "A" })
 ```
 
 
-# 集合方法
+# 5. 集合方法
 
-## aggregate
+## 5.1. aggregate
 
 做聚合和统计用的.
 
@@ -289,14 +329,15 @@ db.inventory.deleteMany({ status : "A" })
 * [文档](https://docs.mongodb.com/manual/reference/method/db.collection.aggregate/)
 * [pipeline文档](https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline/)
 
-### $group
+### 5.1.3. $group
 
 * `_id` 指定分组的关键字, 比如 `_id: {area: "$area", isp: "$isp"}`, 为 null 时则整个集合为一组.
+* 字段经过运算后再分组: `_id: {date: {$divide: ["$date", 1000]}}`
 
 
-### 示例
+### 5.1.4. 示例
 
-#### 统计一段时间内的总和
+#### 5.1.4.1. 统计一段时间内的总和
 
 ```js
 db.col.aggregate(
@@ -319,6 +360,7 @@ db.col.aggregate(
 
 
 
-# 5. 参考
+
+# 6. 参考
 
 * [www.mongodb.com](https://www.mongodb.com)
