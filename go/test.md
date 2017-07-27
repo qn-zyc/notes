@@ -9,6 +9,12 @@
 - [例子用例](#例子用例)
 - [测试脚本](#测试脚本)
     - [除vendor外的测试](#除vendor外的测试)
+- [测试技巧](#测试技巧)
+    - [子测试](#子测试)
+    - [表格驱动](#表格驱动)
+    - [测试用例的当前目录](#测试用例的当前目录)
+    - [flag](#flag)
+- [参考](#参考)
 
 <!-- /TOC -->
 
@@ -194,10 +200,6 @@ b.RunParallel(func(pb *testing.PB) {
 ```
 
 
-
-
-
-
 # 例子用例
 
 - 文件名也是以 _test 结尾
@@ -215,35 +217,128 @@ func ExampleInts() {
 ```
 
 
-
-
-
 # 测试脚本
 
-
-
 ## 除vendor外的测试
-
-
 
 ```bash
 IGNORE_PKGS="(vendor)"
 TEST_PKGS=`find . -name \*_test.go | while read a; do dirname $a; done | sort | uniq | egrep -v "$IGNORE_PKGS" | sed "s|\./||g"`
 ```
 
-
-
 说明：
-
-`find . -name \*_test.go` 找到所有的测试文件。 
-
-`dirname` 获取全路径中的目录部分，比如 `a/b/c.txt` 获取的是 `a/b`。
-
-`sed "s|\./||g` 去掉 `./`
+* `find . -name \*_test.go` 找到所有的测试文件。 
+* `dirname` 获取全路径中的目录部分，比如 `a/b/c.txt` 获取的是 `a/b`。
+* `sed "s|\./||g` 去掉 `./`
 
 最后的结果就是列举出自己写的 `_test.go` 文件。
 
 
+# 测试技巧
 
+
+## 子测试
+
+```go
+import "testing"
+
+func TestAdd(t *testing.T) {
+	a := 1
+
+	t.Run("+1", func(t *testing.T) {
+		if a+1 != 2 {
+			t.Fatal("fail!")
+		}
+	})
+	t.Run("+2", func(t *testing.T) {
+		if a+2 != 3 {
+			t.Fatal("fail!")
+		}
+	})
+}
+```
+
+* 每个 `Run` 都是相互独立的, 可能会在多个 goroutine 里执行.
+* 外层测试会在所有子测试都执行完毕才会 return.
+* 单独执行其中一个子测试: `go test -v -run=TestAdd/1`(使用`+1`报错)
+
+
+## 表格驱动
+
+```go
+func TestAdd(t *testing.T) {
+    cases := []struct{ A, B, Expected int }{
+        { 1, 1, 2 },
+        { 1, -1, 0 },
+        { 1, 0, 1 },
+        { 0, 0, 0 },
+    }
+    for _, tc := range cases {
+        t.Run(fmt.Sprintf("%d + %d", tc.A, tc.B), func(t *testing.T) {
+            actual := tc.A + tc.B
+            if actual != expected { t.Fatal("failure") }
+        })
+    }
+}
+```
+
+给每个用例添加一个名称:
+
+```go
+func TestAdd(t *testing.T) {
+    cases := []struct{
+        Name string
+        A, B, Expected int
+    }{
+      	{"foo", 1, 1, 2 },
+        {"bar", 1, -1, 0 },
+    }
+    for k, tc := range cases {
+        t.Run(tc.Name, func(t *testing.T) {
+            ...
+        })
+    }
+}
+```
+
+
+## 测试用例的当前目录
+
+```go
+func TestAdd(t *testing.T) {
+    data := filepath.Join("test-fixtures", "add_data.json")
+    // ... Do something with data                                                                        
+}
+```
+
+* 当前目录就是测试文件所在路径.
+* 可以将一些测试数据(比如配置等)放在 `test-fixtures` 目录下, 测试用例中使用相对路径来获取.
+
+
+## flag
+
+```go
+var update = flag.Bool("update", false, "update file")
+
+func TestAdd(t *testing.T) {
+	t.Log(*update)
+}
+```
+
+可以使用下面的语句测试:
+
+```shell
+go test -v
+go test -v -update
+go test -v -update=true
+```
+
+
+
+
+
+
+# 参考
+* [Advanced Testing in Go, Mitchell Hashimoto](https://about.sourcegraph.com/go/advanced-testing-in-go-mitchell-hashimoto)
 
 
