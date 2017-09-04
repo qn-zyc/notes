@@ -5,6 +5,7 @@
     - [1.2. supervisorctl](#12-supervisorctl)
     - [1.3. 配置](#13-配置)
         - [1.3.1. 日志](#131-日志)
+- [启动 mongodb](#启动-mongodb)
 
 <!-- /TOC -->
 
@@ -69,3 +70,17 @@ user=user_name
 ;stderr_events_enabled=false   ; emit events on stderr writes (default false)
 ```
 
+
+
+# 启动 mongodb
+
+```
+command=/usr/local/mongodb3.4.6/bin/mongod --fork --logpath=/data/mongolog/mongodb.log --logappend --port 27018 --dbpath /data/mongo
+directory=/usr/local/mongodb3.4.6/bin
+stdout_logfile=/data/mongolog/mongodb_supervisor.log
+priority=999
+autostart=true
+startsecs=1
+autorestart=true
+user=qboxserver
+```

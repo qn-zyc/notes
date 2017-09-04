@@ -2,6 +2,8 @@
 
 - [1. 更新fork项目](#1-更新fork项目)
 - [2. 开启二次验证，如何上传下载代码](#2-开启二次验证如何上传下载代码)
+- [git](#git)
+    - [git stash 储藏](#git-stash-储藏)
 
 <!-- /TOC -->
 
@@ -65,3 +67,19 @@ Password for 'https://hainuo@github.com':此处即为你获得的Token。
 如果设置了该选项，则UserName和Password将会被保存，下次直接git pull或者git push即可。 
 
 其实该命令会在用户根目录下生成一个名为.git-credentials的文件，里面保存了你的UserName和Token。
+
+
+
+
+# git
+
+## git stash 储藏
+
+* `git stash`: 储藏当前变更(暂存的和工作区的)
+* `git stash list`: 查看储藏列表
+* `git stash apply`: 应用最后一个储藏.
+* `git stash apply stash@{1}`: 应用指定的储藏.
+* `git stash apply --index`: 重新暂存暂存区的文件.
+* `git stash drop stash@{1}`: 从列表中移除.
+* `git stash pop`: 应用储藏并从列表中移除.
+* `git stash branch branch_name`: 使用储藏创建分支并删除储藏.
