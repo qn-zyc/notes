@@ -89,6 +89,8 @@
         - [通过其他应用连接](#通过其他应用连接)
         - [使用mongo连接](#使用mongo连接)
         - [数据存储](#数据存储)
+    - [bind](#bind)
+    - [openresty](#openresty)
 - [参考](#参考)
 
 <!-- /TOC -->
@@ -171,7 +173,7 @@ Docker 最佳实践的要求是: **所有的文件写入操作应该使用数据
 * `docker build --rm -t dev:base .` 构建image，`--rm` 删除临时容器, `-t` 指定tag。
 * `docker ps` 查看运行中的容器列表.
 * `docker inspect TAG`: 查看容器或者镜像的详细信息，除了tag，还可以使用id。
-* `docker logs 容器名`: 查看容器的输出
+* `docker logs 容器名`: 查看容器的输出, `docker logs -f 容器名`.
 * `docker commit -m "message" 容器ID 新镜像名` 提交变动生成新镜像
 * `docker search 镜像名字` 在命令行搜索镜像.
 * `docker push learn/ping` 发布自己的镜像.
@@ -1297,6 +1299,62 @@ $ docker run -it --link some-mongo:mongo --rm mongo sh -c 'exec mongo "$MONGO_PO
 ### 数据存储
 
 数据存储在容器的 `/data/db` 目录下.
+
+
+
+## bind
+
+```shell
+docker run --name bind -d --restart=always \
+  --publish 53:53/tcp --publish 53:53/udp --publish 10000:10000/tcp \
+  --volume /srv/docker/bind:/data \
+  sameersbn/bind:9.9.5-20170626
+```
+
+* 后台管理在 `https://localhost:10000`, 用户名 `root`, 密码 `password`, 可以在 run 时通过环境变量指定自己的密码: `--env ROOT_PASSWORD=secretpassword`
+* 上面配置的是所有接口都可以访问, 还可以指定 `--publish 127.0.0.1:53:53/udp`.
+* 使用 `rndc dumpdb` 后, 文件被存放在 `/var/cache/bind/` 下(或者 ` /var/lib/named/var/cache/bind/`).
+* 执行 rndc 命令: `docker exec -it bind rndc status`
+
+
+
+## openresty
+
+启动: 
+
+```shell
+docker run -d --name="nginx" -p 8080:80 -v $PWD/config/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro -v $PWD/logs:/usr/local/openresty/nginx/logs openresty/openresty:1.9.15.1-trusty
+```
+
+nginx.conf:
+
+```
+worker_processes  1;
+error_log logs/error.log;
+events {
+    worker_connections 1024;
+}
+http {
+    server {
+        listen 80;
+        location / {
+            default_type text/html;
+            content_by_lua '
+                ngx.say("<p>hello, world</p>")
+            ';
+        }
+    }
+}
+```
+
+stop:
+
+```shell
+docker kill nginx && docker rm nginx
+```
+
+
+
 
 
 

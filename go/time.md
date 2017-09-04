@@ -4,7 +4,8 @@
 - [函数执行时间](#函数执行时间)
 - [格式化时间](#格式化时间)
 - [timezone](#timezone)
-- [定时器](#定时器)
+- [定时器Timer](#定时器timer)
+    - [timer.After释放问题](#timerafter释放问题)
 - [Ticker](#ticker)
 
 <!-- /TOC -->
@@ -87,7 +88,7 @@ Parse是按照UTC来解析的。
 
 
 
-# 定时器
+# 定时器Timer
 
 ```go
 time.NewTimer(time.Second * 2)
@@ -130,6 +131,33 @@ Timer 1 expired
 Timer 2 stopped
 ```
 
+
+## timer.After释放问题
+* [参考](https://gocn.io/article/403)
+* After的注释上写着: 如果没有fire, 垃圾回收不会回收它, 知道它过期了.
+
+```go
+select {
+    case time.After(3*time.Second):
+        return errTimeout
+    case packet := packetChannel:
+        // process packet.
+}
+```
+
+如果没有执行到After所在的case, 那么会3秒之后才被垃圾回收. 可以主动Stop:
+
+```go
+for {
+	t := time.NewTimer(3*time.Second)
+
+	select {
+	case <- t.C:
+	default:
+		t.Stop()
+	}
+}
+```
 
 
 # Ticker
