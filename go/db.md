@@ -1,3 +1,39 @@
+<!-- TOC -->
+
+- [参考资料](#参考资料)
+- [连接](#连接)
+    - [mysql](#mysql)
+- [从数据库中解析datetime类型的字段](#从数据库中解析datetime类型的字段)
+- [SQLInterface](#sqlinterface)
+    - [Introduction](#introduction)
+    - [Database driver](#database-driver)
+    - [Connecting to a database](#connecting-to-a-database)
+    - [Executing queries](#executing-queries)
+    - [Transactions](#transactions)
+    - [Dealing with NULL](#dealing-with-null)
+- [批量操作各种方式效率分析](#批量操作各种方式效率分析)
+- [database/sql接口](#databasesql接口)
+    - [sql.Register](#sqlregister)
+    - [driver.Driver](#driverdriver)
+    - [driver.Conn](#driverconn)
+    - [driver.Stmt](#driverstmt)
+    - [driver.Tx](#drivertx)
+    - [driver.Execer](#driverexecer)
+    - [driver.Result](#driverresult)
+    - [driver.Rows](#driverrows)
+    - [driver.RowsAffected](#driverrowsaffected)
+    - [driver.Value](#drivervalue)
+    - [driver.ValueConverter](#drivervalueconverter)
+    - [driver.Valuer](#drivervaluer)
+    - [database/sql](#databasesql)
+- [mongo](#mongo)
+    - [mgo](#mgo)
+        - [分组并且累加](#分组并且累加)
+
+<!-- /TOC -->
+
+
+
 # 参考资料
 
 * <https://github.com/golang/go/wiki/SQLInterface>
@@ -648,3 +684,35 @@ type DB struct {
 我们可以看到Open函数返回的是DB对象，里面有一个freeConn，它就是那个简易的连接池。它的实现相当简单或者说简陋，就是当执行Db.prepare的时候会defer db.putConn(ci, err),也就是把这个连接放入连接池，每次调用conn的时候会先判断freeConn的长度是否大于0，大于0说明有可以复用的conn，直接拿出来用就是了，如果不大于0，则创建一个conn,然后再返回之。
 
 
+
+# mongo
+
+## mgo
+
+### 分组并且累加
+
+```go
+v := []statisResult{}
+err = MongoDB().C(CollectionName).Pipe([]bson.M{
+    {
+        "$match": bson.M{
+            "ts": bson.M{"$gte": begin, "$lt": end},
+        },
+    },
+    {
+        "$group": bson.M{
+            "_id": bson.M{
+                "ts":       "$ts",
+                "prov":     "$prov",
+                "isp":      "$isp",
+                "domain":   "$domain",
+                "hit_miss": "$hit_miss",
+            },
+            "total":   bson.M{"$sum": 1},
+            "size":    bson.M{"$sum": "$size"},
+            "elapse":  bson.M{"$sum": "$elapse"},
+            "is_slow": bson.M{"$sum": "$is_slow"},
+        },
+    },
+}).All(&v)
+```

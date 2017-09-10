@@ -186,6 +186,12 @@ go build -gcflags "-m" test.go
 go list -json
 ```
 
+查看某个包引用了哪些包:
+
+```shell
+go list -f '{{ .Imports }}' github.com/a/b
+```
+
 
 
 # go tool objdump

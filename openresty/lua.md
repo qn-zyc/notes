@@ -44,12 +44,23 @@
     - [迭代器](#迭代器)
         - [泛型for](#泛型for)
 - [模块](#模块)
+    - [require](#require)
+    - [模块的加载](#模块的加载)
+    - [模块的编写](#模块的编写)
+- [面向对象编程](#面向对象编程)
 - [系统函数](#系统函数)
     - [unpack](#unpack)
     - [异常](#异常)
         - [assert](#assert)
 - [协同程序 coroutine](#协同程序-coroutine)
     - [yield](#yield)
+- [元表metatable与元方法metamethod](#元表metatable与元方法metamethod)
+    - [获取和设置metatable](#获取和设置metatable)
+    - [相关方法](#相关方法)
+    - [示例](#示例)
+        - [保护metatable, 使其他人对值得metatable没有读取和设置的权限](#保护metatable-使其他人对值得metatable没有读取和设置的权限)
+        - [table 的 `__index` 方法](#table-的-__index-方法)
+- [环境](#环境)
 - [代码片段](#代码片段)
     - [ip是否匹配网段ip](#ip是否匹配网段ip)
 - [参考](#参考)
@@ -387,6 +398,8 @@ print(table.concat(a, " ", 4, 2))   -- output:
 print(table.concat(a, " ", 2, 4))   -- output: 3 5 hello
 ```
 
+对于 `table.concat(a, "\n") .. "\n"`, 当 a 很大时, 需要复制整个字符串然后和最后的换行组合, 开销很大, 可以在 a 的最后插入一个 "\n", 这样就不需要最后的字符串连接操作了.
+
 
 ### table.insert
 
@@ -699,6 +712,11 @@ else
 end
 ```
 
+```lua
+x = x or y -- 等价于 if not x then x = y end
+max = (x > y) and x or y -- 选出最大值, 等价于 x > y ? x:y, 前提是 x 不为假, 如果 x 为假, 结果会是 y.
+```
+
 
 ## while
 * 没有 continue, 但是有 break.
@@ -916,6 +934,48 @@ end
 # 模块
 * 通过 `require("模块名即文件名")` 的方式导入模块.
 * 模块的最后要 return 一个 table.
+* 已加载的模块可以再次被 require.
+
+## require
+
+```lua
+require("mod") -- luajit 中失败
+mod.func()
+
+local m = require("mod")
+m.func()
+```
+
+## 模块的加载
+* Lua 文件的搜索路径存放在 `package.path` 变量中(环境变量 `LUA_PATH`). c 程序库的搜索路径在 `package.cpath` 变量中(环境变量 `LUA_CPATH`).
+* 路径值以分号分隔, 比如 `?;?.lua;/usr/local/lua/?/?.lua`, 当要搜索的路径是 sql 时, 查找的顺序是 `sql;sql.lua;/usr/local/lua/sql/sql.lua`.
+* 路径中的 `;;` 会替换成默认路径.
+* 子模块 `a.b` 在搜索文件时会将 `.` 换成系统的目录分隔符.
+
+
+## 模块的编写
+
+```lua
+local _M = {_VERSION = "0.10"}
+
+function _M.hello() -- 函数
+    print("hello")
+end
+
+_M.i = 123 -- 变量
+
+local function world()
+    _M.hello() -- 内部调用模块的属性
+end
+
+return _M
+```
+
+
+# 面向对象编程
+
+
+
 
 
 
@@ -1045,6 +1105,135 @@ while true do
     b = res
 end
 ```
+
+
+
+
+# 元表metatable与元方法metamethod
+* 修改值的行为, 比如 `a + b`.
+* 每个值都有一个元表. table 和 userdata 有各自独立的元表, 其他类型的值共享类型的单一元表.
+* table 可以成为自己的元表, 描述其特有的行为.
+* table 创建时不会创建元表
+* 只能设置 table 的元表, 其他类型需要通过c代码完成.
+* 查找元表: 先找第一个值的, 没有相应方法的话再找第二个值的, 都没有的话报错.
+
+## 获取和设置metatable
+
+```lua
+t = {}
+print(getmetatable(t)) -- nil
+
+t1 = {}
+setmetatable(t, t1)
+print(getmetatable(t) == t1) -- true
+```
+
+## 相关方法
+算术类的元方法:
+* `__add`: + 加
+* `__sub`: - 减
+* `__mul`: * 乘
+* `__div`: / 除
+* `__unm`: 相反数
+* `__mod`: 取模
+* `__pow`: 乘幂
+
+关系类的元方法:
+* `__eq`: 等于, `~=` 会转化为 `not (a == b)`
+* `__lt`: 小于, 大于会转化为小于
+* `__le`: 小于等于, 大于等于会转化为小于等于
+* 关系类的元方法不能用于混合类型, 否则会引发错误. 等于比较用于不会引发错误(如果两个对象拥有不同的元方法, 等于操作不会调用任何元方法, 直接返回false)
+
+table的元方法:
+* `__index`: 查询 key 时如果key不存在, 调用该方法. 参数为 table, key
+* `__rawget`: 查询 key 时不管 key 是否存在都不调用 `__index`.
+* `__newindex`: 更新 table 时如果 key 不存在, 调用该方法. 参数为 table, key, value
+* `__rawset`: 更新 table 时不管 key 是否存在都不调用 `__newindex`.
+
+
+其他:
+* `__tostring`: 参1: 当前对象.
+
+
+## 示例
+
+```lua
+local mt = {
+    __add = function(a, b)
+        return 250
+    end,
+    __tostring = function()
+        return "hello"
+    end
+}
+
+function newSet()
+    local set = {}
+    setmetatable(set, mt)
+    return set
+end
+
+local set1 = newSet()
+local set2 = newSet()
+print(set1 + set2) -- 250
+print(set1)
+```
+
+### 保护metatable, 使其他人对值得metatable没有读取和设置的权限
+
+```lua
+local mt = {
+    __metatable = "not your business" -- 设置这个值用于保护metatable
+}
+
+function newSet()
+    local set = {}
+    setmetatable(set, mt)
+    return set
+end
+
+local set = newSet()
+print(getmetatable(set)) -- not your business
+
+setmetatable(set, {}) -- error: cannot change a protected metatable
+```
+
+
+### table 的 `__index` 方法
+
+```lua
+Window = {}
+-- 原型
+Window.prototype = {x = 0, y = 0, w = 100, h = 100}
+-- 元表
+Window.mt = {
+    __index = function(table, key)
+        return Window.prototype[key]
+    end,
+    __tostring = function(w)
+        return string.format("x: %s, y: %s, w: %s, h: %s", w.x, w.y, w.w, w.h)
+    end
+}
+
+function Window.new(o)
+    setmetatable(o, Window.mt)
+    return o
+end
+
+w = Window.new {x = 10, y = 20}
+print(w) -- x: 10, y: 20, w: 100, h: 100
+```
+
+* `__index` 还可以是一个 table, 比如上例可以直接写成: `__index = Window.prototype`.
+* 当不想访问 `__index` 时可以使用 `rawget(table, key)` 的方式来访问而不触发 `__index`.
+
+
+
+
+# 环境
+* Lua 中所有的全局变量都放在 `_G` table 中, key 是变量名, value 是一个 table.
+
+
 
 
 
