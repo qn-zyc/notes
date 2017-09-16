@@ -23,6 +23,7 @@
     - [2.6. 表](#26-表)
         - [2.6.1. 查看表状态](#261-查看表状态)
         - [2.6.2. 创建表](#262-创建表)
+        - [删除表中数据](#删除表中数据)
         - [2.6.3. 复制表结构](#263-复制表结构)
         - [2.6.4. 显示表](#264-显示表)
         - [2.6.5. 查看表结构](#265-查看表结构)
@@ -324,6 +325,14 @@ create table newTable select * from oldTable;
 ```
 
 
+### 删除表中数据
+
+1. `DELETE from table_name where ...;`
+2. `TRUNCATE TABLE 表名;` 比 delete 快, 不能回退, 不能添加条件, 不会触发触发器, 自增ID从新计数.
+
+
+
+
 ### 2.6.3. 复制表结构
 
 ```bash
@@ -373,7 +382,7 @@ Key那一栏，可能会有4种值，即 ' '，'PRI'，'UNI'，'MUL'。
 show create table send_record;
 ```
 
-### 2.6.7. 重命名表 ###
+### 2.6.7. 重命名表
 
 <http://dev.mysql.com/doc/refman/5.7/en/rename-table.html>
 
