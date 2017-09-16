@@ -10,6 +10,7 @@
 - [golint](#golint)
 - [go install](#go-install)
 - [go build](#go-build)
+    - [交叉编译](#交叉编译)
     - [ldflags](#ldflags)
     - [gcflags](#gcflags)
 - [go list](#go-list)
@@ -86,8 +87,16 @@ go test internal/config -run=TestKindsString
 
 
 # go fmt
+* 格式化整个项目并将结果写入文件： `gofmt -l -d -w src/abc`
+* `gofmt –w program.go` 会格式化该源文件的代码然后将格式化后的代码覆盖原始内容（如果不加参数 `-w` 则只会打印格式化后的结果而不重写文件）；
+* `gofmt -w *.go` 会格式化并重写所有 Go 源文件；
+* `gofmt map1` 会格式化并重写 map1 目录及其子目录下的所有 Go 源文件。
+* `gofmt` 也可以通过在参数 `-r` 后面加入用双引号括起来的替换规则实现代码的简单重构，规则的格式：`<原始内容> -> <替换内容>`。
 
-格式化整个项目并将结果写入文件： `gofmt -l -d -w src/abc`
+示例:
+* 将源文件中没有意义的括号去掉: `gofmt -r "(a) -> a" –w *.go`
+* 将源文件中多余的 len(a) 去掉: `gofmt -r "a[n:len(a)] -> a[n:]" –w *.go`
+* 将源文件中符合条件的函数的参数调换位置: `gofmt –r 'A.Func1(a,b) -> A.Func2(b,a)' –w *.go`
 
 # goimports
 
@@ -125,6 +134,15 @@ find src/push-sms -name "*.go" -exec golint {} \;
 
 
 # go build
+
+## 交叉编译
+
+```shell
+GOOS=linux GOARCH=amd64 go build
+GOOS=windows GOARCH=amd64 go build
+```
+
+不支持cgo.
 
 ## ldflags
 

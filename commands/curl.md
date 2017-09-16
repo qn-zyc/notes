@@ -6,6 +6,7 @@
     - [指定方法](#指定方法)
     - [将输出写入到文件](#将输出写入到文件)
     - [上传文件](#上传文件)
+    - [代理](#代理)
     - [https](#https)
         - [忽略校验](#忽略校验)
         - [resolve](#resolve)
@@ -84,6 +85,13 @@ curl -O http://www.gnu.org/software/gettext/manual/gettext.html
 
 ```bash
 curl -F "user=username" -F "pwd=userpassword" -F "csvFile=@test1.csv" http://localhost:9030/sms/marketing/upload/csv
+```
+
+
+## 代理
+
+```shell
+curl -x 127.0.0.1:8080 http://a.b.com
 ```
 
 

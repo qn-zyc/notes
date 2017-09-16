@@ -91,6 +91,7 @@
         - [数据存储](#数据存储)
     - [bind](#bind)
     - [openresty](#openresty)
+    - [influxdb](#influxdb)
 - [参考](#参考)
 
 <!-- /TOC -->
@@ -1352,6 +1353,44 @@ stop:
 ```shell
 docker kill nginx && docker rm nginx
 ```
+
+
+
+## influxdb
+
+启动容器:
+
+```shell
+$ docker run -p 8086:8086 \
+      -v $PWD:/var/lib/influxdb \
+      influxdb
+```
+
+生成默认配置文件: `$ docker run --rm influxdb influxd config > influxdb.conf`, 现在在 `$PWD` 下可以修改默认配置文件了.
+
+映射配置文件: 
+
+```shell
+$ docker run -p 8086:8086 \
+      -v $PWD/influxdb.conf:/etc/influxdb/influxdb.conf:ro \
+      influxdb -config /etc/influxdb/influxdb.conf
+```
+
+后台启动:
+
+```shell
+docker run -p 8086:8086 \
+	--name influxdb \
+	-d \
+	-v $PWD/influxdb.conf:/etc/influxdb/influxdb.conf:ro \
+	-v $PWD/influxdb:/var/lib/influxdb \
+	influxdb -config /etc/influxdb/influxdb.conf
+```
+
+
+调用 influx-cli:
+1. 启动容器: `docker run --name=influxdb -d -p 8086:8086 influxdb`
+2. 启动 influx client: `docker run --rm --link=influxdb -it influxdb influx -host influxdb -precision rfc3339`
 
 
 

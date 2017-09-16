@@ -48,6 +48,8 @@
     - [模块的加载](#模块的加载)
     - [模块的编写](#模块的编写)
 - [面向对象编程](#面向对象编程)
+    - [类](#类)
+    - [继承](#继承)
 - [系统函数](#系统函数)
     - [unpack](#unpack)
     - [异常](#异常)
@@ -974,8 +976,74 @@ return _M
 
 # 面向对象编程
 
+```lua
+local _M = {_VERSION = "0.10"}
 
+function _M.hello(self, name)
+    print("version: ", self._VERSION, " hello ", name)
+end
 
+function _M.haha(m, name) -- 不一定非得使用 self.
+    print(string.format("[%s] haha %s", m._VERSION, name))
+end
+
+function _M:hello2(name)
+    print(string.format("[%s] hello %s", self._VERSION, name))
+end
+
+_M:hello("chen")
+_M:haha("name")
+_M:hello2("zhang")
+```
+
+* 调用时 `:` 相当于 `_M.hello(_M, "chen")` 的缩写.
+* 使用 self 而不是 `_M` 是为了避免改名.
+* 冒号的作用是在定义中添加一个额外的隐藏参数, 在调用中添加一个额外的实参.
+
+## 类
+* Lua 中没有类的概念, 但可以模拟类.
+
+```lua
+Account = {
+    balance = 0
+}
+
+function Account:new( o )
+    o = o or {} -- 没有提供的话就创建一个
+    setmetatable(o, self) -- 以自身为元表
+    self.__index = self -- 复写 __index, 这样 o 才具有 Account 的方法
+    return o
+end
+
+function Account:deposit( v )
+    self.balance = self.balance + v
+end
+
+a = Account:new({balance = 100})
+a:deposit(20)
+print(a.balance) -- 120
+```
+
+## 继承
+
+```lua
+SpecialAccount = Account:new({limit = 1000}) -- 定义一个新类
+
+function SpecialAccount:deposit(v) -- 复写方法
+    if v > self.limit then
+        error("exceed limit:" .. self.limit)
+    end
+    self.balance = self.balance + v
+    print("now, balance is ", self.balance)
+end
+
+sa = SpecialAccount:new() -- 继承自Account的方法
+sa:deposit(20)
+sa:deposit(2000)
+```
+
+* `SpecialAccount:new()` 中 self 变成了 SpecialAccount, sa 的元表是 SpecialAccount, SpecialAccount 的 `__index` 是 SpecialAccount.
+* s 继承自 SpecialAccount, 而 SpecialAccount 继承自 Account.
 
 
 
