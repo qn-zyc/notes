@@ -1,13 +1,81 @@
 <!-- TOC -->
 
-- [1. 更新fork项目](#1-更新fork项目)
-- [2. 开启二次验证，如何上传下载代码](#2-开启二次验证如何上传下载代码)
 - [git](#git)
+    - [概念](#概念)
+    - [配置](#配置)
+        - [别名](#别名)
+        - [输出](#输出)
+    - [命令简介](#命令简介)
     - [git stash 储藏](#git-stash-储藏)
+    - [git diff](#git-diff)
+- [github](#github)
+    - [更新fork项目](#更新fork项目)
+    - [开启二次验证，如何上传下载代码](#开启二次验证如何上传下载代码)
+- [参考](#参考)
 
 <!-- /TOC -->
 
-# 1. 更新fork项目
+# git
+
+## 概念
+* 工作区, 暂存区, 版本库
+* HEAD 是版本库的一个引用.
+
+
+
+## 配置
+* `git config` 对应git库的 `.git/config`.
+* `git config --global` 对应 `~/.gitconfig`.
+* `git config --system` 对应 `/etc/gitconfig`.
+* 读取配置: `git config <section>.<key>`
+* 设置配置: `git config <section>.<key> <value>`
+* 操作其他INI文件: `GIT_CONFIG=test.ini git config a.b.c "hello, world"`
+* 删除配置: `git config --unset --global user.name`
+
+```shell
+git config --global user.name "Your Name"
+git config --global user.email YourEmail@example.com
+```
+
+### 别名
+
+```shell
+git config --system alias.st status
+git config --global alias.ci "commit -s"
+```
+
+### 输出
+
+开启颜色显示: `git config --global color.ui true`
+
+
+## 命令简介
+* 创建版本库: `git init`.
+* 查看状态: `git status`.
+
+
+## git stash 储藏
+
+* `git stash`: 储藏当前变更(暂存的和工作区的)
+* `git stash list`: 查看储藏列表
+* `git stash apply`: 应用最后一个储藏.
+* `git stash apply stash@{1}`: 应用指定的储藏.
+* `git stash apply --index`: 重新暂存暂存区的文件.
+* `git stash drop stash@{1}`: 从列表中移除.
+* `git stash pop`: 应用储藏并从列表中移除.
+* `git stash branch branch_name`: 使用储藏创建分支并删除储藏.
+
+
+## git diff
+* 工作区和暂存区比较: `git diff`
+* 暂存区和HEAD比较: `git diff --cached`
+* 工作区和HEAD比较: `git diff HEAD`
+
+
+
+# github
+
+## 更新fork项目
 
 1. 增加源分支地址到你项目远程分支列表中(此处是关键)，先得将原来的仓库指定为upstream，命令为：
     ```bash
@@ -31,7 +99,7 @@
 
 
 
-# 2. 开启二次验证，如何上传下载代码
+## 开启二次验证，如何上传下载代码
 
 > http://shigongbo.blog.163.com/blog/static/976090201542983536987
 
@@ -71,15 +139,5 @@ Password for 'https://hainuo@github.com':此处即为你获得的Token。
 
 
 
-# git
-
-## git stash 储藏
-
-* `git stash`: 储藏当前变更(暂存的和工作区的)
-* `git stash list`: 查看储藏列表
-* `git stash apply`: 应用最后一个储藏.
-* `git stash apply stash@{1}`: 应用指定的储藏.
-* `git stash apply --index`: 重新暂存暂存区的文件.
-* `git stash drop stash@{1}`: 从列表中移除.
-* `git stash pop`: 应用储藏并从列表中移除.
-* `git stash branch branch_name`: 使用储藏创建分支并删除储藏.
+# 参考
+* [git权威指南]()

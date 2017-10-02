@@ -129,7 +129,7 @@ find src/push-sms -name "*.go" -exec golint {} \;
 
 # go install
 
-* 安装所有程序: `go install -v ./...`
+* 安装所有程序(在src下执行): `go install -v ./...`
 
 
 

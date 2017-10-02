@@ -75,6 +75,7 @@ user=user_name
 # 启动 mongodb
 
 ```
+[program:mongodb]
 command=/usr/local/mongodb3.4.6/bin/mongod --fork --logpath=/data/mongolog/mongodb.log --logappend --port 27018 --dbpath /data/mongo
 directory=/usr/local/mongodb3.4.6/bin
 stdout_logfile=/data/mongolog/mongodb_supervisor.log

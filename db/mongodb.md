@@ -10,6 +10,7 @@
     - [runCommand](#runcommand)
         - [finalize](#finalize)
         - [keyf](#keyf)
+    - [findAndModify](#findandmodify)
 - [CRUD 操作](#crud-操作)
     - [Insert Documents](#insert-documents)
         - [插入单个文档](#插入单个文档)
@@ -29,6 +30,7 @@
         - [replaceOne](#replaceone)
         - [Upsert Option](#upsert-option)
         - [inc 自增自减](#inc-自增自减)
+        - [更新集合](#更新集合)
     - [Delete Documents](#delete-documents)
         - [删除所有文档](#删除所有文档)
         - [删除符合条件的文档](#删除符合条件的文档)
@@ -172,7 +174,6 @@ db.runCommand(
 ```
 
 
-
 ### finalize
 
 ```js
@@ -231,6 +232,21 @@ db.runCommand(
 上面是将 name 转换成小写之后再作为分组条件, 注意 `keyf` 最后也需要返回一个文档.
 
 
+## findAndModify
+* [文档](https://docs.mongodb.com/manual/reference/command/findAndModify/)
+* 只会修改并返回一个文档.
+
+模拟队列, 提取出 unix 最小的一条记录, 并锁定:
+```js
+db.runCommand(
+    {
+        findAndModify: "queue",
+        query: { lock: 0 },
+        sort: { unix: 1 }, 
+        update: { $set: { lock: 1 } },
+    }
+)
+```
 
 
 
@@ -348,6 +364,8 @@ db.inventory.find( {
 
 修改已存在的文档。可以修改特定字段，或者整个文档，取决于 [update parameter](https://docs.mongodb.com/manual/reference/method/db.collection.update/#update-parameter)
 
+* 如果update中只包含键值对时, 将更新所有字段(会删除没有更新的字段), 如果包含了更新操作符(比如`$set`)则只更新指定的字段.
+
 
 
 ### updateOne
@@ -400,7 +418,7 @@ db.inventory.updateMany(
 
 example1:
 
-```
+```js
 db.inventory.replaceOne(
    { item: "paper" },
    { item: "paper", instock: [ { warehouse: "A", qty: 60 }, { warehouse: "B", qty: 40 } ] }
@@ -462,6 +480,25 @@ db.products.update(
 )
 ```
 
+
+### 更新集合
+
+不存在时添加:
+
+```js
+db.queue.updateMany(
+    {lock: 1},
+    {$addToSet: {set_name: "hello"}}
+)
+db.queue.updateMany(
+    {lock: 1},
+    {$addToSet: {set_name: {$each: ["1", "2"]}}}
+)
+```
+
+* `$addToSet` 不会添加已经存在的元素.
+* 如果传递的是一个数组: `{$addToSet: {set_name: ["a", "b"]}}`, 那么数组被当做一个元素放入.
+* 如果想将数组中每个元素分开插入, 使用 `$each`: `{$addToSet: {set_name: {$each: ["a", "b"]}}}`
 
 
 

@@ -29,6 +29,7 @@
 - [mongo](#mongo)
     - [mgo](#mgo)
         - [分组并且累加](#分组并且累加)
+        - [断线重连](#断线重连)
 
 <!-- /TOC -->
 
@@ -716,3 +717,8 @@ err = MongoDB().C(CollectionName).Pipe([]bson.M{
     },
 }).All(&v)
 ```
+
+### 断线重连
+
+每次 `session.Clone()`
+

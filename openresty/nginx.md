@@ -208,7 +208,18 @@ error_log   logs/chentest.error.log info;
 ```
 
 
-## server_name
+## server
+
+指定一个默认的server, 只能指定一个：
+
+```nginx
+server {
+    listen 80 default;
+}
+```
+
+
+### server_name
 
 匹配顺序:
 
