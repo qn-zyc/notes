@@ -210,6 +210,9 @@ go list -json
 go list -f '{{ .Imports }}' github.com/a/b
 ```
 
+查看标准库的依赖关系: `go list -json std`
+
+
 
 
 # go tool objdump

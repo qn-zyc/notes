@@ -55,6 +55,8 @@
     - [explain](#explain)
 - [引擎](#引擎)
     - [WiredTiger](#wiredtiger)
+- [复制集](#复制集)
+    - [操作secondary](#操作secondary)
 - [参考](#参考)
 
 <!-- /TOC -->
@@ -896,6 +898,16 @@ WiredTiger的优势:
 Cache: cache的大小极大的影响了wireTiger存储引擎的性能，默认的，mongo将cache的大小设置为内存的一半.
 
 
+# 复制集
+* 复制集的成员最多50个, 最多7个具有投票权, [文档](https://docs.mongodb.com/manual/core/replica-set-architectures/)
+* [复制集和主从模式的对比](http://blog.csdn.net/canot/article/details/50739359)
+
+## 操作secondary
+
+默认情况下，Secondary是不提供服务的，即不能读和写。会提示：`error: { "$err" : "not master and slaveOk=false", "code" : 13435 }`
+
+在特殊情况下需要读的话则需要：`rs.slaveOk()` ，只对当前连接有效。
+
 
 # 参考
 
@@ -903,3 +915,5 @@ Cache: cache的大小极大的影响了wireTiger存储引擎的性能，默认�
 * [MongoDB学习笔记(索引)](http://www.cnblogs.com/stephen-liu74/archive/2012/08/01/2561557.html)
 * [mongo wiredTiger存储引擎相关](http://blog.csdn.net/weiyuanke/article/details/72724052)
 * [学习MongoDB–聚合（初级聚合函数使用）](http://blog.sae.sina.com.cn/archives/1495)
+* [MongoDB 副本集的原理、搭建、应用](http://www.cnblogs.com/zhoujinyi/p/3554010.html)
+* [官网中关于复制集](https://docs.mongodb.com/manual/replication/)
