@@ -1,6 +1,7 @@
 <!-- TOC -->
 
 - [解析xml](#解析xml)
+    - [Q:解析到int字段](#q解析到int字段)
 - [输出xml](#输出xml)
 
 <!-- /TOC -->
@@ -66,6 +67,34 @@ func ReadXml() {
 xml.Servers{XMLName:xml.Name{Space:"", Local:"servers"}, Version:"1", Svs:[]xml.Server{xml.Server{XMLName:xml.Name{Space:"", Local:"server"}, ServerName:"Shanghai_VPN", ServerIP:"127.0.0.1"}, xml.Server{XMLName:xml.Name{Space:"", Local:"server"}, ServerName:"Beijing_VPN", ServerIP:"127.0.0.2"}}, Description:"\r\n    <server>\r\n        <serverName>Shanghai_VPN</serverName>\r\n        <serverIP>127.0.0.1</serverIP>\r\n    </server>\r\n    <server>\r\n        <serverName>Beijing_VPN</serverName>\r\n        <serverIP>127.0.0.2</serverIP>\r\n    </server>\r\n"}
 ```
 结构体中tag标签的写法参考xml.Unmarshal上的注释。
+
+
+
+## Q:解析到int字段
+
+```go
+type A struct {
+	XMLName xml.Name `xml:"a"`
+	Level   int      `xml:"level,omitempty"`
+}
+
+func main() {
+	text := `<?xml version="1.0" encoding="UTF-8"?><a><level></level></a>`
+	a := A{}
+	if err := xml.Unmarshal([]byte(text), &a); err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(a)
+}
+```
+
+go版本v1.8.3, 这将会得到一个错误: `strconv.ParseInt: parsing "": invalid syntax`. 所以目前无法将空值映射到int类型上, `omitempty` 只对 Marshal 方法有效, 对 Unmarshal 方法无效.
+
+解决方法:
+* 使用另一个 string 类型的字段, 然后手动解析.
+* 使用 `github.com/guregu/null` 包.
+
+
 
 # 输出xml
 

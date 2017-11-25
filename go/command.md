@@ -15,6 +15,8 @@
     - [gcflags](#gcflags)
 - [go list](#go-list)
 - [go tool objdump](#go-tool-objdump)
+- [go clean](#go-clean)
+- [Makefile](#makefile)
 
 <!-- /TOC -->
 
@@ -134,6 +136,13 @@ find src/push-sms -name "*.go" -exec golint {} \;
 
 
 # go build
+
+* `go build`: 编译当前目录对应的代码包.
+* `go build my_pkg`: 编译 `my_pkg` 包.
+* `go build aa/a.go aa/b.go`: 编译多个文件, 必须在同一目录下.
+
+
+
 
 ## 交叉编译
 
@@ -263,3 +272,87 @@ TEXT main.test(SB) /Users/zhangyuchen/tmp/test.go
 	:-1		0x213f	cc			INT $0x3
 ```
 
+
+# go clean
+
+[参考](http://wiki.jikexueyuan.com/project/go-command-tutorial/0.4.html)
+
+执行 `go clean` 命令会删除掉执行其它命令时产生的一些文件和目录，包括：
+
+* 在使用go build命令时在当前代码包下生成的与包名同名或者与Go源码文件同名的可执行文件。在Windows下，则是与包名同名或者Go源码文件同名且带有“.exe”后缀的文件。
+* 在执行 `go test` 命令并加入 `-c` 标记时在当前代码包下生成的以包名加 `.test` 后缀为名的文件。在Windows下，则是以包名加 `.test.exe` 后缀为名的文件。
+* 如果执行 `go clean` 命令时带有标记 `-i`，则会同时删除安装当前代码包时所产生的结果文件。如果当前代码包中只包含库源码文件，则结果文件指的就是在工作区的pkg目录的相应目录下的归档文件。如果当前代码包中只包含一个命令源码文件，则结果文件指的就是在工作区的bin目录下的可执行文件。
+* 还有一些目录和文件是在编译Go或C源码文件时留在相应目录中的。包括：`_obj`和`_test`目录，名称为`_testmain.go`、`test.out`、`build.out`或`a.out`的文件，名称以`.5`、`.6`、`.8`、`.a`、`.o`或`.so`为后缀的文件。这些目录和文件是在执行 `go build` 命令时生成在临时目录中的。临时目录的名称以go-build为前缀。
+* 如果执行 `go clean` 命令时带有标记 `-r`，则还包括当前代码包的所有依赖包的上述目录和文件。
+* `-n` 标记会打印使用到的系统命令, 但不会真正执行它们.
+* `-x` 标记会打印使用到的系统命令, 但会执行它们.
+
+
+
+# Makefile
+
+摘抄自: https://ops.tips/blog/minimal-golang-makefile/:
+
+```makefile
+# I usually keep a `VERSION` file in the root so that anyone
+# can clearly check what's the VERSION of `master` or any
+# branch at any time by checking the `VERSION` in that git
+# revision
+VERSION         :=      $(shell cat ./VERSION)
+IMAGE_NAME      :=      cirocosta/l7
+
+# As a call to `make` without any arguments leads to the execution
+# of the first target found I really prefer to make sure that this
+# first one is a non-destructive one that does the most simple 
+# desired installation. It's very common to people set it as `all`
+# but it could be anything like `a`.
+all: install
+
+# Install just performs a normal `go install` which builds the source
+# files from the package at `./` (I like to keep a `main.go` in the root
+# that imports other subpackages). As I always commit `vendor` to `git`
+# a `go install` will typically always work - except if there's an OS
+# limitation in the build flags (e.g, a linux-only project).
+install:
+	go install -v
+
+# keeping `./main.go` with just a `cli` and `./lib/*.go` with actual 
+# logic, `tests` usually reside under `./lib` (or some other subdirectories).
+# Here we could do something like `find . -name "*" -type d -exec ...` but IMO
+# that's unnecessary. Just `cd`ing to what matters to you is fine - no need to
+# handle the case of directories that you don't want to execute a command.
+test:
+	cd ./lib && go test -v
+
+# Just like `test`, formatting what matters. As `main.go` is in the root,
+# `go fmt` the root package. Then just `cd` to what matters to you (`vendor`
+# doesn't matter).
+# fmt:
+	go fmt
+	cd ./lib && go fmt
+
+
+# This target is only useful if you plan to also create a Docker image at
+# the end. I have a separate `gist` with a sample Dockerfile tailored for
+# golang that you can check out at <TODO>.
+# I really like publishing a Docker image together with the GitHub release
+# because Docker makes it very simple to someone run your binary without
+# having to worry about the retrieval of the binary and execution of it
+# - docker already provides the necessary boundaries.
+image:
+	docker build -t cirocosta/l7 .
+
+
+# This is pretty much an optional thing that I tend to always include.
+# Goreleaser is a tool that allows anyone to integrate a binary releasing
+# process to their pipelines. Here in this target With just a simple 
+# `make release` you can have a `tag` created in GitHub with multiple
+# builds if you wish. 
+# See more at `gorelease` github repo.
+release:
+	git tag -a $(VERSION) -m "Release" || true
+	git push origin $(VERSION)
+	goreleaser --rm-dist
+
+.PHONY: install test fmt release
+```

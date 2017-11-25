@@ -3,14 +3,17 @@
 
 - [概念](#概念)
     - [epoll](#epoll)
+- [安装](#安装)
 - [hello world](#hello-world)
     - [启动](#启动)
 - [lua ngx api](#lua-ngx-api)
     - [ngx.var.VARIABLE](#ngxvarvariable)
     - [时间](#时间)
+    - [查询参数](#查询参数)
     - [请求body](#请求body)
     - [worker](#worker)
     - [timer](#timer)
+    - [header](#header)
 - [shared_dict](#shared_dict)
     - [获取字典对象](#获取字典对象)
     - [ngx.shared.DICT.set](#ngxshareddictset)
@@ -28,6 +31,7 @@
 - [json](#json)
 - [负载均衡](#负载均衡)
     - [动态负载均衡](#动态负载均衡)
+    - [获取使用的 upstream server 的信息](#获取使用的-upstream-server-的信息)
 - [重定向](#重定向)
     - [ngx.redirect](#ngxredirect)
 - [原理](#原理)
@@ -42,6 +46,16 @@
 ## epoll
 * 打开的文件描述符不受限制.
 * IO就绪后通过回调的方式通知.
+
+# 安装
+- https://openresty.org/cn/installation.html
+
+在 Mac 上:
+
+```shell
+brew install homebrew/nginx/openresty
+```
+
 
 # hello world
 
@@ -88,6 +102,7 @@ http {
 
 
 ## ngx.var.VARIABLE
+- [使用 Nginx 内置绑定变量](https://moonbingbing.gitbooks.io/openresty-best-practices/openresty/inline_var.html)
 
 ```
 location /foo {
@@ -102,7 +117,8 @@ location /foo {
 ```lua
 ngx.var.scheme
 ngx.var.host
-ngx.var.request_uri
+ngx.var.request_uri  -- 包含查询参数, 比如 /test?a=1
+ngx.var.uri          -- 不包含查询参数, 比如 /test
 ngx.var.remote_addr
 ```
 
@@ -114,6 +130,15 @@ ngx.var.remote_addr
 * ngx.update_time 使用系统时间强制更新nginx缓存时间, 不返回数据.
 * ngx.localtime "yyyy-mm-dd hh:mm:ss" 格式 (2017-08-23 11:28:41)
 * ngx.utctime "yyyy-mm-dd hh:mm:ss" 格式 (2017-08-23 11:28:41)
+
+
+
+## 查询参数
+
+- 使用 `ngx.var.arg_xxx` 的形式, 比如获取参数 a 的值: `ngx.var.arg_a`, 返回的是 string 类型.
+- 使用 `ngx.req.get_uri_args()["param_name"]` 的形式, 比如获取参数 a 的值: `ngx.req.get_uri_args()["a"]`, 如果 a 只有一个值, 那么返回 string 类型, 如果 a 有多个值, 返回一个 table.
+
+
 
 
 ## 请求body
@@ -151,6 +176,17 @@ ok, err = ngx.timer.at(delay, callback, user_arg1, user_arg2, ...)
 ```
 * delay: 单位秒, 可以使用小数指定毫秒(0.001表示1毫秒), 0表示立即执行.
 * 参数是: `premature, user_arg1, user_arg2...`, premature 为 true 表示未到达指定时间, 比如进程 shutdown 了, 这是就不能再调用 `timer.at` 了(delay指定为0除外)
+
+
+## header
+
+设置 header: `ngx.req.set_header("name", "value")`
+
+读取 header: `ngx.req.get_headers()["name"]`
+
+
+
+
 
 
 # shared_dict
@@ -270,11 +306,15 @@ local value, flags = cats:get("Marry")
 
 ## ngx.shared.DICT.incr
 
-语法: `newval, err = ngx.shared.DICT:incr(key, value)`
+语法: `newval, err, forcible? = ngx.shared.DICT:incr(key, value, init?)`
 
 value 必须是 number 类型, 可正可负, 若不是 number 类型, 会返回 nil 和 err(not a number).
 
-key 必须已存在, 若不存在返回 nil 和 err(not found).
+如果 key 不存在或者已过期:
+- init 如果没有指定或者设置为 nil, incr 将返回 `nil, err="not found"`.
+- 如果 init 指定了 number 类型的值, incr 会创建 key, value 使用 `init+value`.
+
+forcible 在没有指定 init 时总是返回 nil, 如果 incr 移除了其他未过期的项, 则 forcible 为 true, 如果没有移除其他未过期项, forcible 为 false.
 
 
 ## ngx.shared.DICT.flush_all
@@ -317,7 +357,7 @@ local str = cjson.encode(obj)
 ## 动态负载均衡
 * [ngx.balancer](https://github.com/openresty/lua-resty-core/blob/master/lib/ngx/balancer.md)
 
-```
+```lua
 http {
     upstream backend {
         server 0.0.0.1;   # just an invalid address as a place holder
@@ -361,6 +401,16 @@ http {
     }
 }
 ```
+
+## 获取使用的 upstream server 的信息
+
+通过 upstream 访问后端服务时, 在 log 阶段通过 `ngx.var.upstream_addr` 和 `ngx.var.upstream_status` 访问使用的是哪个服务以及状态.
+
+参考:
+- [1](https://www.zhihu.com/question/56193805)
+- [2](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#var_upstream_status)
+
+
 
 
 # 重定向

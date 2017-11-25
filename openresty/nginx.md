@@ -7,7 +7,8 @@
     - [模板](#模板)
     - [location](#location)
     - [日志](#日志)
-    - [server_name](#server_name)
+    - [server](#server)
+        - [server_name](#server_name)
     - [client_max_body_size](#client_max_body_size)
 - [模块](#模块)
     - [upstream](#upstream)
@@ -17,6 +18,9 @@
         - [fair](#fair)
         - [url_hash](#url_hash)
         - [least_conn最少连接](#least_conn最少连接)
+        - [为每台设备设置状态值](#为每台设备设置状态值)
+        - [动态修改upstream](#动态修改upstream)
+- [参考](#参考)
 
 <!-- /TOC -->
 
@@ -128,6 +132,7 @@ http {
         server_name  localhost;  
 
         client_max_body_size 10m;
+        client_body_buffer_size 16k; # 请求体大小限制, 超出时会被写到临时文件中, 64位系统默认16K.
 
         location / {  
             proxy_pass http://apaches;  
@@ -253,6 +258,7 @@ server {
 }
 ```
 
+* 和 Host 进行匹配.
 * `server_name _;` 表示默认匹配, 其他匹配不到就使用这个server.
 * `server_name ~.*;` 表示匹配所有域名.
 
@@ -353,6 +359,7 @@ upstream resinserver{
 
 * server 中不能写 weight 等其他参数.
 * hash_method 指定使用的 hash 函数.
+* 一致性 hash: `hash $http_host$hash_uri consistent;` 或者 `consistent_hash $http_host$hash_uri;`
 
 
 ### least_conn最少连接
@@ -366,7 +373,7 @@ upstream myapp1 {
     server srv2.example.com;
     server srv3.example.com;
 }
- ```
+```
 
 
 ### 为每台设备设置状态值
@@ -384,6 +391,75 @@ upstream bakend{ #定义负载均衡设备的Ip及设备状态
       server 10.0.0.11:8080 weight=2; 
       server 10.0.0.11:6060; 
       server 10.0.0.11:7070 backup; 
+}
+```
+
+
+### 动态修改upstream
+
+为 `proxy_pass` 指定 nginx 变量, 通过在 Lua 中动态改变变量值, 从而动态修改要执行的 upstream.
+
+示例配置:
+
+```nginx
+upstream up1 {
+    server 127.0.0.1:9011;
+    server 127.0.0.1:9012 backup;
+}
+
+
+upstream up2 {
+    server 127.0.0.1:9013;
+    server 127.0.0.1:9014 backup;
+}
+
+server {
+    error_log logs/hotspot_test.error.log info;
+    listen 9010;
+    server_name hotspot.test.qiniu.com;
+    set $up_name up1;
+    location / {
+        access_by_lua_block {
+            ngx.var.up_name = 'up2';
+        }
+        proxy_pass http://$up_name;
+    }
+}
+
+server {
+    listen 9011;
+    location / {
+        content_by_lua_block {
+            ngx.say(":9011")
+        }
+    }
+}
+
+server {
+    listen 9012;
+    location / {
+        content_by_lua_block {
+            ngx.say(":9012")
+        }
+    }
+}
+
+server {
+    listen 9013;
+    location / {
+        content_by_lua_block {
+            ngx.say(":9013")
+        }
+    }
+}
+
+server {
+    listen 9014;
+    location / {
+        content_by_lua_block {
+            ngx.say(":9014")
+        }
+    }
 }
 ```
 

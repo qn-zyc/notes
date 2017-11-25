@@ -48,7 +48,7 @@ print sys.modules.keys()
 搜索路径保存在 `sys.path` 中。程序启动时设置这个变量，主要从下面这些路径中查找需要导入的路径：
 
 1. 程序的主目录。顶层文件所在的目录。
-2. PYTHONPATH 环境变量指定的目录。
+2. PYTHONPATH 环境变量指定的目录。
 3. 标准库目录。
 4. 任何 .pth 文件的内容。
 
@@ -163,8 +163,8 @@ function()
 
 * reload 是内置函数，而不是语句。
 * 传给 reload 的是已经存在的模块对象。
-* 重载会影响所有使用 import 的客户端。
-* 重载之前的 from 不受影响，之后的 from 会受影响。
+* 重载会影响所有使用 import 的客户端。
+* 重载之前的 from 不受影响，之后的 from 会受影响。
 
 ```python
 import module
@@ -177,7 +177,7 @@ reload(module)
 
 ### 2.3.1. 过渡性模块重载
 
-例如：A导入模块B和C，重载A时，B和C不会重载，只会重新执行导入语句，获取的是已经载入的B和C的模块对象。
+例如：A 导入模块 B 和 C，重载A时，B和C不会重载，只会重新执行导入语句，获取的是已经载入的B和C的模块对象。
 
 
 
@@ -191,7 +191,7 @@ import dir1.dir2.mod
 
 在 `dir1` 和 `dir2` 目录内都必须包含 `__init__.py` 文件。上面的语句执行时会先执行 `dir1` 下的 init 文件，在执行 `dir2` 下的 init 文件，在初始化 mod 文件。
 
-`__init__.py` 可以防止这样的情况：导入路径 `a/b` 和 `c/d` 中下都有目录 `dir`，但是只有第二个 `dir` 是有效的，为了防止 python 自动使用第一个 `dir`，可以只在第二个 `dir` 下放置 `__init__.py`。
+`__init__.py` 可以防止这样的情况：导入路径 `a/b` 和 `c/d` 中下都有目录 `dir`，但是只有第二个 `dir` 是有效的，为了防止 python 自动使用第一个 `dir`，可以只在第二个 `dir` 下放置 `__init__.py`。
 
 ### 2.4.1. `__init__.py` 中的 `__all__`
 
@@ -216,7 +216,7 @@ from . import spam
 from .spam import name
 ```
 
-在当前目录下的spam文件中导入name.
+在当前目录下的 spam 文件中导入name.
 
 ```py
 from .. import spam # 从当前包的父目录的相对导入

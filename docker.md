@@ -563,7 +563,7 @@ docker run -d -p 8080:8080 chen/testserver:v1
 docker attach 容器名
 ```
 
-**注意: 如果exit，那么容器也会退出。**
+**注意: 如果exit，那么容器也会退出。**, 可通过 `<Ctrl+p>` 然后 `<Ctrl+q>` 来退出.
 
 示例:
 
@@ -785,6 +785,7 @@ $ sudo docker run --volumes-from dbdata2 -v $(pwd):/backup busybox tar xvf
 * `-P` 会随机映射一个 49000 ~ 49900 的端口到内部容器开放的网络端口.
 * `-p` 可以指定要映射的端口, 可以多次使用绑定多个端口.
 * 使用 `docker ps` 可以查看端口映射.
+* `--net=host` 容器使用主机上的网络信息.
 
 映射所有接口的端口`hostPort:containerPort`: `sudo docker run -d -p 5000:5000 training/webapp python app.py`
 
@@ -1241,6 +1242,8 @@ $ docker run --name some-redis -d redis redis-server --appendonly yes
 ```
 
 数据会存储在 `VOLUME/data`, 可以使用 `--volumes-from some-volume-container` 或者 `-v /docker/host/dir:/data` 映射到主机目录.
+
+临时启动: `docker run -it --rm -p 6379:6379 redis`
 
 ### 连接redis服务
 

@@ -6,6 +6,7 @@
 - [2. 文件信息](#2-文件信息)
 - [3. 创建](#3-创建)
     - [3.1. 创建一个可写的文件](#31-创建一个可写的文件)
+    - [创建目录](#创建目录)
 - [4. 读取](#4-读取)
     - [4.1. 读取文件](#41-读取文件)
         - [4.1.1. 分批读取](#411-分批读取)
@@ -63,6 +64,21 @@ file_stat[stat.ST_ATIME]
 >>> f.write('world\n')
 >>> f.close()  # close to flush output buffers to disk
 ```
+
+## 创建目录
+
+* `os.path.exists(path)` 判断一个目录是否存在
+* `os.makedirs(path)` 多层创建目录
+* `os.mkdir(path)` 创建目录
+
+
+```py
+if os.path.exists(dir):
+	print '%s exists' % dir
+	return
+os.mkdir(dir)
+```
+
 
 # 4. 读取
 

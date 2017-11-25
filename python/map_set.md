@@ -110,6 +110,11 @@ m = {
 }
 for (key, value) in m.items():
 	print(key, '=>', value)
+
+
+a = {"a": 11, "b": 12, "c": 13}
+for i in a.values():
+    print i # 11, 12, 13
 ```
 
 ## 判断键是否存在

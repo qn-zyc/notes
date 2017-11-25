@@ -63,6 +63,8 @@
         - [保护metatable, 使其他人对值得metatable没有读取和设置的权限](#保护metatable-使其他人对值得metatable没有读取和设置的权限)
         - [table 的 `__index` 方法](#table-的-__index-方法)
 - [环境](#环境)
+- [json](#json)
+    - [空数组序列化为空对象的问题](#空数组序列化为空对象的问题)
 - [代码片段](#代码片段)
     - [ip是否匹配网段ip](#ip是否匹配网段ip)
 - [参考](#参考)
@@ -1302,6 +1304,63 @@ print(w) -- x: 10, y: 20, w: 100, h: 100
 * Lua 中所有的全局变量都放在 `_G` table 中, key 是变量名, value 是一个 table.
 
 
+
+
+# json
+
+## 空数组序列化为空对象的问题
+
+[原文](http://answerywj.com/2017/06/16/table-encode-as-array-or-object/)
+
+```lua
+local cjson = require('cjson')
+local raw = {}
+raw.name = 'answer'
+raw.list = {} -- 这里希望是数组的
+local str = cjson.encode(raw)
+print('after cjson encode:', str) -- after cjson encode:	{"name":"answer","list":{}}
+```
+
+方案1:
+
+```lua
+local cjson = require('cjson')
+local raw = {}
+raw.name = 'answer'
+raw.list = {}
+cjson.encode_empty_table_as_object(false)
+local str = cjson.encode(raw)
+print('after cjson encode:', str)  -- after cjson encode:	{"name":"answer","list":[]}
+```
+
+- 这里会将所有的空对象都序列化为空数组的.
+
+
+方案2(使用 dkjson 库):
+
+```lua
+local dkjson = require('dkjson')
+local raw = {}
+raw.name = 'answer'
+raw.list = {}
+local str = dkjson.encode(raw)
+print('after cjson encode:', str) -- after cjson encode:	{"name":"answer","list":[]}
+```
+
+
+方案3(使用metatable将table标记为array):
+
+```lua
+local cjson = require('cjson')
+local raw = {}
+raw.name = 'answer'
+raw.list = {}
+setmetatable(raw.list, cjson.empty_array_mt)
+local str = cjson.encode(raw)
+print('after cjson encode:', str) -- after cjson encode:	{"name":"answer","list":[]}
+```
+
+- 如果 list 为空, 会序列化为 `[]`, 如果不为空就不起作用.
 
 
 

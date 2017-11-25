@@ -145,6 +145,21 @@ for i in 1 2 3
 do
 	echo $i
 done
+
+# 单个元素可以和数组比较?
+REPOS=( base net-base )
+MAIN_REPO=( net-base )
+for REPO in ${REPOS[@]}
+do
+    echo $REPO
+    if [ $REPO = $MAIN_REPO ]; then
+        echo "+++++ $REPO ++++++"
+    fi
+done
+
+# 直接输出数组时只输出第一个值
+REPOS=( base net-base )
+echo "${REPOS}" # base
 ```
 
 # 5. 当前目录

@@ -9,6 +9,7 @@
         - [设置header](#设置header)
 - [httplib](#httplib)
     - [访问https网页](#访问https网页)
+- [urlparse](#urlparse)
 - [参考](#参考)
 
 <!-- /TOC -->
@@ -70,9 +71,9 @@ req.headers.setdefault('Content-Type', 'text/xml; charset=utf-8')
 headers = {'User-Agent': '...'}
 req = urllib2.Request(url, data, headers)
 
-# 使用 req.set_header() 设置
+# 使用 req.add_header() 设置
 req = urllib2.Request(url, data)
-req.set_header('Referer', '...')
+req.add_header('Referer', '...')
 ```
 
 
@@ -88,6 +89,19 @@ conn = httplib.HTTPSConnection("www.baidu.com")
 conn.request("GET", "/")
 resp = conn.getresponse()
 print resp.status, resp.reason, resp.read()
+```
+
+
+# urlparse
+
+解析url:
+
+```py
+>>> from urlparse import urlparse
+>>> o = urlparse('http://www.cwi.nl:80/%7Eguido/Python.html')
+>>> o   
+ParseResult(scheme='http', netloc='www.cwi.nl:80', path='/%7Eguido/Python.html',
+            params='', query='', fragment='')
 ```
 
 

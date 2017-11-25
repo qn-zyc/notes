@@ -16,6 +16,10 @@
     - [处理HTTP请求](#处理http请求)
     - [处理HTTPS请求](#处理https请求)
 - [测试](#测试)
+- [HTTPS](#https)
+    - [服务端](#服务端)
+    - [客户端](#客户端)
+        - [客户端跳过证书验证](#客户端跳过证书验证)
 
 <!-- /TOC -->
 
@@ -446,3 +450,35 @@ data, err := ioutil.ReadAll(w.Body)
 ```
 
 
+
+# HTTPS
+
+## 服务端
+
+```go
+http.HandleFunc("/", handler)
+http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil)
+```
+
+
+## 客户端
+
+### 客户端跳过证书验证
+
+```go
+func main() {
+    tr := &http.Transport{
+        TLSClientConfig:    &tls.Config{InsecureSkipVerify: true}, // 跳过验证
+    }
+    client := &http.Client{Transport: tr}
+    resp, err := client.Get("https://localhost:8081")
+
+    if err != nil {
+        fmt.Println("error:", err)
+        return
+    }
+    defer resp.Body.Close()
+    body, err := ioutil.ReadAll(resp.Body)
+    fmt.Println(string(body))
+}
+```
