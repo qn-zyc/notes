@@ -6,7 +6,7 @@
     - [close](#close)
     - [len、cap](#lencap)
     - [new、make](#newmake)
-    - [copy、append](#copyappend)
+    - [copy, append](#copy-append)
         - [copy(dst, src[]Type) int](#copydst-srctype-int)
     - [panic、recover](#panicrecover)
     - [print、println](#printprintln)
@@ -108,8 +108,9 @@ func init() {
 * make(T) 返回类型 T 的初始化之后的值，因此它比 new 进行更多的工作。
 * new() 是一个函数，不要忘记它的括号
 
-## copy、append
+## copy, append
 * 用于复制和连接切片 `copy(dst, src)`, `s = append(s, s2...)`
+* `copy` 是从 `dst[0]` 开始写.
 
 ### copy(dst, src[]Type) int
 

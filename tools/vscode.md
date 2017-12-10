@@ -3,6 +3,7 @@
 - [折叠](#折叠)
 - [命令框](#命令框)
 - [提示](#提示)
+- [自定义 vscode 样式](#自定义-vscode-样式)
 
 <!-- /TOC -->
 
@@ -23,3 +24,11 @@
 
 # 提示
 * `cmd + shift + space` 参数提示
+
+
+# 自定义 vscode 样式
+
+插件: Custom CSS and JS Loader
+
+安装参考 https://github.com/jbouhier/conf/blob/master/vscode/style.css.
+

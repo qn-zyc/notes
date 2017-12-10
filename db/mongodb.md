@@ -121,7 +121,9 @@
 
 
 ## db
-* 删除数据库: `db.dropDatabase()`, 删除前使用 `use` 选中一个数据库.
+
+- 创建数据库: `use DATABASE_NAME;`
+- 删除数据库: `db.dropDatabase()`, 删除前使用 `use` 选中一个数据库.
 
 
 
@@ -244,7 +246,7 @@ db.runCommand(
     {
         findAndModify: "queue",
         query: { lock: 0 },
-        sort: { unix: 1 }, 
+        sort: { unix: 1 },
         update: { $set: { lock: 1 } },
     }
 )
@@ -627,7 +629,7 @@ db.test.ensureIndex({"userid":1},{"unique":true})
 在创建唯一索引时将重复的记录删除, 只保留第一个文档:
 
 ```js
-db.test.ensureIndex({"userid":1},{"unique":true,"dropDups":true}) 
+db.test.ensureIndex({"userid":1},{"unique":true,"dropDups":true})
 ```
 
 创建唯一复合索引:

@@ -14,6 +14,7 @@
     - [worker](#worker)
     - [timer](#timer)
     - [header](#header)
+    - [ctx](#ctx)
 - [shared_dict](#shared_dict)
     - [获取字典对象](#获取字典对象)
     - [ngx.shared.DICT.set](#ngxshareddictset)
@@ -36,6 +37,8 @@
     - [ngx.redirect](#ngxredirect)
 - [原理](#原理)
     - [请求的处理流程](#请求的处理流程)
+- [日志](#日志)
+    - [将日志打到远程服务](#将日志打到远程服务)
 - [参考](#参考)
 
 <!-- /TOC -->
@@ -166,6 +169,7 @@ local post_args = ngx.req.get_post_args()
 
 ```lua
 worker_id = ngx.worker.id() -- 范围是 [0, n)
+ngx.worker.exiting() -- 当前 worker 是否正在关闭(如reload、shutdown期间)
 ```
 
 
@@ -180,11 +184,27 @@ ok, err = ngx.timer.at(delay, callback, user_arg1, user_arg2, ...)
 
 ## header
 
-设置 header: `ngx.req.set_header("name", "value")`
+设置 header: 
 
-读取 header: `ngx.req.get_headers()["name"]`
+```lua
+ngx.req.set_header("name", "value")  -- 设置请求 header
+ngx.header.name = "value"            -- 设置响应 header
+```
+
+读取 header: 
+
+```lua
+ngx.req.get_headers()["name"]
+```
 
 
+## ctx
+
+`ngx.ctx` 是一个 table, 可以在各个阶段之间共享数据.
+
+```lua
+ngx.ctx.name = "value
+```
 
 
 
@@ -402,6 +422,11 @@ http {
 }
 ```
 
+- 这种方式下 request 的 Host 头可能会是 upstream 的名称, 可以使用 `proxy_set_header Host $proxy_host;` 重新设置, [参考](http://liuluo129.iteye.com/blog/1943311)
+
+
+
+
 ## 获取使用的 upstream server 的信息
 
 通过 upstream 访问后端服务时, 在 log 阶段通过 `ngx.var.upstream_addr` 和 `ngx.var.upstream_status` 访问使用的是哪个服务以及状态.
@@ -478,8 +503,15 @@ location /mixed {
 * `log_by_lua*`: 会话完成后本地异步完成日志记录(日志可以记录在本地，还可以同步到其他机器)
 
 
+- log 阶段不能调用 redis.
 
 
+
+# 日志
+
+## 将日志打到远程服务
+
+- [lua-resty-logger-socket](https://github.com/cloudflare/lua-resty-logger-socket)
 
 
 

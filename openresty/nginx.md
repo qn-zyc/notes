@@ -471,3 +471,4 @@ server {
 * [nginx教程](https://openresty.org/download/agentzh-nginx-tutorials-zhcn.html)
 * [Nginx开发从入门到精通](http://tengine.taobao.org/book/index.html)
 * [Nginx配置upstream实现负载均衡](http://www.linuxidc.com/Linux/2015-03/115207.htm)
+* [使用 Nginx 内置绑定变量](https://moonbingbing.gitbooks.io/openresty-best-practices/openresty/inline_var.html)

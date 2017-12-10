@@ -35,10 +35,10 @@ HSTS的作用是强制客户端（如浏览器）使用HTTPS与服务器创建�
 ## Range
 
 ```http
-GET /test.rar HTTP/1.1 
-Connection: close 
+GET /test.rar HTTP/1.1
+Connection: close
 Host: 127.0.0.1
-Range: bytes=0-801 
+Range: bytes=0-801
 ```
 
 `Range: bytes=first-byte-pos "=" [last-byte-pos]`
@@ -164,7 +164,7 @@ if (设置了 MaxAge 头) {
 Cache-Control: max-age=<seconds>
 Cache-Control: max-stale[=<seconds>]
 Cache-Control: min-fresh=<seconds>
-Cache-control: no-cache 
+Cache-control: no-cache
 Cache-control: no-store
 Cache-control: no-transform
 Cache-control: only-if-cached
@@ -223,7 +223,7 @@ $openssl genrsa -out server.key 2048
 $openssl req -new -x509 -key server.key -out server.crt -days 365 # 2
 ```
 
-* 2048 是密钥的长度, 单位是 bit. 
+* 2048 是密钥的长度, 单位是 bit.
 * 私钥中包含了公钥的信息, 可以根据私钥生成公钥: `$openssl rsa -in server.key -out server.key.public`
 * 上面第二个命令是根据私钥直接生成自签发的数字证书.
 
@@ -243,22 +243,25 @@ HTTPS 服务器在连接建立中(ssl shaking握手协议), 会将自身的公�
 ## Content-Encoding 和 Accept-Encoding
 
 > https://imququ.com/post/content-encoding-header-in-http.html
->
-> Accept-Encoding 和 Content-Encoding 是 HTTP 中用来对「采用何种编码格式传输正文」进行协定的一对头部字段。它的工作原理是这样：浏览器发送请求时，通过 Accept-Encoding 带上自己支持的内容编码格式列表；服务端从中挑选一种用来对正文进行编码，并通过 Content-Encoding 响应头指明选定的格式；浏览器拿到响应正文后，依据 Content-Encoding 进行解压。当然，服务端也可以返回未压缩的正文，但这种情况不允许返回 Content-Encoding。这个过程就是 HTTP 的内容编码机制。
+
+Accept-Encoding 和 Content-Encoding 是 HTTP 中用来对「采用何种编码格式传输正文」进行协定的一对头部字段。它的工作原理是这样：浏览器发送请求时，通过 Accept-Encoding 带上自己支持的内容编码格式列表；服务端从中挑选一种用来对正文进行编码，并通过 Content-Encoding 响应头指明选定的格式；浏览器拿到响应正文后，依据 Content-Encoding 进行解压。当然，服务端也可以返回未压缩的正文，但这种情况不允许返回 Content-Encoding。这个过程就是 HTTP 的内容编码机制。
+
+`Content-Encoding` 可取值: `gzip`, `compress`, `deflate`, `br`, `identity`, 除了 `identity` 表示原始数据(未经压缩)外其他都是压缩或编码算法. 可能会指定多种压缩算法.
 
 
 ## Vary
 
 > https://imququ.com/post/vary-header-in-http.html
->
-> 由于客户端和服务端之间可能存在一个或多个中间实体（如缓存服务器），而缓存服务最基本的要求是给用户返回正确的文档。如果服务端根据不同 User-Agent 返回不同内容，而缓存服务器把 IE6 用户的响应缓存下来，并返回给使用其他浏览器的用户，肯定会出问题 。
-> 所以 HTTP 协议规定，如果服务端提供的内容取决于 User-Agent 这样「常规 Accept 协商字段之外」的请求头字段，那么响应头中必须包含 Vary 字段，且 Vary 的内容必须包含 User-Agent。同理，如果服务端同时使用请求头中 User-Agent 和 Cookie 这两个字段来生成内容，那么响应中的 Vary 字段看上去应该是这样的：
->
-> ```
-> Vary: User-Agent, Cookie
-> ```
->
-> 也就是说 Vary 字段用于列出一个响应字段列表，告诉缓存服务器遇到同一个 URL 对应着不同版本文档的情况时，如何缓存和筛选合适的版本。
+
+由于客户端和服务端之间可能存在一个或多个中间实体（如缓存服务器），而缓存服务最基本的要求是给用户返回正确的文档。如果服务端根据不同 User-Agent 返回不同内容，而缓存服务器把 IE6 用户的响应缓存下来，并返回给使用其他浏览器的用户，肯定会出问题 。
+
+所以 HTTP 协议规定，如果服务端提供的内容取决于 User-Agent 这样「常规 Accept 协商字段之外」的请求头字段，那么响应头中必须包含 Vary 字段，且 Vary 的内容必须包含 User-Agent。同理，如果服务端同时使用请求头中 User-Agent 和 Cookie 这两个字段来生成内容，那么响应中的 Vary 字段看上去应该是这样的：
+
+```
+Vary: User-Agent, Cookie
+```
+
+也就是说 Vary 字段用于列出一个响应字段列表，告诉缓存服务器遇到同一个 URL 对应着不同版本文档的情况时，如何缓存和筛选合适的版本。
 
 
 # 下载

@@ -56,8 +56,9 @@ git config --global alias.ci "commit -s"
 
 ## git stash 储藏
 
-* `git stash`: 储藏当前变更(暂存的和工作区的)
+* `git stash`: 储藏当前变更(暂存的和工作区的), 不包括 untracked 文件(未跟踪文件, 比如新建的)
 * `git stash save "自己命名"`: 自定义储藏的名称.
+* `git stash save -u`: 储藏当前变更, 包括 untracked 文件, `-u|--include-untracked`.
 * `git stash list`: 查看储藏列表
 * `git stash apply`: 应用最后一个储藏.
 * `git stash apply stash@{1}`: 应用指定的储藏.
