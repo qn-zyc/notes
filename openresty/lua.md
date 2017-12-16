@@ -1,75 +1,82 @@
-<!-- TOC -->
 
-- [简介](#简介)
-    - [Lua与LuaJIT](#lua与luajit)
-    - [hello world](#hello-world)
-    - [交互模式](#交互模式)
-- [数据结构](#数据结构)
-    - [boolean](#boolean)
-    - [number](#number)
-    - [string](#string)
-        - [字符串连接](#字符串连接)
-        - [转换](#转换)
-        - [提取](#提取)
-            - [match](#match)
-            - [gmatch](#gmatch)
-        - [查找](#查找)
-            - [find](#find)
-            - [gsub](#gsub)
-        - [长度](#长度)
-        - [分割](#分割)
-    - [table](#table)
-        - [数组](#数组)
-        - [排序 table.sort](#排序-tablesort)
-        - [打印](#打印)
-        - [table.concat](#tableconcat)
-        - [table.insert](#tableinsert)
-    - [function](#function)
-        - [参数](#参数)
-            - [变长参数](#变长参数)
-            - [具名参数](#具名参数)
-        - [返回值](#返回值)
-        - [动态函数调用](#动态函数调用)
-        - [忽略括号](#忽略括号)
-        - [递归的局部变量](#递归的局部变量)
-- [表达式](#表达式)
-    - [赋值](#赋值)
-- [控制结构](#控制结构)
-    - [if else](#if-else)
-    - [while](#while)
-    - [repeat](#repeat)
-    - [for](#for)
-    - [break和return](#break和return)
-    - [显示界定一个块](#显示界定一个块)
-    - [迭代器](#迭代器)
-        - [泛型for](#泛型for)
-- [模块](#模块)
-    - [require](#require)
-    - [模块的加载](#模块的加载)
-    - [模块的编写](#模块的编写)
-- [面向对象编程](#面向对象编程)
-    - [类](#类)
-    - [继承](#继承)
-- [系统函数](#系统函数)
-    - [unpack](#unpack)
-    - [异常](#异常)
-        - [assert](#assert)
-- [协同程序 coroutine](#协同程序-coroutine)
-    - [yield](#yield)
-- [元表metatable与元方法metamethod](#元表metatable与元方法metamethod)
-    - [获取和设置metatable](#获取和设置metatable)
-    - [相关方法](#相关方法)
-    - [示例](#示例)
-        - [保护metatable, 使其他人对值得metatable没有读取和设置的权限](#保护metatable-使其他人对值得metatable没有读取和设置的权限)
-        - [table 的 `__index` 方法](#table-的-__index-方法)
-- [环境](#环境)
-- [json](#json)
-    - [空数组序列化为空对象的问题](#空数组序列化为空对象的问题)
-- [代码片段](#代码片段)
-    - [ip是否匹配网段ip](#ip是否匹配网段ip)
-- [参考](#参考)
+<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
+<!-- code_chunk_output -->
 
-<!-- /TOC -->
+* [简介](#简介)
+	* [Lua与LuaJIT](#lua与luajit)
+	* [hello world](#hello-world)
+	* [交互模式](#交互模式)
+* [数据结构](#数据结构)
+	* [boolean](#boolean)
+	* [number](#number)
+	* [string](#string)
+		* [字符串连接](#字符串连接)
+		* [转换](#转换)
+		* [提取](#提取)
+			* [单个字符](#单个字符)
+			* [match](#match)
+			* [gmatch](#gmatch)
+			* [sub](#sub)
+		* [查找](#查找)
+			* [find](#find)
+			* [gsub](#gsub)
+		* [长度](#长度)
+		* [分割](#分割)
+	* [table](#table)
+		* [数组](#数组)
+		* [排序 table.sort](#排序-tablesort)
+		* [打印](#打印)
+		* [table.concat](#tableconcat)
+		* [table.insert](#tableinsert)
+	* [function](#function)
+		* [参数](#参数)
+			* [变长参数](#变长参数)
+			* [具名参数](#具名参数)
+		* [返回值](#返回值)
+		* [动态函数调用](#动态函数调用)
+		* [忽略括号](#忽略括号)
+		* [递归的局部变量](#递归的局部变量)
+* [表达式](#表达式)
+	* [赋值](#赋值)
+* [控制结构](#控制结构)
+	* [if else](#if-else)
+	* [while](#while)
+	* [repeat](#repeat)
+	* [for](#for)
+	* [break和return](#break和return)
+	* [显示界定一个块](#显示界定一个块)
+	* [迭代器](#迭代器)
+		* [泛型for](#泛型for)
+* [模块](#模块)
+	* [require](#require)
+	* [模块的加载](#模块的加载)
+	* [模块的编写](#模块的编写)
+* [面向对象编程](#面向对象编程)
+	* [类](#类)
+	* [继承](#继承)
+* [系统函数](#系统函数)
+	* [unpack](#unpack)
+	* [异常](#异常)
+		* [assert](#assert)
+* [协同程序 coroutine](#协同程序-coroutine)
+	* [yield](#yield)
+* [元表metatable与元方法metamethod](#元表metatable与元方法metamethod)
+	* [获取和设置metatable](#获取和设置metatable)
+	* [相关方法](#相关方法)
+	* [示例](#示例)
+		* [保护metatable, 使其他人对值得metatable没有读取和设置的权限](#保护metatable-使其他人对值得metatable没有读取和设置的权限)
+		* [table 的 `__index` 方法](#table-的-__index-方法)
+		* [table 的 `__newindex` 方法](#table-的-__newindex-方法)
+		* [监控 table 的设置和获取情况](#监控-table-的设置和获取情况)
+		* [只读 table](#只读-table)
+* [环境](#环境)
+* [json](#json)
+	* [空数组序列化为空对象的问题](#空数组序列化为空对象的问题)
+* [代码片段](#代码片段)
+	* [ip是否匹配网段ip](#ip是否匹配网段ip)
+* [参考](#参考)
+
+<!-- /code_chunk_output -->
 
 # 简介
 * lua由标准C编写.
@@ -158,6 +165,17 @@ print(str2)              -->打印 123-world-1.21
 
 ### 提取
 
+#### 单个字符
+
+获取字符的 ascii 码：
+
+```lua
+print(string.byte("abc")) --> 97, 默认是获取第一个字符的 ascii
+print(string.byte("abc", 2)) --> 98, 第二个字符的 ascii
+print(string.byte("abc", -1)) --> 99, 获取倒数第一个字符的 ascii
+```
+
+
 #### match
 
 ```lua
@@ -191,6 +209,16 @@ for k, v in string.gmatch(s, "(%w+)=(%w+)") do
     print(k, v)
 end
 ```
+
+
+#### sub
+
+```lua
+print(string.sub("abc", 1, 3)) -- abc
+print(string.sub("abc", 1, 4)) -- abc
+print(string.sub("abc", 1, 0), type(string.sub("abc", 1, 0))) -- [空格] string
+```
+
 
 
 
@@ -241,7 +269,8 @@ local s = string.gsub("Lua is good", "good", "bad") -- Lua is bad
 ### 长度
 
 ```lua
-print(#"hello")
+print(#"hello") -- 不能是 nil
+print(string.len("hello")) -- 不能传 nil
 ```
 
 
@@ -1026,6 +1055,10 @@ a:deposit(20)
 print(a.balance) -- 120
 ```
 
+
+
+
+
 ## 继承
 
 ```lua
@@ -1216,9 +1249,9 @@ print(getmetatable(t) == t1) -- true
 
 table的元方法:
 * `__index`: 查询 key 时如果key不存在, 调用该方法. 参数为 table, key
-* `__rawget`: 查询 key 时不管 key 是否存在都不调用 `__index`.
+* `rawget()`: 查询 key 时不管 key 是否存在都不调用 `__index`.
 * `__newindex`: 更新 table 时如果 key 不存在, 调用该方法. 参数为 table, key, value
-* `__rawset`: 更新 table 时不管 key 是否存在都不调用 `__newindex`.
+* `rawset()`: 更新 table 时不管 key 是否存在都不调用 `__newindex`.
 
 
 其他:
@@ -1290,7 +1323,7 @@ function Window.new(o)
     return o
 end
 
-w = Window.new {x = 10, y = 20}
+w = Window.new {x = 10, y = 20} -- 自身拥有 x 和 y，所以不会去调用 __index 了
 print(w) -- x: 10, y: 20, w: 100, h: 100
 ```
 
@@ -1298,6 +1331,92 @@ print(w) -- x: 10, y: 20, w: 100, h: 100
 * 当不想访问 `__index` 时可以使用 `rawget(table, key)` 的方式来访问而不触发 `__index`.
 
 
+### table 的 `__newindex` 方法
+
+```lua
+Window = {}
+-- 原型
+Window.prototype = {x = 0, y = 0, w = 100, h = 100}
+-- 元表
+Window.mt = {
+    __index = function(table, key)
+        return Window.prototype[key]
+    end,
+    __newindex = function(table, key, value)
+        print("newindex:", key, ", ", value)
+        Window.prototype[key] = value
+    end,
+    __tostring = function(w)
+        return string.format("x: %s, y: %s, w: %s, h: %s", w.x, w.y, w.w, w.h)
+    end
+}
+
+function Window.new(o)
+    setmetatable(o, Window.mt)
+    return o
+end
+
+w = Window.new {x = 10, y = 20}
+print(w) -- x: 10, y: 20, w: 100, h: 100
+w["hh"] = "test" -- 会访问 __newindex
+w["hh"] = "aaa" -- 会访问 __newindex
+w["hh"] = nil -- 会访问 __newindex
+w["x"] = 20 -- 不会访问 __newindex
+print(w) -- x: 20, y: 20, w: 100, h: 100
+```
+
+
+### 监控 table 的设置和获取情况
+
+```lua
+-- 实现一个 table 的代理，用来监控获取和设置键值对的情况。
+Table = {}
+
+function Table.__newindex (t, k, v)
+    -- print("__newindex:", k, ",", v)
+    t["__data__"][k] = v
+end
+
+function Table.__index (t, k)
+    -- print("__index:", k)
+    return t["__data__"][k]
+end
+
+function new_table (t)
+    t = t or {}
+    local newtable = {}
+    newtable["__data__"] = t
+    setmetatable(newtable, Table)
+    return newtable
+end
+
+t = new_table({abc = 12})
+t2 = new_table({abc = 45})
+t["test"] = "123"
+t2["test"] = "345"
+print(t["test"], t["abc"]) -- 123 12
+print(t2["test"], t2["abc"]) -- 345 45
+```
+
+
+### 只读 table
+
+```lua
+function read_only_table(t)
+    local temp = t or {}
+    local mt = {
+        __index = function(t, k)
+            return temp[k]
+        end;
+        __newindex = function(t, k, v)
+            temp[k] = v
+        end
+    }
+    local table = {}
+    setmetatable(table, mt)
+    return table
+end
+```
 
 
 # 环境

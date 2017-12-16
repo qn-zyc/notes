@@ -56,7 +56,7 @@ var ip net.IP = net.ParseIP("127.0.0.1")
   }
 ```
 
-  获得TCPAddr: 
+  获得TCPAddr:
 
 ```go
 func ResolveTCPAddr(net, addr string) (*TCPAddr, os.Error)
@@ -193,7 +193,7 @@ func handleClient(conn net.Conn) {
             conn.Write([]byte(daytime))
         } else {
             daytime := time.Now().String()
-            conn.Write([]byte(daytime)) 
+            conn.Write([]byte(daytime))
         }
 
         request = make([]byte, 128) // clear last read content
@@ -303,6 +303,7 @@ func readFully2(conn net.Conn) ([]byte, error) {
 ```
 
 结果示例：
+
 ```
 HTTP/1.1 404 Not Found
 Server: ngx_openresty
@@ -319,6 +320,7 @@ Connection: close
 </body>
 </html>
 ```
+
 上面的两个斜杠只是为了可以在页面上显示。
 
 
@@ -330,9 +332,10 @@ Go语言包中处理UDP Socket和TCP Socket不同的地方就是在服务器端�
 func ResolveUDPAddr(net, addr string) (*UDPAddr, os.Error)
 func DialUDP(net string, laddr, raddr *UDPAddr) (c *UDPConn, err os.Error)
 func ListenUDP(net string, laddr *UDPAddr) (c *UDPConn, err os.Error)
-func (c *UDPConn) ReadFromUDP(b []byte) (n int, addr *UDPAddr, err os.Error
+func (c *UDPConn) ReadFromUDP(b []byte) (n int, addr *UDPAddr, err os.Error)
 func (c *UDPConn) WriteToUDP(b []byte, addr *UDPAddr) (n int, err os.Error)
 ```
+
 
 一个UDP的客户端代码如下所示,我们可以看到不同的就是TCP换成了UDP而已：
 
@@ -415,26 +418,26 @@ func checkError(err error) {
 Dial()函数的原型如下：
 
 ```go
-func Dial(net, addr string) (Conn, error) 
+func Dial(net, addr string) (Conn, error)
 ```
 
 其中net参数是网络协议的名字，addr参数是IP地址或域名，而端口号以“:”的形式跟随在地址或域名的后面，端口号可选。如果连接成功，返回连接对象，否则返回error。
 我们来看一下几种常见协议的调用方式。
 **TCP链接：**
 ```go
-conn, err := net.Dial("tcp", "192.168.0.10:2100") 
+conn, err := net.Dial("tcp", "192.168.0.10:2100")
 ```
 **UDP链接：**
 ```go
-conn, err := net.Dial("udp", "192.168.0.12:975") 
+conn, err := net.Dial("udp", "192.168.0.12:975")
 ```
 **ICMP链接（使用协议名称）：**
 ```go
-conn, err := net.Dial("ip4:icmp", "www.baidu.com") 
+conn, err := net.Dial("ip4:icmp", "www.baidu.com")
 ```
 **ICMP链接（使用协议编号）：**
 ```go
-conn, err := net.Dial("ip4:1", "10.0.0.3") 
+conn, err := net.Dial("ip4:1", "10.0.0.3")
 ```
 目前，Dial()函数支持如下几种网络协议："tcp"、"tcp4"（仅限IPv4）、"tcp6"（仅限IPv6）、"udp"、"udp4"（仅限IPv4）、"udp6"（仅限IPv6）、"ip"、"ip4"（仅限IPv4）和"ip6" （仅限IPv6）。
 
@@ -488,9 +491,9 @@ go get code.google.com/p/go.net/websocket
 实际上，Dial()函数是对DialTCP()、DialUDP()、DialIP()和DialUnix()的封装。我们也可以直接调用这些函数，它们的功能是一致的。这些函数的原型如下：
 
 ```go
-func DialTCP(net string, laddr, raddr *TCPAddr) (c *TCPConn, err error) 
-func DialUDP(net string, laddr, raddr *UDPAddr) (c *UDPConn, err error) 
-func DialIP(netProto string, laddr, raddr *IPAddr) (*IPConn, error) 
+func DialTCP(net string, laddr, raddr *TCPAddr) (c *TCPConn, err error)
+func DialUDP(net string, laddr, raddr *UDPAddr) (c *UDPConn, err error)
+func DialIP(netProto string, laddr, raddr *IPAddr) (*IPConn, error)
 func DialUnix(net string, laddr, raddr *UnixAddr) (c *UnixConn, err error)
 ```
 
@@ -587,3 +590,20 @@ for i, v := range addrs {
 	return strings.Split(ipPort, ":")[0]
 ```
 
+或者：
+
+```go
+addrs, err := net.InterfaceAddrs()
+if err != nil {
+	fmt.Println("err:", err)
+	return
+}
+for _, addr := range addrs {
+	fmt.Println("addr is: ", addr)
+	if ipnet, ok := addr.(*net.IPNet); ok {
+		if !ipnet.IP.IsLoopback() && ipnet.IP.To4() != nil {
+			fmt.Println("got ip:", ipnet.IP.String())
+		}
+	}
+}
+```

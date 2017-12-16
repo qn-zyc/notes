@@ -127,6 +127,7 @@ npm install
 - [ide-json](https://github.com/atom/ide-json)
 - [minimap](https://github.com/atom-minimap/minimap)
 - [minimap-bookmarks](https://github.com/atom-minimap/minimap-bookmarks)
+- [minimap-highlight-selected](https://atom.io/packages/minimap-highlight-selected)
 - [project manager](https://github.com/danielbrodin/atom-project-manager)
 - [highlight-selected](https://github.com/richrace/highlight-selected)
 - [hyperclick](https://github.com/facebook-atom/hyperclick)
