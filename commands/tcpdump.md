@@ -34,6 +34,7 @@ tcpdump [ -AdDeflLnNOpqRStuUvxX ] [ -c count ]
 ```
 
 * `-A`: 以ASCII码方式显示每一个数据包(不会显示数据包中链路层头部信息). 在抓取包含网页数据的数据包时, 可方便查看数据(nt: 即Handy for capturing web pages).
+* `-X`: 数据包将会以16进制和ascii的方式显示
 * `-c count`: tcpdump将在接受到count个数据包后退出.
 * `-C file-size`: (nt: 此选项用于配合-w file 选项使用) 该选项使得tcpdump 在把原始数据包直接保存到文件中之前, 检查此文件大小是否超过file-size. 如果超过了, 将关闭此文件,另创一个文件继续用于原始数据包的记录. 新创建的文件名与-w 选项指定的文件名一致, 但文件名后多了一个数字.该数字会从1开始随着新创建文件的增多而增加. file-size的单位是百万字节(nt: 这里指1,000,000个字节,并非1,048,576个字节, 后者是以1024字节为1k, 1024k字节为1M计算所得, 即1M=1024 ＊ 1024 ＝ 1,048,576)
 * `-d`: 以容易阅读的形式,在标准输出上打印出编排过的包匹配码, 随后tcpdump停止.(nt | rt: human readable, 容易阅读的,通常是指以ascii码来打印一些信息. compiled, 编排过的. packet-matching code, 包匹配码,含义未知, 需补充)
@@ -53,6 +54,7 @@ tcpdump [ -AdDeflLnNOpqRStuUvxX ] [ -c count ]
 * `-vv`: 产生比-v更详细的输出. 比如, NFS回应包中的附加域将会被打印, SMB数据包也会被完全解码.
 * `-vvv`: 产生比-vv更详细的输出. 比如, telent 时所使用的SB, SE 选项将会被打印, 如果telnet同时使用的是图形界面, 其相应的图形选项将会以16进制的方式打印出来(nt: telnet 的SB,SE选项含义未知, 另需补充).
 * `-w`: 把包数据直接写入文件而不进行分析和打印输出. 这些包数据可在随后通过 `-r` 选项来重新读入并进行分析和打印.
+* `-nn`: 表示以ip和port的方式显示来源主机和目的主机，而不是用主机名和服务。
 
 
 
@@ -110,6 +112,15 @@ tcpdump -i eth1
 
 对本机的 udp 123 端口进行监视 123 为ntp的服务端口: `tcpdump udp port 123`
 
+```bash
+tcpdump -i eth0 -nn 'host 192.168.1.231' # 抓取 192.168.1.231 收到和发送的包
+tcpdump -i eth0 -nn 'src host 192.168.1.231' # 抓取 192.168.1.231 发送的包
+tcpdump -i eth0 -nn 'dst host 192.168.1.231' # 抓取 192.168.1.231 收到的包
+tcpdump -i eth0 -nnA 'port 80' # 监听主机80端口收到和发送的数据包, 以 ascii 显示
+tcpdump -i eth0 -nnA 'port 80 and src host 192.168.1.231' # 监听192.168.1.231主机通过80端口发送的数据包
+tcpdump -i eth0 -nnA '!port 22' # 监听非22端口的数据包
+```
+
 
 ## 监视指定网络的数据包
 
@@ -121,6 +132,12 @@ tcpdump -i eth1
 
 
 ## 监视指定协议的数据包
+
+```bash
+tcpdump -i eth0 -nn 'icmp' # 监听 icmp 协议的数据
+tcpdump -i eth0 -nn 'tcp' # 监听 tcp 协议的数据
+tcpdump -i eth0 -nn 'udp' # 监听 udp 协议的数据
+```
 
 打印TCP会话中的的开始和结束数据包, 并且数据包的源或目的不是本地网络上的主机.(nt: localnet, 实际使用时要真正替换成本地网络的名字))
 

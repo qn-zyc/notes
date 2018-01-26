@@ -24,9 +24,11 @@
 # urllib2
 
 ## urlopen()
+
 ```python
 urllib2.urlopen(url[, data[, timeout[, cafile[, capath[, cadefault[, context]]]]])
 ```
+
 * url 可以是字符串或者 Request 对象.
 * data 可以是字符串或者 None, 当 data 提供时, 请求会变为 POST 请求. data 是 `application/x-www-form-urlencoded` 格式, 可以使用 `urllib.urlencode()` 转换其他类型为字符串. urllib2 包会发送 `Connection:close` header.
 * timeout 单位是秒.

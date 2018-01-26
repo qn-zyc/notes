@@ -1,28 +1,32 @@
-<!-- TOC -->
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
 - [机制](#机制)
 - [启动关闭](#启动关闭)
 - [变量](#变量)
 - [配置](#配置)
-    - [模板](#模板)
-    - [location](#location)
-    - [日志](#日志)
-    - [server](#server)
-        - [server_name](#server_name)
-    - [client_max_body_size](#client_max_body_size)
+	- [模板](#模板)
+	- [location](#location)
+	- [日志](#日志)
+	- [server](#server)
+		- [server_name](#servername)
+	- [client_max_body_size](#clientmaxbodysize)
 - [模块](#模块)
-    - [upstream](#upstream)
-        - [轮询(默认)](#轮询默认)
-        - [weight权重](#weight权重)
-        - [ip_hash](#ip_hash)
-        - [fair](#fair)
-        - [url_hash](#url_hash)
-        - [least_conn最少连接](#least_conn最少连接)
-        - [为每台设备设置状态值](#为每台设备设置状态值)
-        - [动态修改upstream](#动态修改upstream)
+	- [upstream](#upstream)
+		- [轮询(默认)](#轮询默认)
+		- [weight权重](#weight权重)
+		- [ip_hash](#iphash)
+		- [fair](#fair)
+		- [url_hash](#urlhash)
+		- [least_conn最少连接](#leastconn最少连接)
+		- [为每台设备设置状态值](#为每台设备设置状态值)
+		- [动态修改upstream](#动态修改upstream)
+	- [proxy](#proxy)
+		- [proxy_set_header](#proxysetheader)
 - [参考](#参考)
 
 <!-- /TOC -->
+
+
 
 # 机制
 * 一个Master, 多个Worker.
@@ -67,7 +71,7 @@ echo "${first}world"; // 避免歧义
 ## 模板
 
 ```
-# 使用的用户和组 
+# 使用的用户和组
 user  www www;
 
 # 指定工作进程数  
@@ -78,7 +82,7 @@ worker_processes  1;
 error_log  logs/error.log  notice;
 
 # 指定 pid 存放的路径  
-#pid logs/nginx.pid; 
+#pid logs/nginx.pid;
 
 #-----------------------------------事件模块   
 events {  
@@ -87,29 +91,29 @@ events {
 }
 
 #-----------------------------------HTTP 模块   
-  
+
 http {  
     #包含一个文件描述了：不同文件后缀对应的MIME，见案例分析  
     include       mime.types;  
 
     #制定默认MIME类型为二进制字节流  
     default_type  application/octet-stream;  
-  
+
     #指令 access_log 指派路径、格式和缓存大小。  
     #access_log  off;  
-  
+
     #开启调用Linux的sendfile()，提供文件传输效率  
     sendfile        on;  
-  
+
     #是否允许使用socket的TCP_NOPUSH或TCP_CORK选项  
     #tcp_nopush     on;  
-  
+
     #指定客户端连接保持活动的超时时间，在这个时间之后，服务器会关掉连接。  
     keepalive_timeout  65;  
-  
+
     #设置gzip，压缩文件  
     #gzip  on;  
-  
+
     #为后端服务器提供简单的负载均衡  
     upstream apaches {  
         server 127.0.0.1:8001;  
@@ -125,7 +129,7 @@ http {
 
     # 共享字典
     lua_shared_dict dict_name 10m;
-  
+
     #配置一台虚拟机  
     server {  
         listen       8012;  
@@ -291,19 +295,19 @@ server {
 配置(默认是轮询):
 
 ```
-upstream linuxidc { 
-    server 10.0.6.108:7080; 
-    server 10.0.0.85:8980; 
+upstream linuxidc {
+    server 10.0.6.108:7080;
+    server 10.0.0.85:8980;
 }
 ```
 
 在 proxy_pass 中使用:
 
 ```
-location / { 
-    root  html; 
-    index  index.html index.htm; 
-    proxy_pass http://linuxidc; 
+location / {
+    root  html;
+    index  index.html index.htm;
+    proxy_pass http://linuxidc;
 }
 ```
 
@@ -313,19 +317,19 @@ location / {
 ### weight权重
 
 ```
-upstream linuxidc{ 
-      server 10.0.0.77 weight=5; 
-      server 10.0.0.88 weight=10; 
+upstream linuxidc{
+      server 10.0.0.77 weight=5;
+      server 10.0.0.88 weight=10;
 }
 ```
 
 ### ip_hash
 
 ```
-upstream favresin{ 
-      ip_hash; 
-      server 10.0.0.10:8080; 
-      server 10.0.0.11:8080; 
+upstream favresin{
+      ip_hash;
+      server 10.0.0.10:8080;
+      server 10.0.0.11:8080;
 }
 ```
 
@@ -338,9 +342,9 @@ upstream favresin{
 
 ```
 upstream favresin{      
-      server 10.0.0.10:8080; 
-      server 10.0.0.11:8080; 
-      fair; 
+      server 10.0.0.10:8080;
+      server 10.0.0.11:8080;
+      fair;
 }
 ```
 
@@ -349,11 +353,11 @@ upstream favresin{
 此方法按访问 url 的 hash 结果来分配请求，使每个 url 定向到同一个后端服务器，可以进一步提高后端缓存服务器的效率。Nginx 本身是不支持 url_hash 的，如果需要使用这种调度算法，必须安装 Nginx 的 hash 软件包。
 
 ```
-upstream resinserver{ 
-      server 10.0.0.10:7777; 
-      server 10.0.0.11:8888; 
-      hash $request_uri; 
-      hash_method crc32; 
+upstream resinserver{
+      server 10.0.0.10:7777;
+      server 10.0.0.11:8888;
+      hash $request_uri;
+      hash_method crc32;
 }
 ```
 
@@ -385,12 +389,12 @@ upstream myapp1 {
 * backup： 其它所有的非backup机器down或者忙的时候，请求backup机器。所以这台机器压力会最轻。
 
 ```
-upstream bakend{ #定义负载均衡设备的Ip及设备状态 
-      ip_hash; 
-      server 10.0.0.11:9090 down; 
-      server 10.0.0.11:8080 weight=2; 
-      server 10.0.0.11:6060; 
-      server 10.0.0.11:7070 backup; 
+upstream bakend{ #定义负载均衡设备的Ip及设备状态
+      ip_hash;
+      server 10.0.0.11:9090 down;
+      server 10.0.0.11:8080 weight=2;
+      server 10.0.0.11:6060;
+      server 10.0.0.11:7070 backup;
 }
 ```
 
@@ -465,6 +469,21 @@ server {
 
 
 
+## proxy
+
+
+### proxy_set_header
+
+```
+Syntax:	proxy_set_header field value;
+Default:
+    proxy_set_header Host $proxy_host;
+    proxy_set_header Connection close;
+Context:	http, server, location
+```
+
+重新定义或添加发往后端服务器的请求头。value可以包含文本、变量或者它们的组合。 当且仅当当前配置级别中没有定义 `proxy_set_header` 指令时，会从上面的级别继承配置。
+
 
 
 # 参考
@@ -472,3 +491,4 @@ server {
 * [Nginx开发从入门到精通](http://tengine.taobao.org/book/index.html)
 * [Nginx配置upstream实现负载均衡](http://www.linuxidc.com/Linux/2015-03/115207.htm)
 * [使用 Nginx 内置绑定变量](https://moonbingbing.gitbooks.io/openresty-best-practices/openresty/inline_var.html)
+* [Module ngx_http_proxy_module](http://nginx.org/en/docs/http/ngx_http_proxy_module.html)

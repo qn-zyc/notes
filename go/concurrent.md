@@ -1,29 +1,34 @@
-<!-- TOC -->
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
 - [goroutine](#goroutine)
-    - [当前goroutine id](#当前goroutine-id)
+	- [当前goroutine id](#当前goroutine-id)
 - [并发通信](#并发通信)
-    - [共享数据](#共享数据)
-    - [消息机制](#消息机制)
+	- [共享数据](#共享数据)
+	- [消息机制](#消息机制)
 - [channel](#channel)
-    - [channel示例](#channel示例)
-    - [基本语法](#基本语法)
-    - [select](#select)
-    - [缓冲机制](#缓冲机制)
-        - [有缓冲和无缓冲的区别](#有缓冲和无缓冲的区别)
-        - [带缓冲带channel怎样使用](#带缓冲带channel怎样使用)
-    - [超时机制](#超时机制)
-    - [channel传递](#channel传递)
-    - [单向channel](#单向channel)
+	- [channel示例](#channel示例)
+	- [基本语法](#基本语法)
+	- [select](#select)
+	- [缓冲机制](#缓冲机制)
+		- [有缓冲和无缓冲的区别](#有缓冲和无缓冲的区别)
+		- [带缓冲带channel怎样使用](#带缓冲带channel怎样使用)
+	- [超时机制](#超时机制)
+	- [channel传递](#channel传递)
+	- [单向channel](#单向channel)
 - [锁](#锁)
-    - [sync.Mutex 互斥锁](#syncmutex-互斥锁)
-    - [sync.RWMutex读写互斥锁](#syncrwmutex读写互斥锁)
-    - [golang中sync.RWMutex和sync.Mutex区别](#golang中syncrwmutex和syncmutex区别)
+	- [sync.Mutex 互斥锁](#syncmutex-互斥锁)
+	- [sync.RWMutex读写互斥锁](#syncrwmutex读写互斥锁)
+	- [golang中sync.RWMutex和sync.Mutex区别](#golang中syncrwmutex和syncmutex区别)
 - [actomic](#actomic)
-    - [actomic.Value](#actomicvalue)
+	- [actomic.Value](#actomicvalue)
 - [WaitGroup](#waitgroup)
+- [协程的优劣](#协程的优劣)
+	- [公平调度引发的问题](#公平调度引发的问题)
+- [参考](#参考)
 
 <!-- /TOC -->
+
+
 
 # goroutine
 
@@ -38,6 +43,7 @@ go fun(1, 2, 3)
 在一个函数调用前加上go关键字，这次调用就会在一个新的goroutine中并发执行。当被调用的函数返回时，这个goroutine也自动结束了。需要注意的是，如果这个函数有返回值，那么这个返回值会被丢弃
 
 **使用示例**
+
 ```go
 func Add(x, y int) {
 	z := x + y
@@ -115,7 +121,7 @@ func Routine() {
 		c := count
 		lock.Unlock()
 
-		runtime.Gosched() 
+		runtime.Gosched()
 		if c >= 10 {
 			break
 		}
@@ -131,7 +137,7 @@ func Routine() {
 ```go
 lock.Lock()
 defer lock.Unlock()
-// ... 
+// ...
 ```
 
 
@@ -199,7 +205,7 @@ func Counting(ch chan int, index int) {
 **一般channel的声明形式为：**
 
 ```go
-var chanName chan ElementType 
+var chanName chan ElementType
 ```
 
 与一般的变量声明不同的地方仅仅是在类型之前加了chan关键字。ElementType指定这个channel所能传递的元素类型。
@@ -326,14 +332,14 @@ close(ch)
 ## select
 
 ```go
-select{ 
-	case <-chan1: 
+select{
+	case <-chan1:
 	// 如果chan1成功读到数据，则进行该case处理语句
-	case chan2 <- 1: 
+	case chan2 <- 1:
 	// 如果成功向chan2写入数据，则进行该case处理语句
-	default: 
+	default:
 	// 如果上面都没有成功，则进入default处理流程
-} 
+}
 ```
 
 第一个case试图从chan1读取一个数据并直接忽略读到的数据，而第二个case则是试图向chan2中写入一个整型数1，如果这两者都没有成功，则到达default语句
@@ -402,7 +408,7 @@ select {}
 要创建一个带缓冲的channel，其实也非常容易：
 
 ```go
-c := make(chan int, 1024) 
+c := make(chan int, 1024)
 ```
 
 在调用make()时将缓冲区大小作为第二个参数传入即可，比如上面这个例子就创建了一个大小为1024的int类型channel，即使没有读取方，写入方也可以一直往channel里写入，在缓冲区被填完之前都不会阻塞
@@ -410,9 +416,9 @@ c := make(chan int, 1024)
 从带缓冲的channel中读取数据可以使用与常规非缓冲channel完全一致的方法，但我们也可以使用range关键来实现更为简便的循环读取：
 
 ```go
-for i := range c { 
-	fmt.Println("Received:", i) 
-} 
+for i := range c {
+	fmt.Println("Received:", i)
+}
 ```
 
 Go文档的翻译文是：对于信道，其迭代值产生为在该信道上发送的连续值，直到该信道被关闭。若该信道为 nil，则range表达式将永远阻塞
@@ -624,21 +630,21 @@ Go语言没有提供直接的超时处理机制，但我们可以利用select机
 首先限定基本的数据结构：
 
 ```go
-type PipeData struct{ 
+type PipeData struct{
 	value int
 	handler func(int) int
 	next chan int
-} 
+}
 ```
 
 然后我们写一个常规的处理函数。我们只要定义一系列PipeData的数据结构并一起传递给这个函数，就可以达到流式处理数据的目的：
 
 ```go
-func handle(queue chan *PipeData) { 
-	for data := range queue { 
-		data.next <- data.handler(data.value) 
-	} 
-} 
+func handle(queue chan *PipeData) {
+	for data := range queue {
+		data.next <- data.handler(data.value)
+	}
+}
 ```
 
 这里我们只给出了大概的样子，限于篇幅不再展开。同理，利用channel的这个可传递特性，我们可以实现非常强大、灵活的系统架构。相比之下，在C++、Java、C#中，要达成这样的效果，通常就意味着要设计一系列接口。
@@ -662,7 +668,7 @@ var ch3 <-chan int  // ch3是单向channel，只用于读取int数据
 **单向channel的初始化（类型转换）**
 
 ```go
-ch4 := make(chan int) 
+ch4 := make(chan int)
 ch5 := <-chan int(ch4) // ch5就是一个单向的读取channel
 ch6 := chan<- int(ch4) // ch6 是一个单向的写入channel
 ```
@@ -670,16 +676,26 @@ ch6 := chan<- int(ch4) // ch6 是一个单向的写入channel
 **用法**
 
 ```go
-func Parse(ch <-chan int) { 
-	for value := range ch { 
-		fmt.Println("Parsing value", value) 
-	} 
+func Parse(ch <-chan int) {
+	for value := range ch {
+		fmt.Println("Parsing value", value)
+	}
 }
 ```
 
 除非这个函数的实现者无耻地使用了类型转换，否则这个函数就不会因为各种原因而对ch进行写，避免在ch中出现非期望的数据，从而很好地实践最小权限原则
 
 有些类似于C++中的const的作用
+
+
+
+## Why are there nil channels in Go?
+
+翻译自 https://medium.com/justforfunc/why-are-there-nil-channels-in-go-9877cc0b2308
+
+
+
+
 
 
 
@@ -751,7 +767,7 @@ type RWMutex
 
 其中Mutex为互斥锁，Lock()加锁，Unlock()解锁，**使用Lock()加锁后，便不能再次对其进行加锁**，直到利用Unlock()解锁对其解锁后，才能再次加锁．适用于读写不确定场景，即读写次数没有明显的区别，并且只允许只有一个读或者写的场景，所以该锁也叫做全局锁．
 
-func (m *Mutex) Unlock()用于解锁m，<span style="color:red;">如果在使用Unlock()前未加锁，就会引起一个运行错误</span>
+`func (m *Mutex) Unlock()` 用于解锁m，<span style="color:red;">如果在使用Unlock()前未加锁，就会引起一个运行错误</span>
 
 已经锁定的Mutex并不与特定的goroutine相关联，这样可以利用一个goroutine对其加锁，再利用其他goroutine对其解锁．
 
@@ -764,7 +780,7 @@ import (
 	"fmt"
 	"sync"
 )
-    
+
 func main() {
 	var l *sync.Mutex
 	l = new(sync.Mutex)
@@ -786,7 +802,7 @@ fmt.Println("1")
 l.Lock()
 ```
 
-运行结果： panic: sync: unlock of unlocked mutex 
+运行结果： panic: sync: unlock of unlocked mutex
 
 当在解锁之前再次进行加锁，便会死锁状态
 
@@ -829,7 +845,7 @@ l.Lock()
 运行结果：panic: sync: unlock of unlocked mutex
 ​    
 ```go
-func (rw *RWMutex) RLock() 
+func (rw *RWMutex) RLock()
 ```
 
 读锁，当有写锁时，无法加载读锁，当只有读锁或者没有锁时，可以加载读锁，读锁可以加载多个，所以适用于＂读多写少＂的场景
@@ -880,7 +896,7 @@ l.RLock()
 type s struct {
 	readerCount int32
 }
-    
+
 func main() {
 	l := new(sync.RWMutex)
 	l.RUnlock()
@@ -1058,3 +1074,12 @@ func main() {
 ```
 
 
+# 协程的优劣
+
+## 公平调度引发的问题
+
+协程被调度时是需要尽量公平的，这意味着协程没有优先级的概念，不可以抢占。如果某个 goroutine 比其他 goroutine 重要，当这个 goroutine 准备好执行时，可能 CPU 正被其他 goroutine 占用，这是重要的 goroutine 就只能等着，什么时候被调用是不确定的。当其他 goroutine 依赖这个重要的 goroutine 时，就会造成延迟。
+
+
+# 参考
+- [记一次latency问题排查：谈Go的公平调度的缺陷](http://www.zenlife.tk/go-scheduler-pitfall.md)

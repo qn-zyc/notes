@@ -130,7 +130,7 @@ import (
 )
 
 func Benchmark_Division(b *testing.B) {
-    for i := 0; i < b.N; i++ { //use b.N for looping 
+    for i := 0; i < b.N; i++ { //use b.N for looping
         Division(4, 5)
     }
 }
@@ -210,7 +210,7 @@ b.RunParallel(func(pb *testing.PB) {
 
 # 例子用例
 
-- 文件名也是以 _test 结尾
+- 文件名也是以 `_test` 结尾
 - 使用fmt包输出，使用注释 `// Output: ` 来验证输出是否正确。
 - Example[FunctionName] 针对FunctionName的例子，会显示在FunctionName的下，如果没有FunctionName则会显示在Overview下。
 
@@ -235,7 +235,7 @@ TEST_PKGS=`find . -name \*_test.go | while read a; do dirname $a; done | sort | 
 ```
 
 说明：
-* `find . -name \*_test.go` 找到所有的测试文件。 
+* `find . -name \*_test.go` 找到所有的测试文件。
 * `dirname` 获取全路径中的目录部分，比如 `a/b/c.txt` 获取的是 `a/b`。
 * `sed "s|\./||g` 去掉 `./`
 
@@ -342,11 +342,138 @@ go test -v -update=true
 ```
 
 
+## Don’t export concurrency primitives
+
+假设有一个库，提供一个读取消息的接口，并将 channel 暴露给调用者:
+
+```go
+type Reader struct {...}
+func (r *Reader) ReadChan() <-chan Msg {...}
+```
+
+现在一个使用者想实现一个测试用例:
+
+```go
+func TestConsumer(t testing.T) {
+    cons := &Consumer{
+        r: libqueue.NewReader(),
+    }
+    for msg := range cons.r.ReadChan() {
+        // Test thing.
+    }
+}
+```
+
+使用者决定使用依赖注入的方式，使用他们自己的实现来替换 Reader:
+
+```go
+func TestConsumer(t testing.T, q queueIface) {
+    cons := &Consumer{
+        r: q,
+    }
+    for msg := range cons.r.ReadChan() {
+        // Test thing.
+    }
+}
+```
+
+但是怎么处理错误呢？或许你会这样做:
+
+```go
+func TestConsumer(t testing.T, q queueIface) {
+    cons := &Consumer{
+        r: q,
+    }
+    for {
+        select {
+        case msg := <-cons.r.ReadChan():
+            // Test thing.
+        case err := <-cons.r.ErrChan():
+            // What caused this again?
+        }
+    }
+}
+```
+
+现在，我们应该怎么模拟事件来保证和 Reader 库的表现一致呢？如果库只是提供一个简单的同步API, 那么测试时就简单多了:
+
+```go
+func TestConsumer(t testing.T, q queueIface) {
+    cons := &Consumer{
+        r: q,
+    }
+    msg, err := cons.r.ReadMsg()
+    // handle err, test thing
+}
+```
+
+记住，不用轻易暴露并发原语给调用者，暴露容易，想要删除或者修改就难了。另外，不要忘记在结构体或库的文档中指明是否是并发安全的。
+
+最后，如果有必要暴露 channel, 可以通过一个访问器，并将 channel 设置为只读(`<-chan`)或只写(`chan<-`)。
+
+
+
+## 使用 net/http/httptest
+
+httptest 可以让你在不启动服务或绑定端口的情况下测试你的 `http.Handler` 代码。下面实现了两种方式来测试你的 `ServeHTTP()`:
+
+```go
+func TestServe(t *testing.T) {
+    // The method to use if you want to practice typing
+    s := &http.Server{
+        Handler: http.HandlerFunc(ServeHTTP),
+    }
+    // Pick port automatically for parallel tests and to avoid conflicts
+    l, err := net.Listen("tcp", ":0")
+    if err != nil {
+        t.Fatal(err)
+    }
+    defer l.Close()
+    go s.Serve(l)
+
+    res, err := http.Get("http://" + l.Addr().String() + "/?sloths=arecool")
+    if err != nil {
+        log.Fatal(err)
+    }
+    greeting, err := ioutil.ReadAll(res.Body)
+    res.Body.Close()
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println(string(greeting))
+}
+
+func TestServeMemory(t *testing.T) {
+    // Less verbose and more flexible way
+    req := httptest.NewRequest("GET", "http://example.com/?sloths=arecool", nil)
+    w := httptest.NewRecorder()
+
+    ServeHTTP(w, req)
+    greeting, err := ioutil.ReadAll(w.Body)
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println(string(greeting))
+}
+```
+
+httptest 还可以启动一个临时服务，监听随机端口: `httptest.NewServer()`。
+
+
+
+## Use a separate test package
+
+比如当前包名为 foo, 一般测试文件 `foo_test.go` 中会声明 `package foo`，这样测试文件能访问到 foo 包中所有的字段和函数。
+
+也可以将 `foo_test.go` 中的包声明改成其他名称，比如 `package foo_test`，这样测试 foo 包时就需要导入它。这样做的好处是能从使用者的角度来测试包。难以使用的包同样难以测试。
+
+这样做还有一个好处是避免循环依赖。
+
+比如 `net/url` 包实现了解析 url 的功能，`net/http` 导入了 `net/url` 包，而 `net/url` 包在测试时需要导入 `net/http` 包，这样就会形成循环引用。而如果测试文件中的包名不是 `url` 就可以同时导入 `url` 和 `http` 来测试，以避免循环引用。
 
 
 
 
 # 参考
 * [Advanced Testing in Go, Mitchell Hashimoto](https://about.sourcegraph.com/go/advanced-testing-in-go-mitchell-hashimoto)
-
-
+- [5 Advanced Testing Techniques in Go](https://segment.com/blog/5-advanced-testing-techniques-in-go/)

@@ -139,7 +139,7 @@ $ docker rmi $(docker images -q -f dangling=true)
 
 ### 容器
 
-镜像是静态的定义, 容器是运行时的实体, 容器可以被创建, 启动, 停止, 删除等. 
+镜像是静态的定义, 容器是运行时的实体, 容器可以被创建, 启动, 停止, 删除等.
 
 容器的实质是进程, 但容器进程是运行在自己独立的命名空间中的, 容器可以拥有自己的 root 文件系统, 自己的网络配置, 自己的进程空间, 自己的用户 ID 空间等. 容器内的进程运行在隔离的环境中, 比直接运行在宿主空间中更安全.
 
@@ -174,11 +174,16 @@ Docker 最佳实践的要求是: **所有的文件写入操作应该使用数据
 * `docker build --rm -t dev:base .` 构建image，`--rm` 删除临时容器, `-t` 指定tag。
 * `docker ps` 查看运行中的容器列表.
 * `docker inspect TAG`: 查看容器或者镜像的详细信息，除了tag，还可以使用id。
+    - `docker inspect --format '{{ .NetworkSettings.IPAddress }}' [容器ID]` 查看容器虚拟IP。
 * `docker logs 容器名`: 查看容器的输出, `docker logs -f 容器名`.
 * `docker commit -m "message" 容器ID 新镜像名` 提交变动生成新镜像
 * `docker search 镜像名字` 在命令行搜索镜像.
 * `docker push learn/ping` 发布自己的镜像.
 * `docker history 镜像名:标签` 查看镜像内的历史记录.
+* `docker network ls`: 查看 docker 的网络连接方式。
+    - `docker network inspect bridge`: 查看 bridge 连接方式的详情。
+
+
 
 ## run
 
@@ -1324,7 +1329,7 @@ docker run --name bind -d --restart=always \
 
 ## openresty
 
-启动: 
+启动:
 
 ```shell
 docker run -d --name="nginx" -p 8080:80 -v $PWD/config/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro -v $PWD/logs:/usr/local/openresty/nginx/logs openresty/openresty:1.9.15.1-trusty
@@ -1371,7 +1376,7 @@ $ docker run -p 8086:8086 \
 
 生成默认配置文件: `$ docker run --rm influxdb influxd config > influxdb.conf`, 现在在 `$PWD` 下可以修改默认配置文件了.
 
-映射配置文件: 
+映射配置文件:
 
 ```shell
 $ docker run -p 8086:8086 \

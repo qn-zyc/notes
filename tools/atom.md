@@ -111,12 +111,19 @@ strict-ssl=false
 
 [方案2](https://www.zhihu.com/question/50859713/answer/153110096):
 
-从 github 上 clone 插件到 `~/.atom/packages`, 然后运行 `npm install`, 下面以 atom-beautify 为例:
+从 github 上 clone 插件到 `~/.atom/packages`, 然后运行 `npm install` 或者 `apm install`, 下面以 atom-beautify 为例:
 
-```
+```bash
 git clone git@github.com:Glavin001/atom-beautify.git
 cd atom-beautify
 npm install
+```
+
+或者：
+
+```bash
+git clone https://github.com/atom-minimap/minimap
+apm install minimap
 ```
 
 
@@ -193,9 +200,9 @@ npm install
 
 
 ### markdown
-- x [markdown toc](https://github.com/nok/markdown-toc)
-- x [markdown table editor](https://github.com/susisu/atom-markdown-table-editor)
-- x [markdown-scroll-sync](https://github.com/vincentcn/markdown-scroll-sync)
+- [markdown toc](https://github.com/nok/markdown-toc)
+- [markdown table editor](https://github.com/susisu/atom-markdown-table-editor)
+- [markdown-scroll-sync](https://github.com/vincentcn/markdown-scroll-sync)
 - [markdown-preview-enhanced](https://github.com/shd101wyy/markdown-preview-enhanced)
 
 

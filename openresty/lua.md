@@ -1,82 +1,83 @@
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
-<!-- code_chunk_output -->
+- [简介](#简介)
+	- [Lua与LuaJIT](#lua与luajit)
+	- [hello world](#hello-world)
+	- [交互模式](#交互模式)
+- [数据结构](#数据结构)
+	- [boolean](#boolean)
+	- [number](#number)
+	- [string](#string)
+		- [字符串连接](#字符串连接)
+		- [转换](#转换)
+		- [提取](#提取)
+			- [单个字符](#单个字符)
+			- [match](#match)
+			- [gmatch](#gmatch)
+			- [sub](#sub)
+		- [查找](#查找)
+			- [find](#find)
+			- [gsub](#gsub)
+		- [长度](#长度)
+		- [分割](#分割)
+	- [table](#table)
+		- [数组](#数组)
+		- [排序 table.sort](#排序-tablesort)
+		- [打印](#打印)
+		- [table.concat](#tableconcat)
+		- [table.insert](#tableinsert)
+	- [function](#function)
+		- [参数](#参数)
+			- [变长参数](#变长参数)
+			- [具名参数](#具名参数)
+		- [返回值](#返回值)
+		- [动态函数调用](#动态函数调用)
+		- [忽略括号](#忽略括号)
+		- [递归的局部变量](#递归的局部变量)
+- [表达式](#表达式)
+	- [赋值](#赋值)
+- [控制结构](#控制结构)
+	- [if else](#if-else)
+	- [while](#while)
+	- [repeat](#repeat)
+	- [for](#for)
+	- [break和return](#break和return)
+	- [显示界定一个块](#显示界定一个块)
+	- [迭代器](#迭代器)
+		- [泛型for](#泛型for)
+- [模块](#模块)
+	- [require](#require)
+	- [模块的加载](#模块的加载)
+	- [模块的编写](#模块的编写)
+- [面向对象编程](#面向对象编程)
+	- [类](#类)
+	- [继承](#继承)
+- [系统函数](#系统函数)
+	- [unpack](#unpack)
+	- [异常](#异常)
+		- [assert](#assert)
+- [协同程序 coroutine](#协同程序-coroutine)
+	- [yield](#yield)
+- [元表metatable与元方法metamethod](#元表metatable与元方法metamethod)
+	- [获取和设置metatable](#获取和设置metatable)
+	- [相关方法](#相关方法)
+	- [示例](#示例)
+		- [保护metatable, 使其他人对值得metatable没有读取和设置的权限](#保护metatable-使其他人对值得metatable没有读取和设置的权限)
+		- [table 的 `__index` 方法](#table-的-index-方法)
+		- [table 的 `__newindex` 方法](#table-的-newindex-方法)
+		- [监控 table 的设置和获取情况](#监控-table-的设置和获取情况)
+		- [只读 table](#只读-table)
+- [环境](#环境)
+- [json](#json)
+	- [空数组序列化为空对象的问题](#空数组序列化为空对象的问题)
+- [代码片段](#代码片段)
+	- [ip是否匹配网段ip](#ip是否匹配网段ip)
+- [参考](#参考)
 
-* [简介](#简介)
-	* [Lua与LuaJIT](#lua与luajit)
-	* [hello world](#hello-world)
-	* [交互模式](#交互模式)
-* [数据结构](#数据结构)
-	* [boolean](#boolean)
-	* [number](#number)
-	* [string](#string)
-		* [字符串连接](#字符串连接)
-		* [转换](#转换)
-		* [提取](#提取)
-			* [单个字符](#单个字符)
-			* [match](#match)
-			* [gmatch](#gmatch)
-			* [sub](#sub)
-		* [查找](#查找)
-			* [find](#find)
-			* [gsub](#gsub)
-		* [长度](#长度)
-		* [分割](#分割)
-	* [table](#table)
-		* [数组](#数组)
-		* [排序 table.sort](#排序-tablesort)
-		* [打印](#打印)
-		* [table.concat](#tableconcat)
-		* [table.insert](#tableinsert)
-	* [function](#function)
-		* [参数](#参数)
-			* [变长参数](#变长参数)
-			* [具名参数](#具名参数)
-		* [返回值](#返回值)
-		* [动态函数调用](#动态函数调用)
-		* [忽略括号](#忽略括号)
-		* [递归的局部变量](#递归的局部变量)
-* [表达式](#表达式)
-	* [赋值](#赋值)
-* [控制结构](#控制结构)
-	* [if else](#if-else)
-	* [while](#while)
-	* [repeat](#repeat)
-	* [for](#for)
-	* [break和return](#break和return)
-	* [显示界定一个块](#显示界定一个块)
-	* [迭代器](#迭代器)
-		* [泛型for](#泛型for)
-* [模块](#模块)
-	* [require](#require)
-	* [模块的加载](#模块的加载)
-	* [模块的编写](#模块的编写)
-* [面向对象编程](#面向对象编程)
-	* [类](#类)
-	* [继承](#继承)
-* [系统函数](#系统函数)
-	* [unpack](#unpack)
-	* [异常](#异常)
-		* [assert](#assert)
-* [协同程序 coroutine](#协同程序-coroutine)
-	* [yield](#yield)
-* [元表metatable与元方法metamethod](#元表metatable与元方法metamethod)
-	* [获取和设置metatable](#获取和设置metatable)
-	* [相关方法](#相关方法)
-	* [示例](#示例)
-		* [保护metatable, 使其他人对值得metatable没有读取和设置的权限](#保护metatable-使其他人对值得metatable没有读取和设置的权限)
-		* [table 的 `__index` 方法](#table-的-__index-方法)
-		* [table 的 `__newindex` 方法](#table-的-__newindex-方法)
-		* [监控 table 的设置和获取情况](#监控-table-的设置和获取情况)
-		* [只读 table](#只读-table)
-* [环境](#环境)
-* [json](#json)
-	* [空数组序列化为空对象的问题](#空数组序列化为空对象的问题)
-* [代码片段](#代码片段)
-	* [ip是否匹配网段ip](#ip是否匹配网段ip)
-* [参考](#参考)
+<!-- /TOC -->
 
-<!-- /code_chunk_output -->
+
+
 
 # 简介
 * lua由标准C编写.
@@ -761,7 +762,7 @@ end
 ```
 
 ## repeat
-* 知道 until 的条件为 true 时才跳出循环.
+* 直到 until 的条件为 true 时才跳出循环.
 
 ```lua
 x = 10
@@ -1424,6 +1425,45 @@ end
 
 
 
+# 调用系统命令
+
+
+## os.execute ([command])
+
+相当于 C 语言的 `system()`, 它会返回一个状态码。
+
+示例：
+
+```lua
+local ret = os.execute();
+
+if ret ~= 0 then
+    print("the system shell is available, ret = "..ret.."\n\n")
+else
+    print("the system shell is not available, ret = "..ret.."\n\n")
+end
+
+os.execute("color 02");
+print("this is a test for os.execute\n");
+
+local copyret = os.execute("copy " .."luatest.lua".. ",".."luatest.lua.bak")
+print("copyret = "..copyret)
+
+os.execute("pause");
+```
+
+## io.popen(command)
+
+`io.popen()` 返回一个文件。
+
+示例：
+
+```lua
+local f = io.popen("/bin/hostname")
+local hostname = f:read()
+```
+
+
 
 # json
 
@@ -1480,6 +1520,8 @@ print('after cjson encode:', str) -- after cjson encode:	{"name":"answer","list"
 ```
 
 - 如果 list 为空, 会序列化为 `[]`, 如果不为空就不起作用.
+
+
 
 
 

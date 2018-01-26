@@ -1,8 +1,11 @@
-<!-- TOC -->
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
 - [Worker Pool](#worker-pool)
+- [随机数](#随机数)
+	- [随机byte数组](#随机byte数组)
 
 <!-- /TOC -->
+
 
 # Worker Pool
 
@@ -74,3 +77,38 @@ worker 3 processing job 9
 
 
 
+# 随机数
+
+## 随机byte数组
+
+```go
+import (
+	"fmt"
+	"math/rand"
+	"time"
+)
+
+func randomBytes(d []byte) {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	n, err := r.Read(d)
+	if err != nil {
+		panic(err)
+	}
+	if len(d) != n {
+		fmt.Printf("Read %d bytes, want %d bytes\n", n, len(d))
+	}
+}
+```
+
+或者使用 `crypto/rand` 包，这个包生成的随机数更加复杂并且不可预测:
+
+```go
+import (
+	"crypto/rand"
+	"io"
+)
+
+func randomBytes(d []byte) {
+	io.ReadFull(rand.Reader, d)
+}
+```

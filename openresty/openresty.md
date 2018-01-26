@@ -1,44 +1,48 @@
-
-<!-- TOC -->
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
 - [概念](#概念)
-    - [epoll](#epoll)
+	- [epoll](#epoll)
 - [安装](#安装)
 - [hello world](#hello-world)
-    - [启动](#启动)
+	- [启动](#启动)
 - [lua ngx api](#lua-ngx-api)
-    - [ngx.var.VARIABLE](#ngxvarvariable)
-    - [时间](#时间)
-    - [查询参数](#查询参数)
-    - [请求body](#请求body)
-    - [worker](#worker)
-    - [timer](#timer)
-    - [header](#header)
-    - [ctx](#ctx)
-- [shared_dict](#shared_dict)
-    - [获取字典对象](#获取字典对象)
-    - [ngx.shared.DICT.set](#ngxshareddictset)
-    - [ngx.shared.DICT.safe_set](#ngxshareddictsafe_set)
-    - [ngx.shared.DICT.add](#ngxshareddictadd)
-    - [ngx.shared.DICT.safe_add](#ngxshareddictsafe_add)
-    - [ngx.shared.DICT.get](#ngxshareddictget)
-    - [ngx.shared.DICT.get_stale](#ngxshareddictget_stale)
-    - [ngx.shared.DICT.replace](#ngxshareddictreplace)
-    - [ngx.shared.DICT.delete](#ngxshareddictdelete)
-    - [ngx.shared.DICT.incr](#ngxshareddictincr)
-    - [ngx.shared.DICT.flush_all](#ngxshareddictflush_all)
-    - [ngx.shared.DICT.flush_expired](#ngxshareddictflush_expired)
-    - [ngx.shared.DICT.get_keys](#ngxshareddictget_keys)
+	- [ngx.var.VARIABLE](#ngxvarvariable)
+	- [时间](#时间)
+	- [查询参数](#查询参数)
+	- [请求body](#请求body)
+	- [worker](#worker)
+	- [timer](#timer)
+	- [header](#header)
+	- [ctx](#ctx)
+- [shared_dict](#shareddict)
+	- [获取字典对象](#获取字典对象)
+	- [ngx.shared.DICT.set](#ngxshareddictset)
+	- [ngx.shared.DICT.safe_set](#ngxshareddictsafeset)
+	- [ngx.shared.DICT.add](#ngxshareddictadd)
+	- [ngx.shared.DICT.safe_add](#ngxshareddictsafeadd)
+	- [ngx.shared.DICT.get](#ngxshareddictget)
+	- [ngx.shared.DICT.get_stale](#ngxshareddictgetstale)
+	- [ngx.shared.DICT.replace](#ngxshareddictreplace)
+	- [ngx.shared.DICT.delete](#ngxshareddictdelete)
+	- [ngx.shared.DICT.incr](#ngxshareddictincr)
+	- [ngx.shared.DICT.flush_all](#ngxshareddictflushall)
+	- [ngx.shared.DICT.flush_expired](#ngxshareddictflushexpired)
+	- [ngx.shared.DICT.get_keys](#ngxshareddictgetkeys)
 - [json](#json)
+- [redis](#redis)
+	- [scan keys](#scan-keys)
+- [编码、加密](#编码加密)
+	- [base64](#base64)
+	- [hmac_sha1](#hmacsha1)
 - [负载均衡](#负载均衡)
-    - [动态负载均衡](#动态负载均衡)
-    - [获取使用的 upstream server 的信息](#获取使用的-upstream-server-的信息)
+	- [动态负载均衡](#动态负载均衡)
+	- [获取使用的 upstream server 的信息](#获取使用的-upstream-server-的信息)
 - [重定向](#重定向)
-    - [ngx.redirect](#ngxredirect)
+	- [ngx.redirect](#ngxredirect)
 - [原理](#原理)
-    - [请求的处理流程](#请求的处理流程)
+	- [请求的处理流程](#请求的处理流程)
 - [日志](#日志)
-    - [将日志打到远程服务](#将日志打到远程服务)
+	- [将日志打到远程服务](#将日志打到远程服务)
 - [参考](#参考)
 
 <!-- /TOC -->
@@ -127,12 +131,12 @@ ngx.var.remote_addr
 
 
 ## 时间
-* ngx.today "yyyy-mm-dd" 格式 (2017-08-23)
-* ngx.time 时间戳, 秒 (1503487721)
-* ngx.now 带毫秒的时间戳 (1503487721.425)
-* ngx.update_time 使用系统时间强制更新nginx缓存时间, 不返回数据.
-* ngx.localtime "yyyy-mm-dd hh:mm:ss" 格式 (2017-08-23 11:28:41)
-* ngx.utctime "yyyy-mm-dd hh:mm:ss" 格式 (2017-08-23 11:28:41)
+* `ngx.today()`       "yyyy-mm-dd" 格式 (2017-08-23)
+* `ngx.time()`        时间戳, 秒 (1503487721)
+* `ngx.now()`         带毫秒的时间戳 (1503487721.425)
+* `ngx.update_time()` 使用系统时间强制更新nginx缓存时间, 不返回数据.
+* `ngx.localtime()`   "yyyy-mm-dd hh:mm:ss" 格式 (2017-08-23 11:28:41)
+* `ngx.utctime()`     "yyyy-mm-dd hh:mm:ss" 格式 (2017-08-23 11:28:41)
 
 
 
@@ -184,14 +188,14 @@ ok, err = ngx.timer.at(delay, callback, user_arg1, user_arg2, ...)
 
 ## header
 
-设置 header: 
+设置 header:
 
 ```lua
 ngx.req.set_header("name", "value")  -- 设置请求 header
 ngx.header.name = "value"            -- 设置响应 header
 ```
 
-读取 header: 
+读取 header:
 
 ```lua
 ngx.req.get_headers()["name"]
@@ -282,14 +286,14 @@ local succ, err, forcible = cats:set("Marry", "it is a nice cat!")
 与 set 类似, 但不会插入重复的key, 如果 key 已存在, 返回 nil 和 err(exists).
 
 ## ngx.shared.DICT.safe_add
- 
+
 语法: `ok, err = ngx.shared.DICT:safe_add(key, value, exptime?, flags?)`
 
 与 safe_set 类似, key 已存在时不插入, 返回 nil 和 err(exists).
 
 
 ## ngx.shared.DICT.get
- 
+
 语法: `value, flags = ngx.shared.DICT:get(key)`
 
 若 key 不存在或已过期, 返回 nil. flags 是 set 时传的值, 默认0.
@@ -370,6 +374,65 @@ local cjson = require "cjson"
 local ok, json_obj = pcall(cjson.decode, json_str)
 local str = cjson.encode(obj)
 ```
+
+
+
+# redis
+- [lua-resty-redis](https://github.com/openresty/lua-resty-redis)
+
+
+## scan keys
+
+```lua
+local index = 0
+local query_count = 0
+repeat
+    local results, err = red:scan(index)
+    if not results then
+        log(ERR, "Failed to query, index:", index, ", err:", err)
+        return
+    end
+    index = tonumber(results[1])
+    local keys = results[2]
+    if keys and #keys > 0 then
+        local values, err = red:mget(unpack(keys))
+        if not values then
+            log(ERR, "Failed to query values, keys:", table.concat(keys, ','), ", err:", err)
+            return
+        end
+        for i, key in ipairs(keys) do
+            -- TODO: do something with key and values[i]
+        end
+    end
+    query_count = query_count + #keys
+until index == nil or index == 0
+```
+
+
+# 编码、加密
+
+## base64
+
+```lua
+ngx.encode_base64(msg)
+ngx.decode_base64(digest)
+```
+
+
+
+## hmac_sha1
+
+语法: `digest = ngx.hmac_sha1(secret_key, str)`
+
+该方法主要用于计算输入字符串str的HMAC-SHA1的摘要，并根据secret_key对结果进行转换，计算后得到的结果是二进制格式的，可以通过ngx.encode_base64转换成非二进制格式的字符串，例如：
+
+```lua
+local key = "thisisverysecretstuff"
+local src = "some string we want to sign"
+local digest = ngx.hmac_sha1(key, src)
+ngx.say(ngx.encode_base64(digest))
+```
+
 
 
 # 负载均衡
@@ -524,3 +587,7 @@ location /mixed {
 * [lua nginx module](https://github.com/openresty/lua-nginx-module)
 * [http client库](https://github.com/pintsized/lua-resty-http)
 * [cjson](https://github.com/openresty/lua-cjson/)
+* [ngx_lua模块中正则表达式相关的api](http://blog.csdn.net/weiyuefei/article/details/38439017)
+* [正则表达式](https://moonbingbing.gitbooks.io/openresty-best-practices/lua/re.html)
+* [加密编码相关](https://github.com/openresty/lua-resty-string)
+* [lua-resty-core](https://github.com/openresty/lua-resty-core)
