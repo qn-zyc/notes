@@ -117,7 +117,7 @@ use 数据库名;
 查询主机名和端口：
 
 ```bash
-select @@global.hostname, @@global.port;
+SELECT @@global.hostname, @@global.port;
 ```
 
 
@@ -198,7 +198,7 @@ flush privileges;
 ### 2.4.3. 显示用户 ###
 
 ```bash
-select host,user from mysql.user;
+SELECT host,user from mysql.user;
 ```
 
 ### 2.4.4. 修改用户密码
@@ -301,20 +301,20 @@ create table (...) default charset=utf8;
 创建表时指定表和字段的注释：
 
 ```sql
-CREATE TABLE IF NOT EXISTS send_record ( 
-		id bigint not null primary key auto_increment comment '主键', 
-		uuid char(40) not null comment '备用，迁移时做外键', 
-		phone_number char(20) comment '手机号', 
-		content varchar(1000) comment '短信内容', 
-		msg_kind varchar(20) comment '消息类型，可能的值有auth,notice,goupiao,normal,inside,marketing，后续可能会添加', 
-		ret int comment '返回码', 
-		msg varchar(200) comment '返回信息', 
-		spid varchar(20) comment '服务商ID,当前可选值有yunpian,winner_look,tencent,gaopeng,后续可能会增加', 
-		spret int comment '服务商返回码', 
-		batchid int comment '服务商返回的批次号', 
-		format_date varchar(20) comment '格式化后的发送短信的日期', 
-		format_time varchar(20) comment '格式化后的发送短信的时间', 
-		submitter varchar(50) comment '提交者，即client_id' 
+CREATE TABLE IF NOT EXISTS send_record (
+		id bigint not null primary key auto_increment comment '主键',
+		uuid char(40) not null comment '备用，迁移时做外键',
+		phone_number char(20) comment '手机号',
+		content varchar(1000) comment '短信内容',
+		msg_kind varchar(20) comment '消息类型，可能的值有auth,notice,goupiao,normal,inside,marketing，后续可能会添加',
+		ret int comment '返回码',
+		msg varchar(200) comment '返回信息',
+		spid varchar(20) comment '服务商ID,当前可选值有yunpian,winner_look,tencent,gaopeng,后续可能会增加',
+		spret int comment '服务商返回码',
+		batchid int comment '服务商返回的批次号',
+		format_date varchar(20) comment '格式化后的发送短信的日期',
+		format_time varchar(20) comment '格式化后的发送短信的时间',
+		submitter varchar(50) comment '提交者，即client_id'
 ) default charset=utf8 comment '短信发送记录表';
 ```
 
@@ -342,7 +342,7 @@ create table newTable like oldTable;
 或者：
 
 ```bash
-create table newTable select * from oldTable limit 0;
+create table newTable SELECT * from oldTable limit 0;
 ```
 
 ### 2.6.4. 显示表
@@ -477,7 +477,7 @@ replace into users(id, name, age) values(7, "chen7", 30);
 ### 2.6.14. 查看外键
 
 ```bash
-SELECT 
+SELECT
     TABLE_SCHEMA, TABLE_NAME
 FROM
     INFORMATION_SCHEMA.KEY_COLUMN_USAGE
@@ -548,13 +548,13 @@ SELECT * FROM table LIMIT [offset,] rows | rows OFFSET offset
 
 ```sql
 mysql> SELECT * FROM table LIMIT 5,10; // 检索记录行 6-15  
-  
+
 //为了检索从某一个偏移量到记录集的结束所有的记录行，可以指定第二个参数为 -1：   
 mysql> SELECT * FROM table LIMIT 95,-1; // 检索记录行 96-last.  
-  
+
 //如果只给定一个参数，它表示返回最大的记录行数目：   
 mysql> SELECT * FROM table LIMIT 5; //检索前 5 个记录行  
-  
+
 //换句话说，LIMIT n 等价于 LIMIT 0,n。  
 ```
 
@@ -604,7 +604,7 @@ ALTER TABLE <表名> ADD INDEX (<字段>);
 * 添加全文索引
 
     ```sql
-    ALTER TABLE `table_name` ADD FULLTEXT ( `column`) 
+    ALTER TABLE `table_name` ADD FULLTEXT ( `column`)
     ```
 
 * 添加多列索引
@@ -676,4 +676,3 @@ SELECT str_to_date('03/Jul/2017:16:05:02 +0800', '%d/%b/%Y:%H:%i:%S'); # 2017-07
 ```
 
 [STR_TO_DATE官方文档](https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html#function_str-to-date)
-

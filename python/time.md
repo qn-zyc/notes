@@ -59,11 +59,11 @@ time.mktime(time_arr)  # 4132267932.0
 import time
 
 # 格式化成2016-03-20 11:45:39形式
-print time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) 
+print time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
 # 格式化成Sat Mar 28 22:24:24 2016形式
-print time.strftime("%a %b %d %H:%M:%S %Y", time.localtime()) 
-  
+print time.strftime("%a %b %d %H:%M:%S %Y", time.localtime())
+
 # 将格式字符串转换为时间戳
 a = "Sat Mar 28 22:24:24 2016"
 print time.mktime(time.strptime(a,"%a %b %d %H:%M:%S %Y"))
@@ -93,6 +93,7 @@ python中时间日期格式化符号：
 | %W   | 一年中的星期数（00-53）星期一为星期的开始 |
 | %x   | 本地相应的日期表示                        |
 | %X   | 本地相应的时间表示                        |
+| %z   | 时区, 如 +0800                            |
 | %Z   | 当前时区的名称                            |
 | %%   | %号本身                                   |
 
@@ -105,14 +106,14 @@ python中时间日期格式化符号：
 ```python
 In [11]: datetime.datetime.now()
 Out[11]: datetime.datetime(2016, 12, 1, 15, 32, 16, 512545)
-    
+
 In [3]: datetime.date.today()
 Out[3]: datetime.date(2016, 12, 14)
-    
+
 # 获取毫秒值
 In [33]: datetime.datetime.now().microsecond / 1000
 Out[33]: 434
-    
+
 # 从时间戳获取时间
 datetime.datetime.fromtimestamp(1480929026)
 
@@ -133,7 +134,7 @@ Out[14]: datetime.datetime(2016, 12, 1, 15, 33, 7, 172147)
 
 In [15]: d2
 Out[15]: datetime.datetime(2016, 12, 1, 15, 33, 17, 172147)
-    
+
 # 昨天
 In [4]: datetime.date.today() - datetime.timedelta(days=1)
 Out[4]: datetime.date(2016, 12, 13)
@@ -149,4 +150,3 @@ In [16]: d1 = datetime.datetime.now()
 In [17]: d1.strftime('%Y-%m-%d %H:%M:%S')
 Out[17]: '2016-12-01 15:34:16'
 ```
-

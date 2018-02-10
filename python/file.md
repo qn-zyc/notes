@@ -44,7 +44,7 @@ import os, stat
 
 file_stat = os.stat(file_name)
 # 文件大小
-file_stat[stat.ST_SIZE
+file_stat[stat.ST_SIZE]
 # 创建时间
 file_stat[stat.ST_CTIME]
 # 最后修改时间
@@ -192,12 +192,12 @@ open(file[, mode[, buffering[, encoding[, errors[, newline[, closefd=True]]]]]])
 	* `t`: 文本模式(默认).
 	* `+`: 读写模式。
 	* `U`: 通用换行符。
-* `buffering`: 
+* `buffering`:
 	* 取值0: buffer关闭，只适用于二进制模式。
 	* 取值1: line buffer, 只适用于文本模式。
 	* 取值大于1: 初始化的buffer大小。
 * `encoding`: 返回的数据使用何种编码，一般采用 utf8 或者 gbk.
-* `errors`: 
+* `errors`:
 	* `strict`: 字符编码出现错误时会报错。
 	* `ignore`: 忽略错误，继续执行下面的程序。
 * `newline`: 可选值有 `None`, `\n`, `\r`, `\r\n`, 区分换行符，只对文本模式有效。

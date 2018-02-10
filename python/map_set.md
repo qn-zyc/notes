@@ -75,7 +75,7 @@ D['food']
 ## 修改值
 
 ```python
-D['quantity'] += 1
+D['quantity'] += 1  # key 必须存在了才行
 ```
 
 `setdefault` 只有在键不存在时才会设置值:
@@ -222,4 +222,3 @@ print(x & y)  # set(['b', 'd'])
 print(x ^ y)  # set(['a', 'c', 'e', 'y', 'x', 'z'])
 print(x > y, x < y)  # (False, False)
 ```
-

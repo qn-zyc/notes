@@ -502,7 +502,7 @@ http {
 
 
 # 重定向
-* [](https://moonbingbing.gitbooks.io/openresty-best-practices/openresty/work_with_location.html)
+* [work_with_location](https://moonbingbing.gitbooks.io/openresty-best-practices/openresty/work_with_location.html)
 
 ## ngx.redirect
 
