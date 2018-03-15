@@ -229,7 +229,7 @@ skip = 2, pc = 77123, file = /usr/local/go/src/runtime/proc.go, line = 63
 skip = 3, pc = 227809, file = /usr/local/go/src/runtime/asm_amd64.s, line = 2232
 ```
 
-其中 skip = 0 为当前文件的 main.main 函数, 以及对应的行号. 
+其中 skip = 0 为当前文件的 main.main 函数, 以及对应的行号.
 
 另外的 skip = 1 和 skip = 2 也分别对应2个函数调用. 通过查阅 runtime/proc.c 文件的代码, 我们可以知道对应的函数分别为 runtime.main 和 runtime.goexit.
 
@@ -837,7 +837,7 @@ FAIL	test	0.008s
 
 1. runtime.goexit 还是入口
 2. 然后 runtime.goexit 调用 runtime.main 函数
-3. 最终 runtime.main 调用go test 命令生成的 main.main 函数, 在 _test/_testmain.go 文件
+3. 最终 runtime.main 调用go test 命令生成的 main.main 函数, 在 `_test/_testmain.go` 文件
 4. 然后调用 testing.Main, 改函数执行各个例子函数
 
 另外, 从这个例子我们可以发现, 我们自己写的 main.main 函数所在的 main 包也可以被其他包导入. 但是其他包导入之后的 main 包里的 main 函数就不再是main.main 函数了. 因此, 程序的入口也就不是自己写的 main.main 函数了.
@@ -918,7 +918,7 @@ total number of allocated objects        : 113 bytes
     ...
   memprofilerate=X: 更新`runtime.MemProfileRate`的值。
   ...
-  
+
 
 mark phase: where the GC determines which memory allocations are still in use.
 

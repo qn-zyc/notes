@@ -8,6 +8,7 @@
 	* [多行代码](#多行代码)
 * [设置](#设置)
 	* [UI 设置](#ui-设置)
+		* [字体](#字体)
 * [安装](#安装)
 	* [插件安装](#插件安装)
 	* [插件列表](#插件列表)
@@ -18,6 +19,7 @@
 		* [vim](#vim)
 		* [golang](#golang)
 		* [python](#python)
+		* [rust](#rust)
 		* [markdown](#markdown)
 		* [git](#git)
 		* [openresty](#openresty)
@@ -69,7 +71,9 @@
 # 设置
 
 ## UI 设置
-- [设置 UI 字体大小](https://github.com/atom/atom/issues/2530)
+
+### 字体
+设置 UI 字体大小 https://github.com/atom/atom/issues/2530
 
 我的设置:
 
@@ -89,6 +93,19 @@ atom-text-editor[mini],
 .list-tree li.list-nested-item > .list-item {
   font-size: @font-size;
   font-family: @font-family;
+}
+```
+
+设置字体粗细？
+- https://gist.github.com/james2doyle/9260736
+- https://developer.mozilla.org/zh-CN/docs/Web/CSS/font-smooth
+- https://developer.mozilla.org/zh-CN/docs/Web/CSS/text-rendering
+
+```less
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
 }
 ```
 

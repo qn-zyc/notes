@@ -29,6 +29,7 @@
 	- [ngx.shared.DICT.flush_expired](#ngxshareddictflushexpired)
 	- [ngx.shared.DICT.get_keys](#ngxshareddictgetkeys)
 - [json](#json)
+- [log](#log)
 - [redis](#redis)
 	- [scan keys](#scan-keys)
 - [编码、加密](#编码加密)
@@ -127,6 +128,7 @@ ngx.var.host
 ngx.var.request_uri  -- 包含查询参数, 比如 /test?a=1
 ngx.var.uri          -- 不包含查询参数, 比如 /test
 ngx.var.remote_addr
+ngx.var.request_id
 ```
 
 
@@ -374,6 +376,25 @@ local cjson = require "cjson"
 local ok, json_obj = pcall(cjson.decode, json_str)
 local str = cjson.encode(obj)
 ```
+
+
+
+# log
+
+```lua
+ngx.log(ngx.ERR, "message")
+```
+
+日志级别:
+- ngx.STDERR     -- 0, 标准输出
+- ngx.EMERG      -- 1, 紧急报错
+- ngx.ALERT      -- 2, 报警
+- ngx.CRIT       -- 3, 严重，系统故障，触发运维告警系统
+- ngx.ERR        -- 4, 错误，业务不可恢复性错误
+- ngx.WARN       -- 5, 告警，业务中可忽略错误
+- ngx.NOTICE     -- 6, 提醒，业务比较重要信息
+- ngx.INFO       -- 7, 信息，业务琐碎日志信息，包含不同情况判断等
+- ngx.DEBUG      -- 8, 调试
 
 
 

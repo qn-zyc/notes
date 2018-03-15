@@ -216,6 +216,8 @@ access_log  logs/chentest.access.log;
 error_log   logs/chentest.error.log info;
 ```
 
+日志模块 http://nginx.org/en/docs/http/ngx_http_log_module.html
+
 
 ## server
 

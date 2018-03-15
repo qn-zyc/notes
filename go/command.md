@@ -1,21 +1,24 @@
-<!-- TOC -->
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
 - [go generate](#go-generate)
-    - [一个简单的例子:mkdir](#一个简单的例子mkdir)
-- [在程序中执行命令](#在程序中执行命令)
-- [go test](#go-test)
+	- [一个简单的例子:mkdir](#一个简单的例子mkdir)
+- [在程序中执行命令 #](#在程序中执行命令-)
+- [go test #](#go-test-)
 - [go fmt](#go-fmt)
 - [goimports](#goimports)
 - [goreturns](#goreturns)
 - [golint](#golint)
 - [go install](#go-install)
 - [go build](#go-build)
-    - [交叉编译](#交叉编译)
-    - [ldflags](#ldflags)
-    - [gcflags](#gcflags)
+	- [交叉编译](#交叉编译)
+	- [ldflags](#ldflags)
+	- [gcflags](#gcflags)
 - [go list](#go-list)
 - [go tool objdump](#go-tool-objdump)
 - [go clean](#go-clean)
+- [go tool pprof](#go-tool-pprof)
+- [go tool trace](#go-tool-trace)
+- [-race 参数检查数据竞争](#-race-参数检查数据竞争)
 - [Makefile](#makefile)
 
 <!-- /TOC -->
@@ -288,6 +291,22 @@ TEXT main.test(SB) /Users/zhangyuchen/tmp/test.go
 * `-x` 标记会打印使用到的系统命令, 但会执行它们.
 
 
+# go tool pprof
+
+
+# go tool trace
+
+
+# -race 参数检查数据竞争
+
+```shell
+go run -race *.go
+go build -race *.go
+go test -v -race
+```
+
+
+
 
 # Makefile
 
@@ -303,7 +322,7 @@ IMAGE_NAME      :=      cirocosta/l7
 
 # As a call to `make` without any arguments leads to the execution
 # of the first target found I really prefer to make sure that this
-# first one is a non-destructive one that does the most simple 
+# first one is a non-destructive one that does the most simple
 # desired installation. It's very common to people set it as `all`
 # but it could be anything like `a`.
 all: install
@@ -316,7 +335,7 @@ all: install
 install:
 	go install -v
 
-# keeping `./main.go` with just a `cli` and `./lib/*.go` with actual 
+# keeping `./main.go` with just a `cli` and `./lib/*.go` with actual
 # logic, `tests` usually reside under `./lib` (or some other subdirectories).
 # Here we could do something like `find . -name "*" -type d -exec ...` but IMO
 # that's unnecessary. Just `cd`ing to what matters to you is fine - no need to
@@ -345,9 +364,9 @@ image:
 
 # This is pretty much an optional thing that I tend to always include.
 # Goreleaser is a tool that allows anyone to integrate a binary releasing
-# process to their pipelines. Here in this target With just a simple 
+# process to their pipelines. Here in this target With just a simple
 # `make release` you can have a `tag` created in GitHub with multiple
-# builds if you wish. 
+# builds if you wish.
 # See more at `gorelease` github repo.
 release:
 	git tag -a $(VERSION) -m "Release" || true

@@ -1,16 +1,16 @@
-<!-- TOC -->
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
 - [curl](#curl)
-    - [获取页面](#获取页面)
-    - [POST](#post)
-    - [指定方法](#指定方法)
-    - [将输出写入到文件](#将输出写入到文件)
-    - [上传文件](#上传文件)
-    - [代理](#代理)
-    - [https](#https)
-        - [忽略校验](#忽略校验)
-        - [resolve](#resolve)
-    - [参数列表](#参数列表)
+	- [获取页面](#获取页面)
+	- [POST](#post)
+	- [指定方法](#指定方法)
+	- [将输出写入到文件](#将输出写入到文件)
+	- [上传文件](#上传文件)
+	- [代理](#代理)
+	- [https](#https)
+		- [忽略校验](#忽略校验)
+		- [resolve](#resolve)
+	- [参数列表](#参数列表)
 - [参考](#参考)
 
 <!-- /TOC -->
@@ -54,6 +54,13 @@ curl --data-urlencode "value 1" http://hostname.com
 ```
 
 **data-urlencode也会把&编码**
+
+提交 JSON 字符串:
+
+```bash
+curl -x localhost:80 -X POST -H "Content-Type: applecation/json" 'http://example.com/path' --data-binary '{"json":true}'
+```
+
 
 ## 指定方法
 

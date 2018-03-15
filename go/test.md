@@ -1,20 +1,21 @@
-<!-- TOC -->
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
 - [测试用例](#测试用例)
-    - [代码覆盖率](#代码覆盖率)
-    - [指定超时时间](#指定超时时间)
+	- [代码覆盖率](#代码覆盖率)
 - [压力测试](#压力测试)
-    - [记录cpu占用](#记录cpu占用)
-    - [记录内存分配](#记录内存分配)
-    - [并发测试](#并发测试)
+	- [记录cpu占用](#记录cpu占用)
 - [例子用例](#例子用例)
 - [测试脚本](#测试脚本)
-    - [除vendor外的测试](#除vendor外的测试)
+	- [除vendor外的测试](#除vendor外的测试)
+	- [测试覆盖率](#测试覆盖率)
 - [测试技巧](#测试技巧)
-    - [子测试](#子测试)
-    - [表格驱动](#表格驱动)
-    - [测试用例的当前目录](#测试用例的当前目录)
-    - [flag](#flag)
+	- [子测试](#子测试)
+	- [表格驱动](#表格驱动)
+	- [测试用例的当前目录](#测试用例的当前目录)
+	- [flag](#flag)
+	- [Don’t export concurrency primitives](#dont-export-concurrency-primitives)
+	- [使用 net/http/httptest](#使用-nethttphttptest)
+	- [Use a separate test package](#use-a-separate-test-package)
 - [参考](#参考)
 
 <!-- /TOC -->
@@ -22,155 +23,48 @@
 
 # 测试用例
 
-- 文件名必须是`_test.go`结尾的，这样在执行`go test`的时候才会执行到相应的代码
-- 你必须`import testing`这个包
-- 所有的测试用例函数必须是`Test`开头
-- 测试用例会按照源代码中写的顺序依次执行
-- 测试函数`TestXxx()`的参数是`testing.T`，我们可以使用该类型来记录错误或者是测试状态
-- 测试格式：`func TestXxx (t *testing.T)`,Xxx部分可以为任意的字母数字的组合，但是首字母不能是小写字母[a-z]，例如`Testintdiv`是错误的函数名。
-- 函数中通过调用`testing.T`的Error, Errorf, FailNow, Fatal, FatalIf方法，说明测试不通过，调用Log方法用来记录测试的信息。
-- 执行当前目录下所有的单元测试: `go test -v ./...`.
+- 文件名必须是 `_test.go` 结尾的，这样在执行 `go test` 的时候才会执行到相应的代码
+- 测试包是 `testing`。
+- 所有的测试用例函数必须是 `Test` 开头, 比如 `TestAdd(t *testing.T)`, Add 首字母需要大写。
+- 测试用例会按照源代码中写的顺序依次执行。
+- 函数中通过调用 `testing.T` 的 Error, Errorf, FailNow, Fatal, FatalIf 方法，说明测试不通过，调用 Log 方法用来记录测试的信息。
+- 执行指定单测: `go test -v -run=函数名正则 包路径`。
+- 执行当前目录下所有的单元测试: `go test -v ./...`。
+- 指定超时时间: `go test -v -run=XXX -timeout=10m`。
 
-
-```bash
-go test -v -run=函数名正则 包路径
-```
-
-```go
-package gotest
-
-import (
-    "testing"
-)
-
-func Test_Division_1(t *testing.T) {
-    if i, e := Division(6, 2); i != 3 || e != nil { //try a unit test on function
-        t.Error("除法函数测试没通过") // 如果不是如预期的那么就报错
-    } else {
-        t.Log("第一个测试通过了") //记录一些你期望记录的信息
-    }
-}
-
-func Test_Division_2(t *testing.T) {
-    t.Error("就是不通过")
-}
-```
-
-我们在项目目录下面执行go test,就会显示如下信息：
-
-```bash
---- FAIL: Test_Division_2 (0.00 seconds)
-    gotest_test.go:16: 就是不通过
-FAIL
-exit status 1
-FAIL    gotest  0.013s
-```
-
-从这个结果显示测试没有通过，因为在第二个测试函数中我们写死了测试不通过的代码t.Error，那么我们的第一个函数执行的情况怎么样呢？默认情况下执行go test是不会显示测试通过的信息的，我们需要带上参数`go test -v`，这样就会显示如下信息：
-
-```
-=== RUN Test_Division_1
---- PASS: Test_Division_1 (0.00 seconds)
-    gotest_test.go:11: 第一个测试通过了
-=== RUN Test_Division_2
---- FAIL: Test_Division_2 (0.00 seconds)
-    gotest_test.go:16: 就是不通过
-FAIL
-exit status 1
-FAIL    gotest  0.012s
-```
 
 
 ## 代码覆盖率
 
-```go
-go test -cover -v
-```
+- 显示总的覆盖率信息: `go test -v -cover`。
+- 输出覆盖率信息到文件并用浏览器显示: `go test -coverprofile=c.out && go tool cover -html=c.out`。
+- covermode: `go test -v covermode=atomic`。 通过在代码中插入埋点来实现的。
+    - set: 每个语句是否执行到, 默认配置。
+    - count: 每个语句执行了多少次。
+    - atomic: 类似于 count, 但表示的是并行程序中的精确计数。
 
-通过在每个代码块中插入布尔类型的变量，统计代码是否被执行。
-
-
-**可视化**
-
-```go
-go test -coverprofile=c.out
-go tool cover -html=c.out
-```
-
-使用 `-covermode=count` 在每行代码中插入计数器而不是布尔变量。
-
-
-## 指定超时时间
-
-```shell
-go test -v -run=XXX -timeout=10m
-```
 
 
 # 压力测试
 
-压力测试用来检测函数(方法）的性能，和编写单元功能测试的方法类似,此处不再赘述，但需要注意以下几点：
+- 压力测试用来检测函数(方法)的性能。
+- 函数声明格式: `func BenchmarkXXX(b *testing.B) { ... }`
+- go test 默认执行单测, 而不执行压力测试, 需要使用 `go test -v -bench=函数名正则` 来指定。
+    - `go test -v -run=xxx -bench=.`: 不执行单测, 执行所有压测。
+    - `go test -v -bench='A|bcd|EFG'`: 使用 `|` 表示或。
+    - `go test -v -bench=Benchmark(A|B)`
+- 文件名也必须以 `_test.go` 结尾。
+- cpu 占用: `go test -v -cpuprofile=cpu.out`。
+- 内存占用: `go test -v -benchmem`。
 
-- 压力测试用例必须遵循如下格式，其中XXX可以是任意字母数字的组合，但是首字母不能是小写字母
-
-  `func BenchmarkXXX(b *testing.B) { ... }`
-
-- go test不会默认执行压力测试的函数，如果要执行压力测试需要带上参数`-test.bench`，语法:`-test.bench="test_name_regex"`,例如`go test -test.bench=".*"`表示测试全部的压力测试函数
-- `-bench`也可以, bench可以使用`|`(`-bench='A|bcd|EFG'`, `-bench=Benchmark(A|B)`)
-
-- 在压力测试用例中,请记得在循环体内使用testing.B.N,以使测试可以正常的运行
-
-- 文件名也必须以_test.go结尾
-
-```go
-package gotest
-
-import (
-    "testing"
-)
-
-func Benchmark_Division(b *testing.B) {
-    for i := 0; i < b.N; i++ { //use b.N for looping
-        Division(4, 5)
-    }
-}
-
-func Benchmark_TimeConsumingFunction(b *testing.B) {
-    b.StopTimer() //调用该函数停止压力测试的时间计数
-
-    //做一些初始化的工作,例如读取文件数据,数据库连接之类的,
-    //这样这些时间不影响我们测试函数本身的性能
-
-    b.StartTimer() //重新开始时间
-    for i := 0; i < b.N; i++ {
-        Division(4, 5)
-    }
-}
-```
-
-我们执行命令`go test -file webbench_test.go -test.bench=".*"`，可以看到如下结果：
-
-```
-PASS
-Benchmark_Division  500000000            7.76 ns/op
-Benchmark_TimeConsumingFunction 500000000            7.80 ns/op
-ok      gotest  9.364s  
-```
-
-上面的结果显示我们没有执行任何TestXXX的单元测试函数，显示的结果只执行了压力测试函数，第一条显示了 `Benchmark_Division` 执行了500000000次，每次的执行平均时间是7.76纳秒，第二条显示了 `Benchmark_TimeConsumingFunction` 执行了500000000，每次的平均执行时间是7.80纳秒。最后一条显示总共的执行时间。
-
-
-```
-go test -v -run=XXX -bench=函数名正则 包路径
-```
 
 ## 记录cpu占用
 
 ```
-go test -v -run=XXX -bench=函数名正则 -cpuprofile=cpu.out sms
+go test -v -run=XXX -bench=函数名正则 -cpuprofile=cpu.out 包路径或无
 ```
 
-会在当前目录下生成一个以".test"结尾的文件和一个cpu.out,查看的话使用:
+会在当前目录下生成一个以 `.test` 结尾的文件和一个 cpu.out, 查看的话使用:
 
 ```
 go tool pprof ./XX.test cpu.out
@@ -181,38 +75,17 @@ go tool pprof ./XX.test cpu.out
 文本输出：
 
 ```go
-go tool pprof -text -nodecount=10 ./XX.test cpu.log
+go tool pprof -text -nodecount=10 ./XX.test cpu.out
 ```
 
-`-text` 标志参数用于指定输出格式, 在这里每行是一个函数, 根据使用CPU的时间来排
-序
-
-`-nodecount=10` 标志参数限制了只输出前10行的结果
-
-## 记录内存分配
-
-```go
-添加 -benchmem
-```
-
-
-
-## 并发测试
-
-```go
-b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			// some code
-		}
-	})
-```
+- text 标志参数用于指定输出格式, 在这里每行是一个函数, 根据使用CPU的时间来排序。
+- nodecount=10 标志参数限制了只输出前10行的结果。
 
 
 # 例子用例
 
 - 文件名也是以 `_test` 结尾
-- 使用fmt包输出，使用注释 `// Output: ` 来验证输出是否正确。
-- Example[FunctionName] 针对FunctionName的例子，会显示在FunctionName的下，如果没有FunctionName则会显示在Overview下。
+- 使用 fmt 包输出，使用注释 `// Output: ` 来验证输出是否正确。
 
 
 ```go
@@ -242,6 +115,22 @@ TEST_PKGS=`find . -name \*_test.go | while read a; do dirname $a; done | sort | 
 最后的结果就是列举出自己写的 `_test.go` 文件。
 
 
+## 测试覆盖率
+
+```bash
+#! /bin/bash
+
+set -e
+
+mode="count"
+coverprofile="c.out"
+for package in $(go list ./... | grep -Ev 'qiniu.com/fusionartisan/qtest'); do
+    coverprofile="$(echo $package | tr / -).cover"
+    go test -covermode="$mode" -coverprofile="$coverprofile" -coverpkg="$package" "$package"
+done
+```
+
+
 # 测试技巧
 
 
@@ -269,6 +158,20 @@ func TestAdd(t *testing.T) {
 * 每个 `Run` 都是相互独立的, 可能会在多个 goroutine 里执行.
 * 外层测试会在所有子测试都执行完毕才会 return.
 * 单独执行其中一个子测试: `go test -v -run=TestAdd/1`(使用`+1`报错)
+
+```go
+func TestGroupedParallel(t *testing.T) {
+    for _, tc := range tests {
+        tc := tc // capture range variable
+        t.Run(tc.Name, func(t *testing.T) {
+            t.Parallel()
+            ...
+        })
+    }
+}
+```
+
+- 每个子测试相互之间并行执行。
 
 
 ## 表格驱动
@@ -475,5 +378,7 @@ httptest 还可以启动一个临时服务，监听随机端口: `httptest.NewSe
 
 
 # 参考
-* [Advanced Testing in Go, Mitchell Hashimoto](https://about.sourcegraph.com/go/advanced-testing-in-go-mitchell-hashimoto)
+- [Advanced Testing in Go, Mitchell Hashimoto](https://about.sourcegraph.com/go/advanced-testing-in-go-mitchell-hashimoto)
 - [5 Advanced Testing Techniques in Go](https://segment.com/blog/5-advanced-testing-techniques-in-go/)
+- [https://golang.org/pkg/testing/](https://golang.org/pkg/testing/)
+- [Go多个pkg的单元测试覆盖率](http://singlecool.com/2017/06/11/golang-test/)

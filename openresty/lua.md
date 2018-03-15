@@ -21,6 +21,7 @@
 		- [长度](#长度)
 		- [分割](#分割)
 	- [table](#table)
+		- [判断 table 是否为空](#判断-table-是否为空)
 		- [数组](#数组)
 		- [排序 table.sort](#排序-tablesort)
 		- [打印](#打印)
@@ -68,6 +69,9 @@
 		- [监控 table 的设置和获取情况](#监控-table-的设置和获取情况)
 		- [只读 table](#只读-table)
 - [环境](#环境)
+- [调用系统命令](#调用系统命令)
+	- [os.execute ([command])](#osexecute-command)
+	- [io.popen(command)](#iopopencommand)
 - [json](#json)
 	- [空数组序列化为空对象的问题](#空数组序列化为空对象的问题)
 - [代码片段](#代码片段)
@@ -320,6 +324,18 @@ print(corp["city"])           -->output:"Beijing"
 print(corp.staff[1])          -->output:Jack
 print(corp[10])               -->output:360
 ```
+
+
+### 判断 table 是否为空
+
+```lua
+local a = {}
+if not next(a) then
+	return
+end
+```
+
+如果 table 不为空, next() 返回下一个元素的索引和值(或者key和值)，如果为空，则返回 nil.
 
 
 ### 数组
@@ -727,7 +743,8 @@ print(3.1415 - 3.1415%0.01) -- 精确到小数点后两位 3.14
 ## 赋值
 * 多重赋值: `a, b = 1, 2`, 先计算右边的, 后赋值. 互换变量:`x, y = y, x`.
 * 多重赋值两个个数可以不对等: `a, b = 1, 2, 3`, 多的丢弃, 少的赋值为nil.
-
+* `local i, j`
+* `local i, j = 1, 2`
 
 
 # 控制结构

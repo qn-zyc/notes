@@ -1,18 +1,23 @@
-<!-- TOC -->
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
 - [查看进程文件描述符](#查看进程文件描述符)
-- [TIME_WAIT](#time_wait)
+- [TIME_WAIT](#timewait)
 - [查询域名IP注册信息](#查询域名ip注册信息)
 - [查看进程的运行时间](#查看进程的运行时间)
 - [查看系统信息](#查看系统信息)
-    - [用户相关](#用户相关)
+	- [用户相关](#用户相关)
 - [md5](#md5)
 - [top](#top)
-    - [top 命令的显示结果](#top-命令的显示结果)
+	- [top 命令的显示结果](#top-命令的显示结果)
 - [权限](#权限)
-    - [chmod](#chmod)
-    - [chgrp](#chgrp)
-    - [chown](#chown)
+	- [chmod](#chmod)
+	- [chgrp](#chgrp)
+	- [chown](#chown)
+	- [nc 测试 udp 端口](#nc-测试-udp-端口)
+- [磁盘](#磁盘)
+	- [du](#du)
+		- [介绍](#介绍)
+		- [示例](#示例)
 - [参考](#参考)
 
 <!-- /TOC -->
@@ -264,6 +269,46 @@ usage: `nc [-46DdhklnrStUuvzC] [-i interval] [-p source_port] [-s source_ip_addr
 # nc -vuz 1.1.1.1 123
 Connection to 1.1.1.1 123 port [udp/ntp] succeeded!
 ```
+
+
+# 磁盘
+
+## du
+
+### 介绍
+
+du 命令是对文件和目录磁盘使用空间的查看。
+
+命令参数:
+
+```
+-a或-all  显示目录中个别文件的大小。   
+-b或-bytes  显示目录或文件大小时，以byte为单位。   
+-c或--total  除了显示个别目录或文件的大小外，同时也显示所有目录或文件的总和。
+-k或--kilobytes  以KB(1024bytes)为单位输出。
+-m或--megabytes  以MB为单位输出。   
+-s或--summarize  仅显示总计，只列出最后加总的值。
+-h或--human-readable  以K，M，G为单位，提高信息的可读性。
+-x或--one-file-xystem  以一开始处理时的文件系统为准，若遇上其它不同的文件系统目录则略过。
+-L<符号链接>或--dereference<符号链接> 显示选项中所指定符号链接的源文件大小。   
+-S或--separate-dirs   显示个别目录的大小时，并不含其子目录的大小。
+-X<文件>或--exclude-from=<文件>  在<文件>指定目录或文件。   
+--exclude=<目录或文件>         略过指定的目录或文件。    
+-D或--dereference-args   显示指定符号链接的源文件大小。   
+-H或--si  与-h参数相同，但是K，M，G是以1000为换算单位。   
+-l或--count-links   重复计算硬件链接的文件。
+```
+
+
+### 示例
+
+- 指定目录磁盘占用top10: `du -a ./dir | sort -n -r | head -n 10`
+- 显示指定文件所占空间: `du test.log`
+- 显示指定目录所占空间: `du dir`
+- 显示多个文件所占空间: `du t1.log t2.log`
+- 显示总和大小: `du -s`, `du -s dir`
+- 以方便阅读的格式显示: `du -h dir`
+- 输出当前目录下各子目录所占空间: `du -h --max-depth=1`
 
 
 
