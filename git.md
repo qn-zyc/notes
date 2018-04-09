@@ -103,6 +103,7 @@ git config --global alias.ci "commit -s"
 * `git diff`: 工作区和暂存区比较
 * `git diff --cached`: 暂存区和 HEAD 比较
 * `git diff HEAD`: 工作区和 HEAD 比较
+* `git diff branch1 branch2`: 比较两个分支的异同
 
 
 

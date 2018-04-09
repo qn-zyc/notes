@@ -129,13 +129,13 @@ fmt.Println(resp.Header)
 1. 设定自定义的"User-Agent"，而不是默认的"Go http package"
 2. 传递Cookie
 
-  ```go
+```go
 request, err := http.NewRequest("GET", "http://www.baidu.com", nil)
 request.Header.Add("User-Agent", "default")
 request.Host = "www.baidu.com" // 自定义 Host 只能这样设置
 client := &http.Client{}
 resp, err := client.Do(request)
-  ```
+```
 
 ## 高级封装
 

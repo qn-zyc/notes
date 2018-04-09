@@ -37,7 +37,7 @@ Context 的 Values 方法只用于在程序和接口间传递请求相关的数�
 
 WithCancel 返回的是 `*cancelCtx`, 它有一个 done 字段, 类型是 `chan struct{}`, 返回的 cancelFunc 主要是将这个 done close 掉, 这样监听的其他 goroutine 就能得知这个 context 是被 cancel 了.
 
-另外, 为了能监听到 parent context 的 cancel 消息, 它还在 parent context 的 children 字段中加入自己, 这个字段是个 `map[canceler]struct{}`, 其实是当做 set 来用的, key 就是 `cancelCtx`(注意是值类型而不是指针). 
+另外, 为了能监听到 parent context 的 cancel 消息, 它还在 parent context 的 children 字段中加入自己, 这个字段是个 `map[canceler]struct{}`, 其实是当做 set 来用的, key 就是 `cancelCtx`(注意是值类型而不是指针).
 
 在初始化时如果它的 parent 的 done 不为 nil(为 nil 就什么也不做), 它会递归地向上查找 parent, 直到找到一个 `*cancelCtx` 类型的 parent, 然后向 parent 的 children 字段加入自己. 如果找不到一个 `*cancelCtx` 类型的 parent, 就单独启动一个 goroutine, 监听 parent.done 和自己的 done, 监听 parent.done 是为了调用自己的 cancel, 也就是说 parent 不是 `*cancelCtx` 类型的 context 时 parent 调用不了自己的 cancel 方法, 所以需要通过 select parent.done 来得知 parent 已经结束了. 监听自己的 done 是为了及时退出 goroutine.
 
@@ -68,3 +68,13 @@ timerCtx 的 cancel 方法就是调用了 cancelCtx.cancel(), 只是多加了 st
 key 最好不要是 string 或者其他内建类型, 可以使用包级别的别名, 这样其他包就获取不到这个值了, 只能通过方法来获取.
 
 每个 context 中只保留一对 key-value, 查找时一级一级查找, 并没有 map 这样的结构.
+
+
+
+# context 应用
+
+## cancel
+
+当客户端主动断开连接时, 服务端的 req.Context() 会收到 context canceled 的通知(通过 ctx.Err()). 但是如果服务端将 req.ctx 重新赋值了(`req = req.WithContext(context.Background())`), 那么 req.Context() 就收不到通知了(也就是说 `<-req.Context().Done()` 不能返回).
+
+如果服务端不处理 ctx.Done() 的话, 即使客户端断开连接了也会继续执行 ServeHTTP() 的.

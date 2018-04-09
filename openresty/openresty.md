@@ -44,6 +44,16 @@
 	- [请求的处理流程](#请求的处理流程)
 - [日志](#日志)
 	- [将日志打到远程服务](#将日志打到远程服务)
+- [性能](#性能)
+	- [性能测试](#性能测试)
+		- [注意点](#注意点)
+- [正则](#正则)
+	- [ngx.re](#ngxre)
+		- [ngx.re.match](#ngxrematch)
+		- [ngx.re.find](#ngxrefind)
+		- [ngx.re.gmatch](#ngxregmatch)
+		- [ngx.re.sub](#ngxresub)
+		- [ngx.re.gsub](#ngxregsub)
 - [参考](#参考)
 
 <!-- /TOC -->
@@ -599,6 +609,262 @@ location /mixed {
 
 
 
+# 性能
+
+## 性能测试
+
+
+### 注意点
+
+以下摘自 https://groups.google.com/forum/#!topic/openresty/gXxDThKEGss:
+1. 当前 shell 的 ulimit -n 和 nginx 的 worker_connections 配置都应调整得足够大。
+2. 同时压测时应启用 ab 的 -k 选项以及 lua-resty-redis 的连接池，否则很容易把系统的临时端口用尽。如果你坚持不使用
+ab 的 -k 选项以启用 http 1.0 keepalive，则最好配置  lua_http10_buffering off 指令以提高
+http 1.0 短连接访问下的性能。
+3. 你的系统检测出多少个 CPU 核，就启用多少个 nginx worker 进程，同时恰当配置 Nginx 的
+worker_cpu_affinity 指令设置 CPU 亲缘。建议禁用 access_log 或者至少设置较大的 access log
+buffer，以降低写日志开销。
+4. openresty 一侧应启用 LuaJIT 2.0.
+5. 大并发测试时应调大 nginx 一侧和 redis 一侧的 backlog 设置。
+6. 仔细 ab 客户端或者 redis 服务器本身成为性能瓶颈 ;)
+
+
+
+# 正则
+
+## ngx.re
+
+### ngx.re.match
+
+语法：`captures, err = ngx.re.match(subject, regex, options?, ctx?, res_table?)`
+
+options:
+```
+a             锚定模式，只从头开始匹配.
+d             DFA模式，或者称最长字符串匹配语义，需要PCRE 6.0+支持.
+D             允许重复的命名的子模式，该选项需要PCRE 8.12+支持，例如
+                local m = ngx.re.match("hello, world",
+                                       "(?<named>\w+), (?<named>\w+)",
+                                       "D")
+                -- m["named"] == {"hello", "world"}
+i             大小写不敏感模式.
+j             启用PCRE JIT编译, 需要PCRE 8.21+ 支持，并且必须在编译时加上选项--enable-jit，
+                为了达到最佳性能，该选项总是应该和'o'选项搭配使用.		  
+J             启用PCRE Javascript的兼容模式，需要PCRE 8.12+ 支持.
+m             多行模式.
+o             一次编译模式，启用worker-process级别的编译正则表达式的缓存.
+s             单行模式.
+u             UTF-8模式. 该选项需要在编译PCRE库时加上--enable-utf8 选项.
+U             与"u" 选项类似，但是该项选禁止PCRE对subject字符串UTF-8有效性的检查.
+x             扩展模式
+```
+
+只有第一次匹配的结果被返回，如果没有匹配，则返回nil；或者匹配过程中出现错误时，也会返回nil，此时错误信息会被保存在err中。
+
+当匹配的字符串找到时，一个Lua table captures会被返回，captures[0]中保存的就是匹配到的字串，captures[1]保存的是用括号括起来的第一个子模式的结果，captures[2]保存的是第二个子模式的结果，依次类似。
+
+```lua
+-- 1
+local m, err = ngx.re.match("hello, 1234", "[0-9]+")
+if m then
+    -- m[0] == "1234"
+else
+    if err then
+        ngx.log(ngx.ERR, "error: ", err)
+        return
+    end
+    ngx.say("match not found")
+end
+
+-- 2
+local m, err = ngx.re.match("hello, 1234", "([0-9])[0-9]+")
+-- m[0] == "1234"
+-- m[1] == "1"
+
+-- 命名
+local m, err = ngx.re.match("hello, 1234", "([0-9])(?<remaining>[0-9]+)")
+-- m[0] == "1234"
+-- m[1] == "1"
+-- m[2] == "234"
+-- m["remaining"] == "234"
+local m, err = ngx.re.match("hello, world", "(world)|(hello)|(?<named>howdy)")
+-- m[0] == "hello"
+-- m[1] == nil
+-- m[2] == "hello"
+-- m[3] == nil
+-- m["named"] == nil
+
+-- options
+local m, err = ngx.re.match("hello, world", "HEL LO", "ix")
+-- m[0] == "hello"
+
+local m, err = ngx.re.match("hello, 美好生活", "HELLO, (.{2})", "iu")
+-- m[0] == "hello, 美好"
+-- m[1] == "美好"
+```
+
+第四个可选参数ctx可以传入一个Lua Table，传入的Lua Table可以是一个空表，也可以是包含pos字段的Lua Table。如果传入的是一个空的Lua Table，那么，ngx.re.match将会从subject字符串的起始位置开始匹配查找，查找到匹配串后，修改pos的值为匹配字符串的**下一个位置的值**，并将pos的值保存到ctx中，如果匹配失败，那么pos的值保持不变；如果传入的是一个非空的Lua Table，即指定了pos的初值，那么ngx.re.match将会从指定的pos的位置开始进行匹配，如果匹配成功了，修改pos的值为匹配字符串的下一个位置的值，并将pos的值保存到ctx中，如果匹配失败，那么pos的值保持不变。
+
+```lua
+local ctx = {}
+local m, err = ngx.re.match("1234, hello", "[0-9]+", "", ctx)
+-- m[0] = "1234"
+-- ctx.pos == 5
+
+local ctx = { pos = 2 }
+local m, err = ngx.re.match("1234, hello", "[0-9]+", "", ctx)
+-- m[0] = "34"
+-- ctx.pos == 5
+```
+
+注意：如果需要传入ctx参数，但并不需要第三个可选参数options时，第三个参数也不能简单去掉，这时需要传入一个空的字符串作为第三个参数的值。
+
+
+### ngx.re.find
+
+语法：`from, to, err = ngx.re.find(subject, regex, options?, ctx?, nth?)`
+
+该方法与ngx.re.match方法基本类似，不同的地方在于ngx.re.find返回的是匹配的字串的起始位置索引和结束位置索引，如果没有匹配成功，那么将会返回两个nil，如果匹配出错，还会返回错误信息到err中。
+
+```lua
+local s = "hello, 1234"
+local from, to, err = ngx.re.find(s, "([0-9]+)", "jo")
+if from then
+    ngx.say("from: ", from)
+    ngx.say("to: ", to)
+    ngx.say("matched: ", string.sub(s, from, to))
+else
+    if err then
+        ngx.say("error: ", err)
+        return
+    end
+    ngx.say("not matched!")
+end
+```
+
+该方法相比ngx.re.match，不会创建新的Lua字符串，也不会创建新的Lua Table，因此，该方法比ngx.re.match更加高效，因此，在可以使用ngx.re.find的地方应该尽量使用。
+
+第五个参数可以指定返回第几个子模式串的起始位置和结束位置的索引值，默认值是0，此时将会返回匹配的整个字串；如果nth等于1，那么将返回第一个子模式串的始末位置的索引值；如果nth等于2，那么将返回第二个子模式串的始末位置的索引值，依次类推。如果nth指定的子模式没有匹配成功，那么将会返回两个nil。
+
+```lua
+local str = "hello, 1234"
+local from, to = ngx.re.find(str, "([0-9])([0-9]+)", "jo", nil, 2)
+if from then
+    ngx.say("matched 2nd submatch: ", string.sub(str, from, to))  -- yields "234"
+end
+```
+
+
+### ngx.re.gmatch
+
+语法：`iterator, err = ngx.re.gmatch(subject, regex, options?)`
+
+与ngx.re.match相似，区别在于该方法返回的是一个Lua的迭代器，这样就可以通过迭代器遍历所有匹配的结果。如果匹配失败，将会返回nil，如果匹配出现错误，那么还会返回错误信息到err中。
+
+```lua
+local it, err = ngx.re.gmatch("hello, world!", "([a-z]+)", "i")
+if not it then
+    ngx.log(ngx.ERR, "error: ", err)
+    return
+end
+
+while true do
+    local m, err = it()
+    if err then
+        ngx.log(ngx.ERR, "error: ", err)
+        return
+    end
+
+    if not m then
+        -- no match found (any more)
+        break
+    end
+
+    -- found a match
+    ngx.say(m[0])
+    ngx.say(m[1])
+end
+```
+
+ngx.re.gmatch返回的迭代器只能在一个请求所在的环境中使用，就是说，我们不能把返回的迭代器赋值给持久存在的命名空间（比如一个Lua Packet）中的某一个变量。
+
+
+
+### ngx.re.sub
+
+语法：`newstr, n, err = ngx.re.sub(subject, regex, replace, options?)`
+
+该方法主要实现匹配字符串的替换，会用replace替换匹配的字串，replace可以是纯字符串，也可以是使用$0, $1等子模式串的形式，ngx.re.sub返回进行替换后的完整的字符串，同时返回替换的总个数；options选项，与ngx.re.match中的options选项是一样的。
+
+```lua
+local newstr, n, err = ngx.re.sub("hello, 1234", "([0-9])[0-9]", "[$0][$1]")
+if newstr then
+    -- newstr == "hello, [12][1]34"
+    -- n == 1
+else
+    ngx.log(ngx.ERR, "error: ", err)
+    return
+end
+```
+
+在上面例子中，$0表示整个匹配的子串，$1表示第一个子模式匹配的字串，以此类推。
+
+可以用大括号{}将相应的0，1，2...括起来，以区分一般的数字：
+
+```lua
+local newstr, n, err = ngx.re.sub("hello, 1234", "[0-9]", "${0}00")
+-- newstr == "hello, 100234"
+-- n == 1
+```
+
+如果想在replace字符串中显示$符号，可以用$进行转义（不要用反斜杠`\$`对美元符号进行转义，这种方法不会得到期望的结果）：
+
+```lua
+local newstr, n, err = ngx.re.sub("hello, 1234", "[0-9]", "$$")
+-- newstr == "hello, $234"
+-- n == 1
+```
+
+如果replace是一个函数，那么函数的参数是一个"match table"， 而这个"match table"与ngx.re.match中的返回值captures是一样的，replace这个函数根据"match table"产生用于替换的字符串。
+
+```lua
+local func = function (m)
+    return "[" .. m[0] .. "][" .. m[1] .. "]"
+end
+local newstr, n, err = ngx.re.sub("hello, 1234", "( [0-9] ) [0-9]", func, "x")
+-- newstr == "hello, [12][1]34"
+-- n == 1
+```
+
+注意：通过函数形式返回的替换字符串中的美元符号$不再是特殊字符，而只是被看作一个普通字符。
+
+### ngx.re.gsub
+
+语法：`newstr, n, err = ngx.re.gsub(subject, regex, replace, options?)`
+
+该方法与ngx.re.sub是类似的，但是该方法进行的是全局替换。
+
+```lua
+local newstr, n, err = ngx.re.gsub("hello, world", "([a-z])[a-z]+", "[$0,$1]", "i")
+if newstr then
+    -- newstr == "[hello,h], [world,w]"
+    -- n == 2
+else
+    ngx.log(ngx.ERR, "error: ", err)
+    return
+end
+
+
+local func = function (m)
+    return "[" .. m[0] .. "," .. m[1] .. "]"
+end
+local newstr, n, err = ngx.re.gsub("hello, world", "([a-z])[a-z]+", func, "i")
+-- newstr == "[hello,h], [world,w]"
+-- n == 2
+```
+
+
+
 
 
 # 参考
@@ -612,3 +878,4 @@ location /mixed {
 * [正则表达式](https://moonbingbing.gitbooks.io/openresty-best-practices/lua/re.html)
 * [加密编码相关](https://github.com/openresty/lua-resty-string)
 * [lua-resty-core](https://github.com/openresty/lua-resty-core)
+* [ngx_lua模块中正则表达式相关的api](https://blog.csdn.net/weiyuefei/article/details/38439017)

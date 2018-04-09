@@ -1,16 +1,24 @@
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
-<!-- code_chunk_output -->
+- [install](#install)
+	- [hello world](#hello-world)
+	- [使用 Cargo](#使用-cargo)
+- [表达式和语句](#表达式和语句)
+- [注释](#注释)
+- [所有权](#所有权)
+	- [Copy 类型](#copy-类型)
+- [引用和借用](#引用和借用)
+	- [&mut 引用](#mut-引用)
+	- [借用的规则](#借用的规则)
+- [生命周期](#生命周期)
+	- [static生命周期](#static生命周期)
+	- [隐式生命周期](#隐式生命周期)
+	- [显式生命周期](#显式生命周期)
+		- [声明多个生命周期](#声明多个生命周期)
+	- [结构体中的生命周期](#结构体中的生命周期)
+- [参考](#参考)
 
-* [install and uninstall rust](#install-and-uninstall-rust)
-	* [hello world](#hello-world)
-* [使用 Cargo](#使用-cargo)
-* [变量](#变量)
-	* [类型](#类型)
-* [参考](#参考)
-
-<!-- /code_chunk_output -->
-
+<!-- /TOC -->
 
 # install
 
@@ -56,7 +64,19 @@ Hello, world!
 Rust 主要是基于表达式的语句, 只有两种语句, 其他都是表达式. 两种语句是: 声明语句和表达式语句.
 
 `let x = (let y = 1);` 这种会导致编译失败, 因为 `let y = 1` 是语句而不是表达式, 它没有返回值.
+
 赋值一个绑定过的变量(`y = 2`) 是一个表达式, 它返回空的元组 `()`, 所以 `let y = (x = 1)` 后 y 的值是 `()`.
+
+函数调用, 宏调用都是表达式.
+
+`{}` 也是表达式:
+
+```rust
+let y = { // 花括号是一个表达式, 返回值 4.
+	let x = 3;
+	x + 1 // 表达式不带分号.
+}
+```
 
 
 # 注释
@@ -71,22 +91,42 @@ Rust 有两种注释, 行注释(line comments) 和 文档注释(doc comments).
 
 # 所有权
 
-Rust 中变量绑定有一个属性: 它们与它们所绑定的值的所有权. 这意味着一个绑定离开作用域后, 绑定的资源就会被释放.
+所有权规则:
+- Rust 中每一个值都有一个称之为其 所有者（owner）的变量。
+- 值有且只能有一个所有者。
+- 当所有者（变量）离开作用域，这个值将被丢弃。
 
-Rust 确保了对于任何给定的资源都正好只有一个绑定与之对应.
 
 ```rust
-let v1 = vec![1, 2, 3];
-let v2 = v1;
-println!("{}", v1[0])
+let s1 = String::from("hello");
+let s2 = s1;
+
+println!("{}, world!", s1);
 ```
 
-上例中 v1 绑定的资源的所有权转移给 v2 后, 就不能再使用 v1 来访问资源了.
+上面的例子编译时会报错, 原因是 s1 被 move 到了 s2, 所以 s1 不能再被使用了。 在栈上保存着字符串的基本信息（指针， 长度， 容量等）， 在堆上存放这字符串数据, 当执行 `let s2 = s1;` 时会将 s1 的栈上的内容拷贝一份给 s2, 所以 s1 和 s2 都引用了堆上相同的内存. 当离开作用域时, Rust 会尝试回收 s1 和 s2 所占用的内存, 这时会出现同一内存被释放两次. 为了避免这个问题, Rust 会将 s1 标记为无效的, 也就是说堆上的内存的所有权移动到 s2 了, s1 成为无效的了.
 
-生成 vector 对象时, Rust 在堆上和栈上都会分配一些内存(我猜在栈上存储了一些基本信息, 比如长度什么的, 在堆上保存了具体的数据), 当执行 `let v2 = v1;` 时, 只是将栈上的内容拷贝了一份给 v2, 他们都执行堆上的数据. 如果通过 v2 改变了 vector 的大小, 那么 v1 在栈上的信息与堆上的信息就不一致了, 这可能导致段错误.
+```rust
+let s1 = String::from("hello");
+let s2 = s1.clone();
+
+println!("s1 = {}, s2 = {}", s1, s2);
+```
+
+上例调用了 clone(), 这样 s2 会拥有一份 s1 堆内容的拷贝.
 
 
 ## Copy 类型
+
+- 如果一个类型拥有 Copy trait，一个旧的变量在将其赋值给其他变量后仍然可用。
+- Rust 不允许自身或其任何部分实现了 Drop trait 的类型使用 Copy trait。
+- 作为一个通用的规则，任何简单标量值的组合可以是 Copy 的，任何需要分配内存，或者本身就是某种形式资源的类型不会是 Copy 的。
+
+如下是以下 Copy 的类型:
+- 所有整数类型，比如 u32。
+- 布尔类型，bool，它的值是 true 和 false。
+- 所有浮点数类型，比如 f64。
+- 元组，当且仅当其包含的类型也都是 Copy 的时候。(i32, i32) 是 Copy 的，不过 (i32, String) 就不是。
 
 ```rust
 let v1 = 1;
@@ -98,40 +138,29 @@ println!("{}", v1);
 
 
 # 引用和借用
+- 引用就像是创建了一个指向栈上元数据的指针, 不会获取所有权.
+- 我们将获取引用作为函数参数称为 借用（borrowing）。
 - 借用主要是为了解决这样的问题: 所有权发生改变之后原来的绑定就不能使用资源了.
 - `&`: 不可变引用.
 - `&mut`: 可变引用.
 - 借用避免的是数据竞争问题.
 - 借用的类型, 比如借用 i32, 那么借用的类型就是 `&i32`. 再比如 `&str`.
 
+借用默认是不能修改借用的值的:
 
 ```rust
 fn main() {
-    let v1 = vec![1, 2, 3];
-    let v2 = vec![3, 4, 5];
-    let answer = foo(&v1, &v2);
-    println!("answer are: {}", answer);
-    // 这里还可以继续使用 v1, v2
+    let s = String::from("hello");
+
+    change(&s);
 }
 
-fn foo(v1: &Vec<i32>, v2: &Vec<i32>) -> i32 {
-    10
+fn change(some_string: &String) {
+    some_string.push_str(", world"); // !Error
 }
 ```
 
-使用 `&Vec<i32>` 来获取引用, 传参时使用 `&v1` 来传递参数. `&T` 类型是一个引用, 它借用了所有权. **借用变量的绑定在离开作用域后并不释放资源**.
-
-引用是不可变的, 所以在使用引用变量时不能改变值:
-
-```rust
-fn foo(v1: &Vec<i32>, v2: &Vec<i32>) -> i32 {
-    v1.push(4); // 错误!!!
-    10
-}
-```
-
-
-## &mut 引用
+## 可变引用
 
 可变引用, 可以改变引用的资源.
 
@@ -146,15 +175,70 @@ println!("x = {}", x); // x = 2
 
 x 也必须被标记为可变的, 否则无法获取它的引用. y 要获取引用的值需要加 `*`.
 
+一个在函数中使用可变引用的示例：
 
-## 借用的规则
+```rust
+fn incr(v: &mut i32) {
+    *v += 1;
+}
 
-1. 任何借用必须位于比拥有者更小的作用域.
-2. 对同一资源的借用, 以下情况不能同时出现在同一作用域下:
-	- 1个或多个不可变引用(`&T`)
-	- 唯一一个可变引用(`&mut T`)
+fn main() {
+    let mut x = 1i32;
+    incr(&mut x);
+    println!("x = {}", x);
+}
+```
 
-第二条的意思是: 同一个作用域下, 要么只有一个可变引用(`&T`), 要么有N个不可变引用, 但是可变引用和不可变引用不能同时存在.
+```rust
+fn main() {
+    let mut s = String::from("hello");
+
+    change(&mut s);
+}
+
+fn change(some_string: &mut String) {
+    some_string.push_str(", world"); // 可以修改借用的值
+}
+```
+
+在特定作用域中的特定数据有且只有一个可变引用:
+
+```rust
+let mut s = String::from("hello");
+
+let r1 = &mut s; 
+let r2 = &mut s; // !Error
+```
+
+不能在拥有不可变引用的同时拥有可变引用:
+
+```rust
+let mut s = String::from("hello");
+
+let r1 = &s; // no problem
+let r2 = &s; // no problem
+let r3 = &mut s; // !BIG PROBLEM
+```
+
+
+## 引用的规则
+1. 在任意给定时间，只能 拥有如下中的一个：
+- 一个可变引用。
+- 任意数量的不可变引用。
+2. 引用必须总是有效的。
+
+违反第二条的示例如下:
+
+```rust
+fn dangle() -> &String { // dangle returns a reference to a String
+
+    let s = String::from("hello"); // s is a new String
+
+    &s // we return a reference to the String, s
+} // Here, s goes out of scope, and is dropped. Its memory goes away.
+  // Danger!
+```
+
 
 下面的例子说明了第一个规则:
 

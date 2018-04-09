@@ -1,16 +1,17 @@
-<!-- TOC -->
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
 - [array](#array)
-    - [创建](#创建)
-        - [zeros](#zeros)
-    - [shape 维度](#shape-维度)
-    - [tile 重复](#tile-重复)
-    - [差值](#差值)
-    - [平方](#平方)
-    - [sum](#sum)
-    - [argsort](#argsort)
-    - [分片赋值](#分片赋值)
-    - [min, max](#min-max)
+	- [创建](#创建)
+		- [zeros](#zeros)
+	- [shape 维度](#shape-维度)
+	- [tile 重复](#tile-重复)
+	- [差值](#差值)
+	- [平方](#平方)
+	- [sum](#sum)
+	- [argsort](#argsort)
+	- [分片赋值](#分片赋值)
+	- [min, max](#min-max)
+- [参考](#参考)
 
 <!-- /TOC -->
 
@@ -75,6 +76,7 @@ matrix([[1, 2],
 ### zeros
 
 `zeros(shape, dtype=float, order='C')`: 返回零矩阵.
+
 * shape 为列表时从后向前分别表示低维度到高维度的数量.
 
 ```py
@@ -82,7 +84,7 @@ matrix([[1, 2],
 array([ 0.,  0.,  0.,  0.,  0.])
 >>> np.zeros((5,), dtype=np.int)
 array([0, 0, 0, 0, 0])
->>> np.zeros((2, 1))
+>>> np.zeros((2, 1))  # 两行一列
 array([[ 0.],
        [ 0.]])
 >>> s = (2,2)
@@ -331,3 +333,8 @@ array([1, 3])
 # 也可以 a.min(axis=0)
 ```
 
+
+
+# 参考
+
+- [CS231n课程笔记翻译：Python Numpy教程](https://zhuanlan.zhihu.com/p/20878530?refer=intelligentunit)

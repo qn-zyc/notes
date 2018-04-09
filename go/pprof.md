@@ -13,6 +13,10 @@
 
 ## pprof
 
+- [文档](https://github.com/google/pprof/blob/master/doc/pprof.md)
+
+
+
 ### runtime/pprof
 
 如果程序为非 httpserver 类型，使用此方式；在 main 函数中嵌入如下代码:

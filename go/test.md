@@ -16,6 +16,7 @@
 	- [Don’t export concurrency primitives](#dont-export-concurrency-primitives)
 	- [使用 net/http/httptest](#使用-nethttphttptest)
 	- [Use a separate test package](#use-a-separate-test-package)
+	- [TestMain](#testmain)
 - [参考](#参考)
 
 <!-- /TOC -->
@@ -374,6 +375,50 @@ httptest 还可以启动一个临时服务，监听随机端口: `httptest.NewSe
 
 比如 `net/url` 包实现了解析 url 的功能，`net/http` 导入了 `net/url` 包，而 `net/url` 包在测试时需要导入 `net/http` 包，这样就会形成循环引用。而如果测试文件中的包名不是 `url` 就可以同时导入 `url` 和 `http` 来测试，以避免循环引用。
 
+
+## TestMain
+
+如果想在所有测试执行前后做一些设置和回收工作，可以添加一个 `TestMain` 函数。
+
+`TestMain` 中需要调用 `os.Exit()`，参数是 `m.Run()` 返回的值: `os.Exit(m.Run())`。
+
+因为是使用 `os.Exit()` 退出的，所以 defer 不会被执行。
+
+如果使用了 flag，还需要手动执行 `flag.Parse()`:
+
+```go
+func TestMain(m *testing.M) {
+	// call flag.Parse() here if TestMain uses flags
+	os.Exit(m.Run())
+}
+```
+
+```go
+func TestMain(m *testing.M) {
+    fmt.Println("1")
+    code := m.Run()
+    fmt.Println("2")
+    defer func() {
+        fmt.Println("3")
+    }()
+    os.Exit(code)
+}
+
+func TestABC(t *testing.T) {
+    fmt.Println("4")
+}
+```
+
+输出示例:
+
+```
+1
+=== RUN   TestABC
+4
+--- PASS: TestABC (0.00s)
+PASS
+2
+```
 
 
 

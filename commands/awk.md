@@ -264,7 +264,7 @@ user count is  40
 
 count是自定义变量。之前的action{}里都是只有一个print,其实print只是一个语句，而action{}可以有多个语句，以;号隔开。
 
- 
+
 
 这里没有初始化count，虽然默认是0，但是妥当的做法还是初始化为0:
 
@@ -287,7 +287,7 @@ ls -l |awk 'BEGIN {size=0;} {size=size+$5;} END{print "[end]size is ", size}'
 如果以M为单位显示:
 
 ```bash
-ls -l |awk 'BEGIN {size=0;} {size=size+$5;} END{print "[end]size is ", size/1024/1024,"M"}' 
+ls -l |awk 'BEGIN {size=0;} {size=size+$5;} END{print "[end]size is ", size/1024/1024,"M"}'
 [end]size is  8.25889 M
 ```
 
@@ -586,7 +586,7 @@ print x;
 统计某个文件夹下的文件占用的字节数,过滤4096大小的文件(一般都是文件夹):
 
 ```bash
-ls -l |awk 'BEGIN {size=0;print "[start]size is ", size} {if($5!=4096){size=size+$5;}} END{print "[end]size is ", size/1024/1024,"M"}' 
+ls -l |awk 'BEGIN {size=0;print "[start]size is ", size} {if($5!=4096){size=size+$5;}} END{print "[end]size is ", size/1024/1024,"M"}'
 
 [end]size is  8.22339 M
 ```
@@ -598,22 +598,19 @@ BEGIN {
     x=2;
     y=3;
 
-    #
     if(x < y) {
         print "x < y";
     }
 
-    #
     if(x < y) {
         print "x < y";
     } else {
         print "x >= y";
     }
 
-    #
     if(x < y) {
         print "x < y";
-    } else if (x = y) {
+    } else if(x = y) {
         print "x = y";
     } else {
         print "x > y";
@@ -634,7 +631,7 @@ BEGIN {
     i=1;
     sum=0;
 
-    while (i <= 10) {
+    while(i <= 10) {
         sum+=i;
         i++;
     }
@@ -657,7 +654,7 @@ BEGIN {
     do {
         sum+=i;
         i++;
-    } while (i <= 10)
+    } while(i <= 10)
     printf("sum=%s\n", sum);
 };
 
@@ -683,7 +680,7 @@ BEGIN {
     # 方式2用来迭代数组
     alphabet[0]="a";
     alphabet[1]="b";
-    for (key in alphabet) {
+    for(key in alphabet) {
         printf("alphabet[%s]=%s\n", key, alphabet[key]);
     }
 };
@@ -733,42 +730,42 @@ BEGIN {
 
     # 对数组排序
     asort(names);
-    for (key in names) { # 迭代数组
+    for(key in names) { # 迭代数组
         printf("names[%s]=%s\n", key, names[key]);
     }
 
     # 抽出并排序关联数组下标
     asorti(country_code_name_map, country_codes);
-    for (key in country_codes) {
+    for(key in country_codes) {
         printf("country_codes[%s]=%s\n", key, country_codes[key]);
     }
 
     # 删除数组元素
     delete names[0];
-    if (0 in names) { #判断下标是否存在
+    if(0 in names) { #判断下标是否存在
         print "index 0 exists";
     }
 
     # 删除数组
     delete alphabet;
-    for (key in alphabet) {
+    for(key in alphabet) {
         printf("alphabet[%s]=%s\n", key, alphabet[key]);
     }
 
     # 定义多维数组
-    for (i = 1; i <= 9; i++) {
-        for (j = 1; j <= 9; j++) {
+    for(i = 1; i <= 9; i++) {
+        for(j = 1; j <= 9; j++) {
             table[i, j] = i * j;
         }
     }
 
     # 迭代多维数组
-    for (key in table) {
+    for(key in table) {
         printf("table[%s]=%s\n", key, table[key]);
     }
 
     # 迭代多维数组
-    for (key in table) {
+    for(key in table) {
         split(key, indexs, SUBSEP); # SUBSEP 是一个内置变量，多维数组下标分隔符
         printf("table[%s, %s]=%s\n", indexs[1], indexs[2], table[indexs[1], indexs[2]]);
     }
@@ -915,7 +912,7 @@ X{n,m}   匹配X 至少n次至多m次. 需要指定 --re-interval
 [[:print:]]             类似[[:graph:]]，但是包含空白字符  
 [[:punct:]]             标点符号  
 [[:cntrl:]]             控制字符  
-[[:xdigit:]]            十六进制中容许出现的数字(例如 0-9a-fA-f) 
+[[:xdigit:]]            十六进制中容许出现的数字(例如 0-9a-fA-f)
 [. xx .]                将 xx 作为一个整体匹配, xx 可以是任何字母  
 [= e =]                 认为等价，在法语中匹配 e, è, 或 é  
 ```
@@ -1014,7 +1011,7 @@ asorti(s [, d])         对数组 s 下标排序
 
 ```bash
 systime()           返回当前时间自 1970-01-01 00:00:00 UTC 以来的秒数
-mktime(datespec)    返回 datespec 自 1970-01-01 00:00:00 UTC 以来的秒数， 
+mktime(datespec)    返回 datespec 自 1970-01-01 00:00:00 UTC 以来的秒数，
                     datespec 的格式为YYYY MM DD HH MM SS[ DST]
                     MM(1-12),DD(1-31),HH(0-23),MM(0-59),SS(0-60)
 strftime([format [, timestamp]]) 将日期时间格式化为字符串,format 见 date --help,如:%Y-%m-%d %H:%M:%S
@@ -1134,7 +1131,7 @@ done
 BEGIN {empty_row_count=0}
 
 # 如果是空行，则 empty_row_count+1
-/^$/{empty_row_count++} 
+/^$/{empty_row_count++}
 
 # 打印变量 empty_row_count
 END {print empty_row_count}

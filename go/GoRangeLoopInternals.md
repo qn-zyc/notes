@@ -93,7 +93,7 @@ for i := range a {
 ```go
 // copies the entire array
 var a [10]int
-acopy := a 
+acopy := a
 
 // copies the slice header struct only, NOT the backing array
 s := make([]int, 10)
@@ -108,7 +108,7 @@ mcopy := m
 
 ## Step 3: Go编译器源码
 
-懒惰的我简单的google了下Go编译器源码。我第一个找的是编译器的GCC版本。有趣的是下面的注释（在`statements.cc `中）：
+懒惰的我简单的google了下Go编译器源码。我第一个找的是编译器的GCC版本。有趣的是下面的注释（在`statements.cc`中）：
 
 ```go
 // Arrange to do a loop appropriate for the type.  We will produce
@@ -210,4 +210,3 @@ for index_temp = 0; index_temp < len_temp; index_temp++ {
 7. [slice source code](https://golang.org/src/runtime/slice.go)
 8. [map source code](https://golang.org/src/runtime/hashmap.go)
 9. [channel source code](https://golang.org/src/runtime/chan.go)
-
