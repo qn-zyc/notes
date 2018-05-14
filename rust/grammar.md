@@ -1,40 +1,100 @@
-<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+<!-- TOC -->
 
 - [变量](#变量)
-	- [变量绑定](#变量绑定)
-	- [变量与常量](#变量与常量)
-	- [隐藏(shadowing)](#隐藏shadowing)
-	- [原生类型](#原生类型)
-		- [类型列表](#类型列表)
-		- [整型](#整型)
-		- [浮点型](#浮点型)
-		- [字符型](#字符型)
-	- [作用域](#作用域)
+    - [变量绑定](#变量绑定)
+    - [变量与常量](#变量与常量)
+    - [隐藏(shadowing)](#隐藏shadowing)
+    - [原生类型](#原生类型)
+        - [类型列表](#类型列表)
+        - [整型](#整型)
+        - [浮点型](#浮点型)
+        - [字符型](#字符型)
+    - [作用域](#作用域)
+- [String](#string)
+    - [创建](#创建)
+    - [基本操作](#基本操作)
+    - [索引字符串](#索引字符串)
+    - [遍历](#遍历)
+- [Slices](#slices)
+    - [字符串 slice](#字符串-slice)
 - [数组](#数组)
-	- [基础](#基础)
-	- [切片](#切片)
+    - [基础](#基础)
+    - [切片](#切片)
 - [元组](#元组)
-	- [创建](#创建)
-	- [访问](#访问)
-- [vectors](#vectors)
-	- [创建](#创建)
-	- [访问](#访问)
-	- [遍历](#遍历)
+    - [创建](#创建-1)
+    - [访问](#访问)
+- [vector](#vector)
+    - [创建](#创建-2)
+    - [更新](#更新)
+    - [访问](#访问-1)
+        - [无效引用](#无效引用)
+    - [遍历](#遍历-1)
+    - [传递给函数](#传递给函数)
+- [map](#map)
+    - [创建](#创建-3)
+    - [访问](#访问-2)
+    - [遍历](#遍历-2)
+    - [更新](#更新-1)
 - [函数](#函数)
-	- [声明](#声明)
-	- [函数指针](#函数指针)
-- [结构体](#结构体)
-	- [元组结构体](#元组结构体)
-	- [类单元结构体（没有字段）](#类单元结构体没有字段)
-	- [枚举](#枚举)
+    - [声明](#声明)
+    - [函数指针](#函数指针)
+    - [闭包](#闭包)
+        - [在结构体中使用闭包](#在结构体中使用闭包)
+        - [闭包会捕获其环境](#闭包会捕获其环境)
+- [结构体 struct](#结构体-struct)
+    - [创建](#创建-4)
+        - [元组结构体(tuple structs)](#元组结构体tuple-structs)
+        - [类单元结构体(没有字段)](#类单元结构体没有字段)
+    - [方法](#方法)
+        - [关联函数](#关联函数)
+- [枚举](#枚举)
+    - [定义](#定义)
+    - [在枚举上定义方法](#在枚举上定义方法)
+    - [标准库的Option](#标准库的option)
+    - [使用 match 匹配枚举](#使用-match-匹配枚举)
 - [分支](#分支)
-	- [if](#if)
-	- [match](#match)
+    - [if](#if)
+    - [match](#match)
+        - [if let](#if-let)
 - [循环](#循环)
-	- [loop](#loop)
-	- [while](#while)
-	- [for](#for)
-		- [enumerate()](#enumerate)
+    - [loop](#loop)
+    - [while](#while)
+    - [for](#for)
+        - [enumerate()](#enumerate)
+- [迭代器 iterator](#迭代器-iterator)
+    - [迭代器的方法](#迭代器的方法)
+    - [自定义迭代器](#自定义迭代器)
+- [模块 mod](#模块-mod)
+    - [定义](#定义-1)
+    - [在不同文件中定义模块](#在不同文件中定义模块)
+    - [公有和私有](#公有和私有)
+    - [使用模块](#使用模块)
+        - [使用 use 导入作用域](#使用-use-导入作用域)
+        - [使用 super 访问父模块](#使用-super-访问父模块)
+        - [使用 pub use 重导出模块](#使用-pub-use-重导出模块)
+- [工作空间](#工作空间)
+- [错误处理](#错误处理)
+    - [触发panic](#触发panic)
+    - [Result](#result)
+    - [匹配不同的错误](#匹配不同的错误)
+    - [unwrap 和 expect](#unwrap-和-expect)
+    - [传播错误](#传播错误)
+- [trait](#trait)
+    - [定义trait](#定义trait)
+    - [实现trait](#实现trait)
+- [泛型](#泛型)
+    - [定义泛型](#定义泛型)
+    - [Trait Bounds](#trait-bounds)
+    - [不同泛型实现不同的方法](#不同泛型实现不同的方法)
+- [测试](#测试)
+    - [判断函数](#判断函数)
+        - [should_panic](#should_panic)
+    - [自定义错误信息](#自定义错误信息)
+    - [引用外部函数](#引用外部函数)
+    - [运行测试](#运行测试)
+    - [测试的组织结构](#测试的组织结构)
+        - [单元测试](#单元测试)
+        - [集成测试](#集成测试)
 
 <!-- /TOC -->
 
@@ -199,14 +259,132 @@ let y = "hello"
 - 值在堆上而不是栈上。
 - 值是可以改变的, 而原生类型不可以改变。
 
-创建 String 类型:
+## 创建
 
 ```rust
 let mut s = String::from("hello"); // 从字符串字面值来创建 String
 s.push_str(", world!"); // 字符串可以改变
 println!("{}", s);
+
+let data = "initial contents";
+let s = data.to_string();
+
+// the method also works on a literal directly:
+let s = "initial contents".to_string();
+
+// 多行文本
+let contents = "\
+one line
+two line
+three line";
 ```
 
+
+## 基本操作
+
+追加字符串:
+
+```rust
+let mut s = String::from("one");
+s.push_str(" two");
+let three = " three";
+s.push_str(three); // 这里将 three 的所有权转移了, 如果不想转移的话就使用 s.push_str(&three);
+
+s.push('.'); // 仅追加一个字符.
+println!("the string is: {}", s)
+```
+
+连接字符串:
+
+```rust
+let s1 = String::from("hello, ");
+let s2 = String::from("world!");
+let s = s1 + &s2; // Note that s1 has been moved here and can no longer be used
+println!("{}", s)
+```
+
+`+` 的签名就像这样: `fn add(self, s: &str) -> String`, 所以 s1 只能是 String, 而 s2 只能是 &str, 这里 `&s2` 的类型是 `&String`, 是因为 Rust 将 `&String` 强转成 `&str` 了. s1 的所有权发生了转移, 所以执行完 `s1 + &s2` 后就不能再使用了.
+
+级联多个字符串:
+
+```rust
+let s1 = String::from("tic");
+let s2 = String::from("tac");
+let s3 = String::from("toe");
+
+let s = s1 + "-" + &s2 + "-" + &s3;
+```
+
+
+## 索引字符串
+
+```rust
+let s1 = String::from("hello");
+let h = s1[0];
+```
+
+上面的代码会报错, 原因是 **Rust 的字符串不支持索引**. 因为字符串是按 utf-8 编码的, 直接索引获取的值可能不是一个有效的字符.
+
+可以通过字符串 slice 来获取字符串的某个片段:
+
+```rust
+let s = String::from("hello");
+let s1 = &s[0..1];
+println!("{}", s1);
+
+let s = String::from("中文");
+let s2 = &s[0..1]; // 这里在运行时将 panic
+println!("{}", s2);
+```
+
+上面代码在获取无效的字符串 slice 依然会 panic, 所以需要谨慎使用这个操作.
+
+
+## 遍历
+
+```rust
+let s = String::from("中文");
+for c in s.chars() {
+    println!("{}", c);
+}
+```
+
+chars() 会将字符串分隔成单独的 unicode 值, 上例输出 `中`, `文` 两个字. 直接遍历字符串: `for c in &s` 会 panic.
+
+下例输出字符串的字节列表:
+
+```rust
+let s = String::from("中文");
+for c in s.bytes() {
+    println!("{}", c);
+}
+
+// 228 184 173 230 150 135
+```
+
+
+
+
+
+# Slices
+
+- slice 没有所有权.
+
+## 字符串 slice
+
+```rust
+let s = String::from("hello world");
+let hello = $s[0..5];
+let world = &s[6..11];
+```
+
+- hello 和 world 的类型是 `&str`, 是一个不可变引用.
+- `[start..end]` 包括 start, 不包括 end.
+- start 可以省略, 默认是 0: `&s[..5]`.
+- end 也可以省略, 默认是 len: `&s[3..]`.
+- start 和 end 都省略: `&s[..]`.
+
+字符串字面值就是 slice: `let s = "hello";`, s 的类型是 `&str`, 指向二进制程序特定位置的 slice.
 
 
 # 数组
@@ -294,14 +472,26 @@ let c = x.2;
 ```
 
 
-# vectors
+# vector
 
-Vector 是一个动态数组, 实现为标准库类型 `Vec<T>`.
-
-Vector 总是在堆上分配内存.
+- vector 是一个动态数组, 实现为标准库类型 `Vec<T>`.
+- vector 总是在堆上分配内存, 彼此相邻的排列所有的值.
 
 
 ## 创建
+
+```rust
+let mut v = Vec::new();
+```
+
+如果只是使用上面的代码来创建, 则会报错, 因为 Rust 无法推断出 v 的类型, 所以需要显式声明类型: `let mut v: Vec<i32> = Vec::new();`.
+
+```rust
+let mut v = Vec::new();
+v.push(1)
+```
+
+上面的 v 也没有声明类型, 但是下面的 push(1) 可以让 Rust 推断出 T 的类型是 i32.
 
 可以使用 `vec!` 宏来创建:
 
@@ -319,44 +509,208 @@ vector 以连续的 T 的数组的形式存储在堆上, 所以需要在编译�
 有些类型在编译时不知道大小, 这时就需要保存一个指向该类型的指针, Box 类型正好符合这种情况.
 
 
-## 访问
-
-使用下标来访问 vector. **下标的类型只能是 usize**
+## 更新
 
 ```rust
-let v = vec![1; 10]; // 10个元素，初始化为1
-let i: usize = 1; // 类型只能是usize
-println!("v[1] = {}", v[i]);
+let mut v = Vec::new();
+
+v.push(5);
+v.push(6);
+v.push(7);
+v.push(8);
 ```
 
-越界访问会 panic, 这时可以使用 `get()` 或 `get_mut()`, 它们在越界是返回 None:
+
+## 访问
 
 ```rust
-let v = vec![1; 10]; // 10个元素，初始化为1
-match v.get(11) {
-    Some(x) => println!("get {}", x),
-    None => println!("nothing")
+let v = vec![1; 10];
+
+let i: usize = 2;
+let a: &i32 = &v[i];
+println!("a = {}", a);
+
+let b: Option<&i32> = v.get(i);
+match b {
+    Some(x) => println!("b = {}", x),
+    None => println!("not found"),
 }
+```
+
+- 使用下标的方式时下标必须是 usize 类型. 如果越界访问, 则会 panic.
+- 使用 get() 时返回的是 Option, 如果越界访问, 则返回 None.
+
+
+### 无效引用
+
+```rust
+let mut v = vec![1, 2, 3, 4, 5];
+let first = &v[0];
+v.push(6);
+```
+
+上面的程序会报错, 不能这么做的原因是由于 vector 的工作方式。在 vector 的结尾增加新元素时，在没有足够空间将所有所有元素依次相邻存放的情况下，可能会要求分配新内存并将老的元素拷贝到新的空间中。这时，第一个元素的引用就指向了被释放的内存。借用规则阻止程序陷入这种状况.
+
+
+## 遍历
+
+```rust
+// 获取每个元素的不可变引用并打印
+let v = vec![100, 32, 57];
+for i in &v {
+    println!("{}", i);
+}
+
+// 获取每个元素的可变引用, 并修改每个元素的值
+let mut v = vec![100, 32, 57];
+for i in &mut v {
+    *i += 50;
+    println!("i = {}", i);
+}
+```
+
+
+## 传递给函数
+
+```rust
+fn main() {
+    let list = vec![34, 50, 25, 100, 65];
+    let result = largest(&list);
+    println!("The largest number is {}", result);
+}
+
+fn largest(list: &[i32]) -> i32 { // 传的是切片
+    let mut largest = list[0];
+    for &item in list.iter() {
+        if item > largest {
+            largest = item;
+        }
+    }
+    largest
+}
+```
+
+
+
+# map
+
+## 创建
+
+```rust
+use std::collections::HashMap;
+
+fn main() {
+    let mut m = HashMap::new();
+    m.insert(String::from("one"), 50);
+    m.insert(String::from("two"), 100);
+    let three = String::from("three");
+    m.insert(three, 111);
+}
+```
+
+- 键必须是相同的类型, 值也必须是相同的类型.
+- 拥有所有权的值(比如上面的 three)一旦放入了 HashMap, 所有权就被转移了. 也可以放入引用, 但要保证引用的有效期比 HashMap 长.
+
+另一个构建哈希 map 的方法是使用一个元组的 vector 的 collect 方法，其中每个元组包含一个键值对。
+
+```rust
+use std::collections::HashMap;
+
+let teams  = vec![String::from("Blue"), String::from("Yellow")];
+let initial_scores = vec![10, 50];
+
+let scores: HashMap<_, _> = teams.iter().zip(initial_scores.iter()).collect();
+```
+
+这里 HashMap<_, _> 类型注解是必要的，因为可能 collect 很多不同的数据结构，而除非显式指定否则 Rust 无从得知你需要的类型。但是对于键和值的类型参数来说，可以使用下划线占位，而 Rust 能够根据 vector 中数据的类型推断出 HashMap 所包含的类型。
+
+
+## 访问
+
+```rust
+use std::collections::HashMap;
+
+let mut scores = HashMap::new();
+
+scores.insert(String::from("Blue"), 10);
+scores.insert(String::from("Yellow"), 50);
+
+let team_name = String::from("Blue");
+let score = scores.get(&team_name); // 返回的是 Option<i32> 类型
 ```
 
 
 ## 遍历
 
 ```rust
-for i in v {
-    println!("get {}", i)
-}
-for i in &v {
-    println!("get {}", i)
-}
-for i in &mut v {
-    println!("get {}", i)
+use std::collections::HashMap;
+
+let mut scores = HashMap::new();
+
+scores.insert(String::from("Blue"), 10);
+scores.insert(String::from("Yellow"), 50);
+
+for (key, value) in &scores {
+    println!("{}: {}", key, value);
 }
 ```
 
 
+## 更新
+
+**值不存在时插入, 存在时覆盖**:
+
+```rust
+use std::collections::HashMap;
+
+let mut scores = HashMap::new();
+
+scores.insert(String::from("Blue"), 10);
+scores.insert(String::from("Blue"), 25);
+
+println!("{:?}", scores);
+```
+
+**值不存在时插入, 存在时不做操作**:
+
+```rust
+use std::collections::HashMap;
+
+let mut scores = HashMap::new();
+scores.insert(String::from("Blue"), 10);
+
+scores.entry(String::from("Yellow")).or_insert(50);
+scores.entry(String::from("Blue")).or_insert(50);
+
+println!("{:?}", scores);
+```
+
+`or_insert`: 如果 key 存在旧返回旧的 entry, 如果不存在就插入值并返回新的 entry.
 
 
+**计数器**:
+
+```rust
+use std::collections::HashMap;
+
+let text = "hello world wonderful world";
+
+let mut map = HashMap::new();
+
+for word in text.split_whitespace() {
+    let count = map.entry(word).or_insert(0);
+    *count += 1;
+}
+
+println!("{:?}", map);
+```
+
+`or_insert` 返回的是值的一个可变引用(`&mut V`), 所以为了赋值必须使用 `*` 解引用.
+
+
+
+
+------------------------------
 # 函数
 
 - 命名规范: snake case, 字母都是小写并使用下划线分割单词.
@@ -417,53 +771,206 @@ fn incr(i: i32) -> i32 {
 ```
 
 
-# 结构体
+## 闭包
 
 ```rust
-struct Point {
-    x: i32,
-    y: i32,
+let expensive_closure = |num| {
+    println!("calculating slowly...");
+    thread::sleep(Duration::from_secs(2));
+    num
+};
+```
+
+`||` 之间是参数列表, 多个参数使用逗号分隔: `|param1, param2|`.
+
+不需要注明类型, 当然也可以注明类型:
+
+```rust
+let expensive_closure = |num: u32| -> u32 {
+    println!("calculating slowly...");
+    thread::sleep(Duration::from_secs(2));
+    num
+};
+```
+
+```rust
+fn  add_one_v1   (x: u32) -> u32 { x + 1 } // 函数定义
+let add_one_v2 = |x: u32| -> u32 { x + 1 }; // 标注了类型的闭包
+let add_one_v3 = |x|             { x + 1 }; // 省略了类型
+let add_one_v4 = |x|               x + 1  ; // 省略了花括号
+```
+
+闭包参数的类型是通过调用时推导出来的, 所以调用时不能指定不同的类型:
+
+```Rust
+let example_closure = |x| x;
+
+let s = example_closure(String::from("hello")); // String
+let n = example_closure(5); // u32, Error!!!
+```
+
+### 在结构体中使用闭包
+
+```rust
+struct Cacher<T>
+    where T: Fn(u32) -> u32
+{
+    calculation: T,
+    value: Option<u32>,
 }
 
+impl<T> Cacher<T>
+    where T: Fn(u32) -> u32
+{
+    fn new(calculation: T) -> Cacher<T> {
+        Cacher {
+            calculation,
+            value: None,
+        }
+    }
+
+    fn value(&mut self, arg: u32) -> u32 {
+        match self.value {
+            Some(v) => v,
+            None => {
+                let v = (self.calculation)(arg);
+                self.value = Some(v);
+                v
+            },
+        }
+    }
+}
+```
+
+`Fn` 系列 trait 由标准库提供。所有的闭包都实现了 trait `Fn`、`FnMut` 或 `FnOnce` 中的一个.
+
+在结构体中的闭包的参数需要指定类型.
+
+
+### 闭包会捕获其环境
+
+```rust
 fn main() {
-    let p = Point { x: 1, y: 2 };
-    println!("x = {}, y = {}", p.x, p.y);
+    let x = 4;
+    let equal_to_x = |z| z == x;
+    let y = 4;
+    assert!(equal_to_x(y));
 }
 ```
 
-修改字段值：
+而函数不行:
 
 ```rust
-let mut p = Point { x: 1, y: 2 };
-p.x = 3;
-```
-
-修改结构体的字段然后让其不可变：
-
-```rust
-	let mut p = Point { x: 1, y: 2 };
-    p.x = 3;
-    let p = p; // 现在p不再可变了
-	// p.y = 4; // error
-```
-
-从另一个结构体复制字段的值：
-
-```rust
-struct Point {
-    x: i32,
-    y: i32,
-    z: i32,
-}
-
 fn main() {
-    let p1 = Point { x: 1, y: 2, z: 3 };
-    let p2 = Point { x: 4, ..p1 }; // 从p1复制y和z的值
-    println!("p2.x = {}, p2.y = {}, p2.z = {}", p2.x, p2.y, p2.z);
+    let x = 4;
+    fn equal_to_x(z: i32) -> bool { z == x } // Error!!!
+    let y = 4;
+    assert!(equal_to_x(y));
 }
 ```
 
-## 元组结构体
+闭包可以通过三种方式捕获其环境，他们直接对应函数的三种获取参数的方式：获取所有权，不可变借用和可变借用。这三种捕获值的方式被编码为如下三个 Fn trait：
+
+* `FnOnce` 消费从周围作用域捕获的变量，闭包周围的作用域被称为其 环境，environment。为了消费捕获到的变量，闭包必须获取其所有权并在定义闭包时将其移动进闭包。其名称的 Once 部分代表了闭包不能多次获取相同变量的所有权的事实，所以它只能被调用一次。
+* `Fn` 从其环境不可变的借用值
+* `FnMut` 可变的借用值所以可以改变其环境
+
+如果我们希望强制闭包获取其使用的环境值的所有权，可以在参数列表前使用 `move` 关键字。这个技巧在将闭包传递给新线程以便将数据移动到新线程中时最为实用。
+
+```rust
+fn main() {
+    let x = vec![1, 2, 3];
+    let equal_to_x = move |z| z == x; // x 的所有权被移到闭包内
+    println!("can't use x here: {:?}", x); // 这里不能在使用 x 了
+    let y = vec![1, 2, 3];
+    assert!(equal_to_x(y));
+}
+```
+
+
+
+
+------------------------------
+# 结构体 struct
+
+## 创建
+
+```rust
+struct User {
+    username: String,
+    email: String,
+    sign_in_count: u64,
+    active: bool,
+}
+```
+
+实例化:
+
+```rust
+let user1 = User {
+    email: String::from("someone@example.com"),
+    username: String::from("someusername123"),
+    active: true,
+    sign_in_count: 1,
+};
+```
+
+实例化并修改字段值:
+
+```rust
+let mut user1 = User {
+    email: String::from("someone@example.com"),
+    username: String::from("someusername123"),
+    active: true,
+    sign_in_count: 1,
+};
+
+user1.email = String::from("anotheremail@example.com");
+```
+
+- user1 实例必须是可变的.
+
+从函数中返回实例:
+
+```rust
+fn build_user(email: String, username: String) -> User {
+    User {
+        email: email,
+        username: username,
+        active: true,
+        sign_in_count: 1,
+    }
+}
+```
+
+变量与字段同名时的简写形式:
+
+```rust
+fn build_user(email: String, username: String) -> User {
+    User {
+        email,    // 简写
+        username, // 简写
+        active: true,
+        sign_in_count: 1,
+    }
+}
+```
+
+从其他对象创建对象:
+
+```rust
+let user2 = User {
+    email: String::from("another@example.com"),
+    username: String::from("anotherusername567"),
+    ..user1 // !!!
+};
+```
+
+- `..` 语法指定了剩余未显式设置值的字段应有与给定实例对应字段相同的值。
+
+
+
+### 元组结构体(tuple structs)
 
 使用 `()` 而不是 `{}`, 字段没有名称。
 
@@ -486,17 +993,174 @@ fn main() {
     let p = Point(1);
     let Point(x) = p;
     println!("x = {}", x);
+    println!("x = {}", p.0) // 使用 0 也可以访问值
 }
 ```
 
-## 类单元结构体（没有字段）
+
+
+
+### 类单元结构体(没有字段)
 
 ```rust
 struct Point;
 let p = Point;
 ```
 
-## 枚举
+
+
+## 方法
+
+定义方法:
+
+```rust
+#[derive(Debug)]
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+
+    fn can_hold(&self, other: &Rectangle) -> bool {
+        self.width > other.width && self.height > other.height
+    }
+}
+
+fn main() {
+    let rect1 = Rectangle { width: 30, height: 50 };
+
+    println!(
+        "The area of the rectangle is {} square pixels.",
+        rect1.area()
+    );
+}
+```
+
+- `impl` 是 `implementation` 的缩写.
+- `&self` 是代替 `&Rectangle`, 是一个不可变引用. 要获取一个可变引用可以使用 `&mut self`. 通过仅仅使用 self 作为第一个参数来使方法获取实例的所有权是很少见的, 这种技术通常用在当方法将 self 转换成别的实例的时候，这时我们想要防止调用者在转换之后使用原始的实例。
+- 自动引用和解引用（automatic referencing and dereferencing）: 当使用 `object.something()` 调用方法时，Rust 会自动增加 `&`、`&mut` 或 `*` 以便使 object 符合方法的签名.
+```rust
+p1.distance(&p2);
+(&p1).distance(&p2); // 与上面等价
+```
+
+每个结构体都允许拥有多个 impl 块:
+
+```rust
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+}
+
+impl Rectangle {
+    fn can_hold(&self, other: &Rectangle) -> bool {
+        self.width > other.width && self.height > other.height
+    }
+}
+```
+
+
+### 关联函数
+
+- 关联函数: 在 impl 块中定义不以 self 作为参数的函数.
+- 关联函数经常被用作返回一个结构体新实例的构造函数.
+
+```rust
+impl Rectangle {
+    fn square(size: u32) -> Rectangle {
+        Rectangle { width: size, height: size }
+    }
+}
+```
+
+调用: `let sq = Rectangle::square(3);`.
+
+
+
+
+
+# 枚举
+
+## 定义
+
+```rust
+// 最简单的一种定义
+enum IpAddrKind {
+    V4,
+    V6,
+}
+fn route(ip_type: IpAddrKind) { }
+route(IpAddrKind::V4);
+route(IpAddrKind::V6);
+let four = IpAddrKind::V4;
+let six = IpAddrKind::V6;
+
+// 在枚举值中存储值
+enum IpAddr {
+    V4(String),
+    V6(String),
+}
+let home = IpAddr::V4(String::from("127.0.0.1"));
+let loopback = IpAddr::V6(String::from("::1"));
+
+enum IpAddr {
+    V4(u8, u8, u8, u8), // 可以是不同类型的的
+    V6(String),
+}
+let home = IpAddr::V4(127, 0, 0, 1);
+let loopback = IpAddr::V6(String::from("::1"));
+
+// 存储各种类型
+enum Message {
+    Quit, // 没有关联任何数据
+    Move { x: i32, y: i32 }, // 包含一个匿名结构体
+    Write(String), // 包含单独一个 String
+    ChangeColor(i32, i32, i32), // 包含三个 i32
+}
+let quit: Message = Message::Quit;
+let change_color: Message = Message::ChangeColor(1, 2, 3);
+let m = Message::Move { x: 1, y: 2 };
+let w = Message::Write("hello".to_string());
+```
+
+
+## 在枚举上定义方法
+
+```rust
+impl Message {
+    fn call(&self) {
+        // method body would be defined here
+    }
+}
+
+let m = Message::Write(String::from("hello"));
+m.call();
+```
+
+
+## 标准库的Option
+
+```rust
+enum Option<T> {
+    Some(T),
+    None,
+}
+let some_number = Some(5);
+let some_string = Some("a string");
+let absent_number: Option<i32> = None; // 需要指定 T 的类型, 编译器推断不出来.
+```
+
+- 它被包含在了 prelude 之中，这意味着我们不需要显式引入作用域.
+- 不需要 `Option::` 前缀来直接使用 `Some` 和 `None`.
+
+
+
+## 使用 match 匹配枚举
 
 ```rust
 enum Message {
@@ -559,68 +1223,160 @@ println!("{}", y)
 
 if 是一个表达式, 它的值是任何被选择的分支的最后一个表达式的值. if 的每个分支的可能的返回值都必须是 **相同的类型**.
 
+
 ## match
 
 ```rust
-    let x = 3;
-    match x {
-        1 => println!("one"),
-        2 => println!("two"),
-        3 => println!("three"),
-        _ => println!("other"),
-    };
+let x = 3;
+match x {
+    1 => println!("one"),
+    2 => println!("two"),
+    3 => println!("three"),
+    _ => println!("other"),
+};
 ```
 
-match 是一个表达式：
+多行代码可以使用 `{}` 括起来:
 
 ```rust
-    let x = 3;
-    let y = match x {
-        1 => "one",
-        2 => "two",
-        3 => "three",
-        _ => "other",
-    };
-    println!("{}", y);
+fn value_in_cents(coin: Coin) -> u32 {
+    match coin {
+        Coin::Penny => {
+            println!("Lucky penny!");
+            1
+        },
+        Coin::Nickel => 5,
+        Coin::Dime => 10,
+        Coin::Quarter => 25,
+    }
+}
 ```
 
-匹配多个模式：
+使用 `_` 和 `()` 忽略分支(match必须匹配所有可能的情况):
 
 ```rust
-	let x = 2;
-    let y = match x {
-        1 | 2 => "one or two",
-        3 => "three",
-        _ => "other",
-    };
+let some_u8_value = 0u8;
+match some_u8_value {
+    1 => println!("one"),
+    3 => println!("three"),
+    5 => println!("five"),
+    7 => println!("seven"),
+    _ => (),
+}
+```
+
+match 是一个表达式, 可以返回值:
+
+```rust
+let x = 3;
+let y = match x {
+    1 => "one",
+    2 => "two",
+    3 => "three",
+    _ => "other",
+};
+println!("{}", y);
+```
+
+使用 `|` 匹配多个条件:
+
+```rust
+let x = 2;
+let y = match x {
+    1 | 2 => "one or two",
+    3 => "three",
+    _ => "other",
+};
 ```
 
 解构：
 
 ```rust
-	let p = Point { x: 45, y: 90 };
-    match p {
-        Point { x, y } => println!("point({}, {})", x, y),
-    }
+let p = Point { x: 45, y: 90 };
+match p {
+    Point { x, y } => println!("point({}, {})", x, y),
+}
 ```
 
 使用其他名字解构：
 
 ```rust
-	let p = Point { x: 45, y: 90 };
-    match p {
-        Point { x: x1, y: y1 } => println!("point({}, {})", x1, y1),
-    }
+let p = Point { x: 45, y: 90 };
+match p {
+    Point { x: x1, y: y1 } => println!("point({}, {})", x1, y1),
+}
 ```
 
 只解构部分字段：
 
 ```rust
-	let p = Point { x: 45, y: 90 };
-    match p {
-        Point { x, .. } => println!("point({} ..)", x),
-    }
+let p = Point { x: 45, y: 90 };
+match p {
+    Point { x, .. } => println!("point({} ..)", x),
+}
 ```
+
+匹配 Option:
+
+```rust
+fn plus_one(x: Option<i32>) -> Option<i32> {
+    match x {
+        None => None,
+        Some(i) => Some(i + 1),
+    }
+}
+
+let five = Some(5);
+let six = plus_one(five);
+let none = plus_one(None);
+```
+
+
+
+### if let
+
+处理只匹配一个模式的值而忽略其他模式的情况, 如下:
+
+```rust
+let some_u8_value = Some(0u8);
+match some_u8_value {
+    Some(3) => println!("three"),
+    _ => (),
+}
+```
+
+可以使用下面的简写形式:
+
+```rust
+if let Some(3) = some_u8_value {
+    println!("three");
+}
+```
+
+还可以使用 else 来代替 `_` 分支的代码:
+
+```rust
+let mut count = 0;
+match coin {
+    Coin::Quarter(state) => println!("State quarter from {:?}!", state),
+    _ => count += 1,
+}
+```
+
+上面的代码可以使用下面的简写形式:
+
+```rust
+let mut count = 0;
+if let Coin::Quarter(state) = coin {
+    println!("State quarter from {:?}!", state);
+} else {
+    count += 1;
+}
+```
+
+
+
+
 
 
 
@@ -695,4 +1451,1171 @@ for (i, v) in (5..10).enumerate() {
 2: 7
 3: 8
 4: 9
+```
+
+
+
+------------------------------
+# 迭代器 iterator
+
+```rust
+let v1 = vec![1, 2, 3];
+let v1_iter = v1.iter();
+for val in v1_iter { // for 获取了 v1_iter 的所有权, 并在后台使 v1_iter 可变.
+    println!("Got: {}", val);
+}
+```
+
+迭代器实现了标准库中的 `Iterator` trait.
+
+```rust
+#[test]
+fn iterator_demonstration() {
+    let v1 = vec![1, 2, 3];
+
+    let mut v1_iter = v1.iter(); // 这里需要可变, 因为 next() 改变了内部状态
+
+    assert_eq!(v1_iter.next(), Some(&1)); // next() 返回了 vec 中值的不可变引用.
+    assert_eq!(v1_iter.next(), Some(&2));
+    assert_eq!(v1_iter.next(), Some(&3));
+    assert_eq!(v1_iter.next(), None);
+}
+```
+
+`iter` 方法生成一个不可变引用的迭代器。如果我们需要一个获取 v1 所有权并返回拥有所有权的迭代器，则可以调用 `into_iter` 而不是 `iter`。类似的，如果我们希望迭代可变引用，则可以调用 `iter_mut` 而不是 `iter`。
+
+
+## 迭代器的方法
+
+求和:
+
+```rust
+fn main() {
+    let v = vec![1, 2, 3];
+    let iter = v.iter();
+    let total: i32 = iter.sum();
+    println!("total is {}", total)
+}
+```
+
+使用 map 产出另一个迭代器:
+
+```rust
+fn main() {
+    let v = vec![1, 2, 3];
+    let v1: Vec<_> = v.iter().map(|x| x + 1).collect();
+    println!("{:?}", v1) // [2, 3, 4]
+}
+```
+
+
+## 自定义迭代器
+
+实现一个只产生 1-5 的计数器:
+
+```rust
+struct Counter {
+    count: u32,
+}
+
+impl Counter {
+    fn new() -> Counter {
+        Counter { count: 0 }
+    }
+}
+
+impl Iterator for Counter {
+    type Item = u32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.count += 1;
+
+        if self.count < 6 {
+            Some(self.count)
+        } else {
+            None
+        }
+    }
+}
+
+fn main() {
+    let c = Counter::new();
+    for n in c {
+        println!("{}", n)
+    }
+}
+```
+
+
+
+
+
+------------------------------
+# 模块 mod
+- 使用 `cargo new --lib mod_name` 可以创建一个库.
+- 使用 `cargo build` 来编译.
+- 模块的入口点是 `lib.rs` 文件.
+- 子模块的入口是 `mod.rs` 文件.
+
+## 定义
+
+在 `src/lib.rs`(只能叫 lib.rs, 固定会去找这个文件) 中定义一个 `network` 模块:
+
+```rust
+mod network {
+    fn connect(){
+    }
+}
+```
+
+调用模块中的方法使用 `network::connect()`.
+
+**在同一个文件中定义多个模块**:
+
+```rust
+mod network {
+    fn connect() {
+    }
+}
+
+mod client {
+    fn connect() {
+    }
+}
+```
+
+调用方法: `network::connect()`, `client::connect()`.
+
+
+**在模块中定义子模块**:
+
+```rust
+mod network {
+    fn connect() {
+    }
+
+    mod client {
+        fn connect() {
+        }
+    }
+}
+```
+
+调用方法是: `network::client::connect()`.
+
+
+## 在不同文件中定义模块
+
+如果是在同一个文件中定义所有模块的话, 看起来是这样的:
+
+```rust
+// src/lib.rs
+mod client {
+    fn connect() {
+    }
+}
+
+mod network {
+    fn connect() {
+    }
+
+    mod server {
+        fn connect() {
+        }
+    }
+}
+```
+
+先将 client 移出去
+
+```rust
+// src/lib.rs
+mod client; // 只声明, 没有实现
+
+mod network {
+    fn connect() {
+    }
+
+    mod server {
+        fn connect() {
+        }
+    }
+}
+
+// src/client.rs
+fn connect() {
+}
+```
+
+client.rs 中不需要再用 mod 声明了, 因为已经在 lib.rs 中声明过了.
+
+再将 network 移出去:
+
+```rust
+// src/lib.rs
+mod client;
+
+mod network;
+
+// src/network.rs
+fn connect() {
+}
+
+mod server {
+    fn connect() {
+    }
+}
+```
+
+
+如果想将子模块 server 也移到单独的一个文件中, 需要先创建一个 network 目录, 在这个目录中创建 server.rs:
+
+```rust
+// src/lib.rs
+mod network;
+
+// src/network/mod.rs 只能叫 mod.rs
+fn connect() {}
+
+mod server;
+
+// src/network/server.rs
+fn connect() {}
+```
+
+
+## 公有和私有
+
+- 模块, 函数等默认是私有的, 需要设置为公有需要添加 `pub`.
+
+```rust
+pub mod network;
+
+pub fn hello(){}
+```
+
+
+## 使用模块
+
+调用外部模块:
+
+```rust
+extern crate communicator;
+
+fn main() {
+    communicator::hello();
+    communicator::network::connect();
+}
+```
+
+调用内部模块:
+
+```rust
+mod net {
+    pub fn connect() {
+        println!("net.connect()")
+    }
+}
+
+fn main() {
+    net::connect()
+}
+```
+
+
+### 使用 use 导入作用域
+
+- use 是相对于根模块的.
+
+
+```rust
+pub mod a {
+    pub mod series {
+        pub mod of {
+            pub fn nested_modules() {}
+        }
+    }
+}
+
+fn main() {
+    a::series::of::nested_modules(); // 名称太长
+}
+
+// 改成下面这样
+use a::series::of::nested_modules;
+
+fn main() {
+    nested_modules();
+}
+
+// 导入枚举
+enum TrafficLight {
+    Red,
+    Yellow,
+    Green,
+}
+
+use TrafficLight::{Red, Yellow}; // 多个可以使用 {}
+
+fn main() {
+    let red = Red;
+    let yellow = Yellow;
+    let green = TrafficLight::Green;
+}
+
+// 使用 * 导入全部
+use TrafficLight::*;
+
+fn main() {
+    let red = Red;
+    let yellow = Yellow;
+    let green = Green;
+}
+```
+
+
+### 使用 super 访问父模块
+
+下面的代码中 tests 模块和 client 模块同级, 不能直接通过 `client::connect()` 来访问.
+
+```rust
+pub mod client;
+
+pub mod network;
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_works() {
+        ::client::connect(); // 从根模块开始
+        super::client::connect(); // super 表示父模块
+    }
+}
+```
+
+如果从 super 开始还是很长, 可以使用 use 来缩短:
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::client;
+
+    #[test]
+    fn it_works() {
+        client::connect();
+    }
+}
+```
+
+### 使用 pub use 重导出模块
+
+假设模块中有两个子模块:
+
+src/lib.rs:
+
+```rust
+//! # Art
+//!
+//! A library for modeling artistic concepts.
+
+pub mod kinds {
+    /// The primary colors according to the RYB color model.
+    pub enum PrimaryColor {
+        Red,
+        Yellow,
+        Blue,
+    }
+
+    /// The secondary colors according to the RYB color model.
+    pub enum SecondaryColor {
+        Orange,
+        Green,
+        Purple,
+    }
+}
+
+pub mod utils {
+    use kinds::*;
+
+    /// Combines two primary colors in equal amounts to create
+    /// a secondary color.
+    pub fn mix(c1: PrimaryColor, c2: PrimaryColor) -> SecondaryColor {
+        // --snip--
+    }
+}
+```
+
+使用时需要这样:
+
+```rust
+extern crate art;
+
+use art::kinds::PrimaryColor; // 不方便
+use art::utils::mix;          // 不方便
+
+fn main() {
+    let red = PrimaryColor::Red;
+    let yellow = PrimaryColor::Yellow;
+    mix(red, yellow);
+}
+```
+
+使用 `pub use` 重导出子模块和子模块中的函数:
+
+```rust
+//! # Art
+//!
+//! A library for modeling artistic concepts.
+
+pub use kinds::PrimaryColor;
+pub use kinds::SecondaryColor;
+pub use utils::mix;
+
+pub mod kinds {
+    // --snip--
+}
+
+pub mod utils {
+    // --snip--
+}
+```
+
+使用时就可以这样:
+
+```rust
+extern crate art;
+
+use art::PrimaryColor; // 不需要子模块的名称了
+use art::mix;
+
+fn main() 
+    // --snip--
+}
+```
+
+
+
+------------------------------
+# 工作空间
+
+在 `add/Cargo.toml` 中：
+
+```toml
+[workspace]
+
+members = [
+    "adder",
+    "add-one"
+]
+```
+
+在 add 目录下使用 `cargo new --bin adder` 创建一个名为 adder 的二进制项目。
+
+在 add 下使用 `cargo new --lib add-one` 创建一个名为 add-one 的库项目。
+
+现在 add 目录的文件结构如下：
+
+```
+├── Cargo.lock
+├── Cargo.toml
+├── add-one
+│   ├── Cargo.toml
+│   └── src
+│       └── lib.rs
+├── adder
+│   ├── Cargo.toml
+│   └── src
+│       └── main.rs
+└── target
+```
+
+在 `add-one/src/lib.rs` 中有一个 `add_one` 函数。
+
+如果想在 adder 中使用 add-one, 需要在 `adder/Cargo.toml` 中加入下面的声明：
+
+```toml
+[dependencies]
+
+add-one = { path = "../add-one" }
+```
+
+这样就可以在 adder 中像下面这样使用 add-one 了：
+
+```rust
+extern crate add_one;
+
+fn main() {
+    let num = 10;
+    println!("Hello, world! {} plus one is {}!", num, add_one::add_one(num));
+}
+```
+
+在 add 目录下
+* 使用 `cargo build` 构建所有的项目。
+* 使用 `cargo run -p adder` 来运行 adder 项目。
+
+如果在 add-one 中引入外部 crate, 可以在 `add-one/Cargo.toml` 中加入下面的依赖：
+
+```
+[dependencies]
+
+rand = "0.3.14"
+```
+
+
+
+
+
+
+
+-----------------------------
+
+# 错误处理
+
+
+## 触发panic
+
+使用 `panic!` 宏来抛出异常:
+
+```rust
+panic!("crash and burn");
+```
+
+运行时 `RUST_BACKTRACE=1 cargo run` 来打印出详细的错误堆栈.
+
+
+## Result 
+
+```rust
+enum Result<T, E> {
+    Ok(T),
+    Err(E),
+}
+```
+
+示例: 打开文件
+
+```rust
+use std::fs::File;
+
+fn main() {
+    let f = File::open("hello.txt");
+    let f = match f {
+        Ok(file) => file,
+        Err(error) => {
+            panic!("There was a problem opening the file: {:?}", error)
+        },
+    };
+}
+```
+
+open() 返回的类型是 `std::result::Result<std::fs::File, std::io::Error>`.
+
+Result 和 Option 一样都被导入到了 prelude 中, 所以可以直接使用 Ok, Err 枚举值.
+
+
+## 匹配不同的错误
+
+```rust
+use std::fs::File;
+use std::io::ErrorKind;
+
+fn main() {
+    let f = File::open("hello.txt");
+
+    let f = match f {
+        Ok(file) => file,
+        Err(ref error) if error.kind() == ErrorKind::NotFound => {
+            match File::create("hello.txt") {
+                Ok(fc) => fc,
+                Err(e) => {
+                    panic!(
+                        "Tried to create file but there was a problem: {:?}",
+                        e
+                    )
+                },
+            }
+        },
+        Err(error) => {
+            panic!(
+                "There was a problem opening the file: {:?}",
+                error
+            )
+        },
+    };
+}
+```
+
+上例中当错误为 NotFound 时会尝试创建文件.
+
+ref 是必须的，这样 error 就不会被移动到 guard 条件中而仅仅只是引用它.
+
+
+## unwrap 和 expect
+
+```rust
+use std::fs::File;
+
+fn main() {
+    let f = File::open("hello.txt").unwrap();
+}
+```
+
+`unwrap` 是 Result 提供的一个方法, 如果 Result 匹配到了 Ok, 那么 unwrap 就返回 Ok 中的内容, 如果匹配到了 Err, 那么就 panic.
+
+```rust
+use std::fs::File;
+
+fn main() {
+    let f = File::open("hello.txt").expect("Failed to open hello.txt");
+}
+```
+
+`expect` 中我们可以自定义 panic 时的错误信息.
+
+
+## 传播错误
+
+```rust
+use std::io;
+use std::io::Read;
+use std::fs::File;
+
+fn read_username_from_file() -> Result<String, io::Error> {
+    let f = File::open("hello.txt");
+
+    let mut f = match f {
+        Ok(file) => file,
+        Err(e) => return Err(e), // 这里的 return 是结束了整个函数
+    };
+
+    let mut s = String::new();
+
+    match f.read_to_string(&mut s) {
+        Ok(_) => Ok(s),
+        Err(e) => Err(e),
+    }
+}
+```
+
+上例是从文件中读取用户名, 当读取失败时返回错误而不是 panic.
+
+下例是上例的一个简写形式.
+
+```rust
+use std::io;
+use std::io::Read;
+use std::fs::File;
+
+fn read_username_from_file() -> Result<String, io::Error> {
+    let mut f = File::open("hello.txt")?; // 多了个 ?
+    let mut s = String::new();
+    f.read_to_string(&mut s)?; // 多了个 ?
+    Ok(s)
+}
+```
+
+`?` 的作用是: 如果 Result 返回了 Ok, 那么 `?` 就返回 Ok 中的内容, 如果返回了 Err, 就 return Err.
+
+
+> ? 所使用的错误值被传递给了 from 函数，它定义于标准库的 From trait 中，其用来将错误从一种类型转换为另一种类型。到问号运算符调用 from 函数时，收到的错误类型被转换为定义为当前函数返回的错误类型。这在当一个函数返回一个错误类型来代表所有可能失败的方式时很有用，即使其可能会因很多种原因失败。只要每一个错误类型都实现了 from 函数来定义如将其转换为返回的错误类型，问号运算符会自动处理这些转换。
+
+
+还可以链式调用:
+
+```rust
+use std::io;
+use std::io::Read;
+use std::fs::File;
+
+fn read_username_from_file() -> Result<String, io::Error> {
+    let mut s = String::new();
+
+    File::open("hello.txt")?.read_to_string(&mut s)?;
+
+    Ok(s)
+}
+```
+
+`?` 只能用于返回 Result 的函数, 比如下面的 main 函数没有返回值, 使用 `?` 会导致程序 panic:
+
+```rust
+use std::fs::File;
+
+fn main() {
+    let f = File::open("hello.txt")?; // 这里不能使用 ?
+}
+```
+
+------------------------------
+# trait
+- 类似接口, 一组方法的集合.
+
+
+## 定义trait
+
+```rust
+pub trait Summarizable {
+    fn summary(&self) -> String;
+}
+```
+
++ 方法声明的最后需要添加分号 `;`.
+
+
+## 实现trait
+
+```rust
+fn main() {
+    let news_article = NewsArticle {
+        headline: String::from("headline"),
+        author: String::from("chen"),
+    };
+    println!("{}", news_article.summary());
+
+    let tweet = Tweet {
+        username: String::from("chen"),
+        content: String::from("content"),
+    };
+    println!("{}", tweet.summary());
+}
+
+pub trait Summarizable {
+    fn summary(&self) -> String;
+}
+
+pub struct NewsArticle {
+    pub headline: String,
+    pub author: String,
+}
+
+impl Summarizable for NewsArticle {
+    fn summary(&self) -> String {
+        format!("{}, by {}", self.headline, self.author)
+    }
+}
+
+pub struct Tweet {
+    pub username: String,
+    pub content: String,
+}
+
+impl Summarizable for Tweet {
+    fn summary(&self) -> String {
+        format!("{}: {}", self.username, self.content)
+    }
+}
+```
+
+默认实现:
+
+```rust
+pub trait Summarizable {
+    fn summary(&self) -> String {
+        String::from("(Read more...)")
+    }
+}
+
+pub struct NewsArticle {
+    pub headline: String,
+    pub author: String,
+}
+
+impl Summarizable for NewsArticle {}
+
+fn main() {
+    let news_article = NewsArticle {
+        headline: String::from("headline"),
+        author: String::from("chen"),
+    };
+    println!("{}", news_article.summary());
+}
+```
+
+调用trait中的其他方法:
+
+```rust
+pub trait Summarizable {
+    fn author_summary(&self) -> String;
+
+    fn summary(&self) -> String {
+        format!("(Read more from {}...)", self.author_summary())
+    }
+}
+
+pub struct Tweet {
+    pub username: String,
+    pub content: String,
+}
+
+impl Summarizable for Tweet {
+    fn author_summary(&self) -> String {
+        format!("@{}", self.username)
+    }
+}
+
+fn main() {
+    let tweet = Tweet {
+        username: String::from("chen"),
+        content: String::from("content"),
+    };
+    println!("{}", tweet.summary());
+}
+```
+
+
+------------------------------
+# 泛型
+
+## 定义泛型
+
+**结构体中的泛型**:
+
+```rust
+// 一种类型
+struct Point<T> {
+    x: T,
+    y: T,
+}
+
+fn main() {
+    let integer = Point { x: 5, y: 10 };
+    let float = Point { x: 1.0, y: 4.0 };
+}
+
+// 多种类型
+struct Point<T, U> {
+    x: T,
+    y: U,
+}
+```
+
+
+**枚举中的泛型**:
+
+```rust
+enum Option<T> {
+    Some(T),
+    None,
+}
+
+enum Result<T, E> {
+    Ok(T),
+    Err(E),
+}
+```
+
+
+**函数中的泛型**:
+
+```rust
+struct Point<T> {
+    x: T,
+    y: T,
+}
+
+impl<T> Point<T> {
+    fn x(&self) -> &T {
+        &self.x
+    }
+}
+
+fn main() {
+    let p = Point { x: 5, y: 10 };
+
+    println!("p.x = {}", p.x());
+}
+```
+
+`impl<T>` 中的 T 是必须的, 这是告诉编译器 Point 后的 T 是泛型而不是具体类型.
+
+下面展示了为具体类型实现的方法:
+
+```rust
+impl Point<f32> { // 为 T = f32 实现的方法
+    fn distance_from_origin(&self) -> f32 {
+        (self.x.powi(2) + self.y.powi(2)).sqrt()
+    }
+}
+```
+
+下例中的 mixup 使用两个不同类型的 Point 组装成一个新的 Point:
+
+```rust
+struct Point<T, U> {
+    x: T,
+    y: U,
+}
+
+impl<T, U> Point<T, U> { // impl 后的 T, U 是相对于结构体的
+    fn mixup<V, W>(self, other: Point<V, W>) -> Point<T, W> { // mixup 后的 V, W 是相对于方法的
+        Point {
+            x: self.x,
+            y: other.y,
+        }
+    }
+}
+
+fn main() {
+    let p1 = Point { x: 5, y: 10.4 };
+    let p2 = Point { x: "Hello", y: 'c'};
+
+    let p3 = p1.mixup(p2);
+
+    println!("p3.x = {}, p3.y = {}", p3.x, p3.y);
+}
+```
+
+## Trait Bounds
+
+```rust
+pub trait Summarizable {
+    fn author_summary(&self) -> String;
+
+    fn summary(&self) -> String {
+        format!("(Read more from {}...)", self.author_summary())
+    }
+}
+
+pub struct Tweet {
+    pub username: String,
+    pub content: String,
+}
+
+impl Summarizable for Tweet {
+    fn author_summary(&self) -> String {
+        format!("@{}", self.username)
+    }
+}
+
+pub fn notify<T: Summarizable>(item: T) {
+    println!("Breaking news! {}", item.summary())
+}
+
+fn main() {
+    let tweet = Tweet {
+        username: String::from("chen"),
+        content: String::from("content"),
+    };
+    notify(tweet)
+}
+```
+
+可以通过 `+` 来为泛型指定多个 trait bounds: `T: Summarizable + Display`, 需要两个 trait 都实现.
+
+可以为每个泛型都指定 trait: `fn some_function<T: Display + Clone, U: Clone + Debug>(t: T, u: U) -> i32 {`, 为了方便阅读, 可以将泛型声明放到 where 从句中:
+
+```rust
+fn some_function<T, U>(t: T, u: U) -> i32
+    where T: Display + Clone,
+          U: Clone + Debug
+{
+```
+
+## 不同泛型实现不同的方法
+
+```rust
+use std::fmt::Display;
+
+struct Pair<T> {
+    x: T,
+    y: T,
+}
+
+impl<T> Pair<T> {
+    fn new(x: T, y: T) -> Self {
+        Self {
+            x,
+            y,
+        }
+    }
+}
+
+impl<T: Display + PartialOrd> Pair<T> {
+    fn cmp_display(&self) {
+        if self.x >= self.y {
+            println!("The largest member is x = {}", self.x);
+        } else {
+            println!("The largest member is y = {}", self.y);
+        }
+    }
+}
+```
+
+`Pair<T>` 总是实现了 new 方法, 但是只有当 T 实现了 Display 和 PartialOrd 时才有 `cmp_display` 方法.
+
+
+
+------------------------------
+# 测试
+
+## 判断函数
+
+```Rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_works() {
+        assert!(2 + 2 == 4); 
+        assert_eq!(2 + 2, 4);
+        assert_ne!(2 + 2, 3);
+    }
+}
+```
+
+`assert_eq!` 和 `assert_ne!` 在底层使用了 `==` 和 `!=`, 并且在断言失败时会使用调试格式打印出参数, 所以被比较的值需要实现 `PartialEq` 和 `Debug` trait.
+
+
+### should_panic
+
+```rust
+pub struct Guess {
+    value: u32,
+}
+
+impl Guess {
+    pub fn new(value: u32) -> Guess {
+        if value < 1 || value > 100 {
+            panic!("Guess value must be between 1 and 100, got {}.", value);
+        }
+
+        Guess {
+            value
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic]
+    fn greater_than_100() {
+        Guess::new(200);
+    }
+}
+```
+
+确保错误信息中包含指定的字符串:
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic(expected = "Guess value must be between 1 and 100")]
+    fn greater_than_100() {
+        Guess::new(200);
+    }
+}
+```
+
+
+
+
+## 自定义错误信息
+
+```rust
+#[test]
+fn greeting_contains_name() {
+    let result = greeting("Carol");
+    assert!(
+        result.contains("Carol"),
+        "Greeting did not contain name, value was `{}`", result
+    );
+}
+```
+
+除了所需的参数外, 其余参数会被传递给 `format!` 宏.
+
+
+## 引用外部函数
+
+```rust
+pub fn add_two(a: i32) -> i32 {
+    a + 2
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_adds_two() {
+        assert_eq!(4, add_two(2));
+    }
+}
+```
+
+因为测试代码在 tests 模块中, 为了直接使用外部模块的函数, 使用了 `use super::*;`.
+
+
+## 运行测试
+
+`cargo test` 并行地运行所有测试.
+
+`--` 是分隔符, 之前的参数会传递给 `cargo test`, 之后的参数会传递给测试二进制文件. 运行 `cargo test --help` 会告诉你 cargo test 的相关参数，而运行 `cargo test -- --help` 则会告诉你位于分隔符 -- 之后的相关参数.
+
+多个测试默认使用线程来并行的运行, 如果不希望并行, 可以使用 `cargo test -- --test-threads=1` 来串行执行.
+
+如果测试通过了, 测试库默认会捕获打印到标准输出的任何内容, 不会显示出来. 如果测试失败了则会显示出来(显示失败的那个函数的输出, 成功的不会显示).
+
+运行特定的测试: `cargo test func_name`(执行包含 `func_name` 的测试).
+
+忽略某些测试:
+
+```rust
+#[test]
+#[ignore]
+fn expensive_test() {
+    // code that takes an hour to run
+}
+```
+
+如果想执行这些被忽略的测试, 可以使用 `cargo test -- --ignored`.
+
+
+## 测试的组织结构
+
+### 单元测试
+
+`#[cfg(test)]` 模块只在运行 `cargo test` 时才会被编译, 运行 `cargo build` 时不会被编译, 节省空间.
+
+### 集成测试
+
+创建一个 tests 目录, 与 src 目录同级.
+
+tests/integration_test.rs:
+
+```rust
+extern crate adder;
+
+#[test]
+fn it_adds_two() {
+    assert_eq!(4, adder::add_two(2));
+}
+```
+
+每个文件都会被编译为单独的 crate.
+
+不需要 `#[cfg(test)]`, 编译器只会在运行 `cargo test` 时编译这个目录中的文件.
+
+运行特定集成测试文件中的所有测试: `cargo test --test <file_name>`.
+
+将辅助代码移动到单独的模块中, 比如 `tests/common/mod.rs`(common 作为一个模块, 不会出现在测试结果中), 然后就可以在测试代码中调用这些辅助函数了:
+
+tests/integration_test.rs:
+
+```rust
+extern crate adder;
+
+mod common; // 模块声明
+
+#[test]
+fn it_adds_two() {
+    common::setup(); // 调用
+    assert_eq!(4, adder::add_two(2));
+}
 ```

@@ -3,6 +3,7 @@
 - [概述](#概述)
     - [概念](#概念)
     - [网络](#网络)
+- [安装](#安装)
 - [命令](#命令)
     - [保留策略 retention policy](#保留策略-retention-policy)
 - [配置](#配置)
@@ -10,7 +11,7 @@
 - [数据库](#数据库)
 - [Writing and exploring data](#writing-and-exploring-data)
 - [HTTP API](#http-api)
-    - [创建数据库](#创建数据库)
+    - [数据库](#数据库-1)
     - [写数据](#写数据)
     - [查询](#查询)
 - [influxQL](#influxql)
@@ -48,6 +49,15 @@
 * 一些插件可能需要其它端口, 这些都可以在配置文件中配置.
 
 
+# 安装
+
+mac:
+
+```bash
+brew update
+brew install influxdb
+```
+
 
 # 命令
 
@@ -70,6 +80,7 @@ create a non-DEFAULT RP: `CREATE RETENTION POLICY "a_year" ON "food_data" DURATI
 # 配置
 
 ## 使用自己的配置启动
+1. 生成配置模板: `influxd config > my_influxdb.conf`
 1. `-config` 参数 `influxd -config /etc/influxdb/influxdb.conf`
 2. 在环境变量 `INFLUXDB_CONFIG_PATH` 中指定.
 
@@ -81,6 +92,11 @@ create a non-DEFAULT RP: `CREATE RETENTION POLICY "a_year" ON "food_data" DURATI
 * `CREATE DATABASE mydb`: 创建数据库，如果数据库名包含除了ASCII字符，数字，下划线还包括其他字符，需要使用双引号。
 * `SHOW DATABASES`: 显示已存在的数据库。`_internal` 是 influxDB 存储内部运行数据的。
 * `USE mydb`: 每个查询都需要制定数据库，使用这个语句避免每次都指定。
+* `DROP DATABASE mydb`: 删除数据库。
+* `show measurements`: 显示该数据库中所有的表。
+* `drop measurement "measurement_name"`: 删除表。
+
+
 
 # Writing and exploring data
 
@@ -130,7 +146,7 @@ time		    	                     host     	region   value
 # HTTP API
 * [write API](https://docs.influxdata.com/influxdb/v1.3/tools/api/#write)
 
-## 创建数据库
+## 数据库
 
 ```shell
 curl -i -XPOST http://localhost:8086/query --data-urlencode "q=CREATE DATABASE mydb"

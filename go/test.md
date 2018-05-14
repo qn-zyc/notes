@@ -56,18 +56,18 @@
     - `go test -v -bench=Benchmark(A|B)`
 - 文件名也必须以 `_test.go` 结尾。
 - cpu 占用: `go test -v -cpuprofile=cpu.out`。
-- 内存占用: `go test -v -benchmem`。
+- 内存占用: `go test -v -benchmem`。 使用 `go test -v -memprofile=mem.out` 输出 mem.out 用于 go tool pprof 分析.
 
 
 ## 记录cpu占用
 
-```
+```bash
 go test -v -run=XXX -bench=函数名正则 -cpuprofile=cpu.out 包路径或无
 ```
 
 会在当前目录下生成一个以 `.test` 结尾的文件和一个 cpu.out, 查看的话使用:
 
-```
+```bash
 go tool pprof ./XX.test cpu.out
 ```
 
@@ -75,12 +75,14 @@ go tool pprof ./XX.test cpu.out
 
 文本输出：
 
-```go
+```bash
 go tool pprof -text -nodecount=10 ./XX.test cpu.out
 ```
 
 - text 标志参数用于指定输出格式, 在这里每行是一个函数, 根据使用CPU的时间来排序。
 - nodecount=10 标志参数限制了只输出前10行的结果。
+
+
 
 
 # 例子用例

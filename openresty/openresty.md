@@ -74,6 +74,22 @@
 brew install homebrew/nginx/openresty
 ```
 
+```bash
+brew install openresty/brew/openresty
+```
+
+如果遇到下载安装包失败的情况， 可以手动下载， 然后放到 brew 的 cache 目录（通过 `brew --cache` 查看）。
+
+如果遇到下面的错误：
+
+```
+Error: Formulae found in multiple taps:
+* openresty/brew/openresty-openssl
+* denji/nginx/openresty-openssl
+```
+
+可以使用 `brew untap denji/nginx`。
+
 
 # hello world
 
@@ -108,7 +124,7 @@ http {
 
 ```
 /usr/local/openresty/nginx/sbin/nginx -c /usr/local/openresty/nginx/conf/nginx.conf
-/usr/local/openresty/nginx/sbin/nginx -p 'pwd' -c /usr/local/openresty/nginx/conf/nginx.conf
+/usr/local/openresty/nginx/sbin/nginx -p `pwd` -c /usr/local/openresty/nginx/conf/nginx.conf
 ```
 
 * `-c` 指定配置文件.

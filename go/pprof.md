@@ -119,6 +119,45 @@ full goroutine stack dump
 - 其他功能使用参见 官方 [net/http/pprof](https://golang.org/pkg/net/http/pprof/) 库
 
 
+### 内存占用
+
+`http://localhost:9090/debug/pprof/heap?debug=1`
+
+输出示例:
+
+```
+heap profile: 3190(inused objects): 77516056(inused bytes) [54762(alloc objects): 612664248(alloc bytes)] @ heap/1048576(2*MemProfileRate)
+1: 29081600 [1: 29081600] (前面4个数跟第一行的一样，此行以后是每次记录的，后面的地址是记录中的栈指针)@ 0x89368e 0x894cd9 0x8a5a9d 0x8a9b7c 0x8af578 0x8b4441 0x8b4c6d 0x8b8504 0x8b2bc3 0x45b1c1
+...
+# runtime.MemStats
+# Alloc = 6951912 
+# TotalAlloc = 5619604376 
+# Sys = 19249400 (进程从系统获得的内存空间，虚拟地址空间)
+# Lookups = 3656
+# Mallocs = 43503252
+# Frees = 43445133
+# HeapAlloc = 6951912 (进程堆内存分配使用的空间，通常是用户new出来的堆对象，包含未被gc掉的)
+# HeapSys = 12386304 (进程从系统获得的堆内存，因为golang底层使用TCmalloc机制，会缓存一部分堆内存，虚拟地址空间。)
+# HeapIdle = 4325376
+# HeapInuse = 8060928
+# HeapReleased = 0
+# HeapObjects = 58119
+# Stack = 3276800 / 3276800
+# MSpan = 158080 / 229376
+# MCache = 6944 / 16384
+# BuckHashSys = 1474607
+# GCSys = 782336
+# OtherSys = 1083593
+# NextGC = 7960256
+# LastGC = 1524025669886421880
+# PauseNs = [89496 119498 ...] (记录每次gc暂停的时间(纳秒)，最多记录256个最新记录。)
+# PauseEnd = [1524025666427497151 ...]
+# NumGC = 1988 (记录gc发生的次数。)
+# NumForcedGC = 0
+# GCCPUFraction = -8.074638565876587e-06
+# DebugGC = false
+```
+
 
 # 优化代码
 

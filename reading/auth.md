@@ -209,3 +209,4 @@ https://www.example.com/callback#token=ACCESS_TOKEN
 # 参考
 - [OAuth 2.0 理解](https://mp.weixin.qq.com/s/hzy8gV0eDdumg0TD5mi5cA)
 - [OAuth2.0原理和验证流程分析](https://www.jianshu.com/p/d74ce6ca0c33)
+- [简述 OAuth 2.0 的运作流程](https://www.barretlee.com/blog/2016/01/10/oauth2-introduce/)

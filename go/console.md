@@ -59,6 +59,8 @@ if err := scanner.Err(); err != nil {
 
 Scanner的每一次调用都会调入一个新行，并且会自动将其行末的换行符去掉；其结果可以用input.Text()得到。Scan方法在读到了新行的时候会返回true，而在没有新行被读入时，会返回false
 
+可以结合 cat 命令: `cat input.txt | go run scanner.go`.
+
 
 
 **一个词一个词读取**

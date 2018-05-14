@@ -30,11 +30,21 @@
 
 # 查看进程文件描述符
 
-* `ulimit -a` 查看系统文件描述符上线.
-* 在 `/proc/<进程ID>/fd` 目录下是进程打开的所有文件描述符, 使用 `ll | wc -l` 查看个数.
 * `lsof -p <进程ID>` 查看进程占用了哪些文件.
 * `netstat -ant | grep -i "80" | wc -l` 查看连接数
 * `lsof -n | awk '{print $2}' | sort | uniq -c | sort -nr | more` 查看各个进程占用的句柄数, 第一列是句柄数, 第二列是进程号
+* `cat /proc/sys/fs/file-max` 查看系统最大打开文件描述符.
+* `echo 10000 > /proc/sys/fs/file-max` 临时修改系统最大文件描述符.
+* 在 `/etc/sysctl.conf` 中 **永久** 设置最大文件描述符: `fs.file-max = 10000`.
+* `ulimit -n` (soft limit)查看进程最大文件描述符(`ulimit -Hn` 查看 hard limit). `cat /proc/<pid>/limits` 查看具体进程的限制.
+* (临时)`ulimit -n 1000` 设置 soft limit 和 hard limit, `ulimit -Sn 1000` 设置 soft limit, `ulimit -Hn 1000` 设置 hard limit.
+* (永久)在 `/etc/security/limits.conf` 中添加下面两行(需要注意设置 nofile 的 hard limit 不能大于 `/proc/sys/fs/nr_open`, 如果大于注销后不能正常登陆, 可以修改 `nr_open` 的值: `echo 20000 > /proc/sys/fs/nr_open`)
+    ```
+    user_name   soft    nofile  180000
+    user_name   hard    nofile  200000
+    ```
+* `ll /proc/<pid>/fd | wc -l` 查看进程打开的文件描述符数.
+
 
 
 # TIME_WAIT
@@ -373,6 +383,13 @@ grep（global search regular expression(RE) and print out the line，全面搜�
 常见用法:
 
 ```bash
+# 找出filename中带有keyword的行，输出中除显示该行外，还显示之后的一行(After 1)
+grep -A1 keyword filename
+# 找出filename中带有keyword的行，输出中除显示该行外，还显示之前的一行(Before 1)
+grep -B1 keyword filename
+# 找出filename中带有keyword的行，输出中除显示该行外，还显示之前的一行(After 1)和显示之后的一行(After 1）
+grep -1 keyword filename
+
 # 在文件中搜索一个单词:
 grep match_pattern file_name
 grep "match_pattern" file_name
