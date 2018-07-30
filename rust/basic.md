@@ -24,6 +24,7 @@
         - [隐式解引用强制多态](#隐式解引用强制多态)
     - [Drop trait](#drop-trait)
     - [Rc<T> 引用计数智能指针](#rct-引用计数智能指针)
+    - [RefCell<T>](#refcellt)
 - [参考](#参考)
 
 <!-- /TOC -->
@@ -649,6 +650,60 @@ fn main() {
 
 
 ## Rc<T> 引用计数智能指针
+
+* 引用计数（reference counting）的缩写
+* 多所有权
+* `Rc<T>` 用于当我们希望在堆上分配一些内存供程序的多个部分读取，而且无法在编译时确定程序的那一部分会最后结束使用它的时候。如果确实知道哪部分会结束使用的话，就可以令其成为数据的所有者同时正常的所有权规则就可以在编译时生效。
+* `Rc<T>` 只能用于单线程场景
+
+```rust
+enum List {
+    Cons(i32, Rc<List>),
+    Nil,
+}
+
+use List::{Cons, Nil};
+use std::rc::Rc;
+
+fn main() {
+    let a = Rc::new(Cons(5, Rc::new(Cons(10, Rc::new(Nil)))));
+    let b = Cons(3, Rc::clone(&a)); // clone 会增加引用计数
+    let c = Cons(4, Rc::clone(&a));
+}
+```
+
+使用 `Rc::strong_count()` 获取引用计数值:
+
+```rust
+fn main() {
+    let a = Rc::new(Cons(5, Rc::new(Cons(10, Rc::new(Nil)))));
+    println!("count after creating a = {}", Rc::strong_count(&a)); // 1
+    let b = Cons(3, Rc::clone(&a));
+    println!("count after creating b = {}", Rc::strong_count(&a)); // 2
+    {
+        let c = Cons(4, Rc::clone(&a));
+        println!("count after creating c = {}", Rc::strong_count(&a)); // 3
+    }
+    println!("count after c goes out of scope = {}", Rc::strong_count(&a)); // 2
+}
+```
+
+`Rc<T>` 允许通过不可变引用来只读的在程序的多个部分共享数据。如果 `Rc<T>` 也允许多个可变引用，则会违反第四章讨论的借用规则之一：相同位置的多个可变借用可能造成数据竞争和不一致。
+
+
+## RefCell<T>
+
+* 对于引用和 `Box<T>`，借用规则的不可变性作用于编译时。对于 `RefCell<T>`，这些不可变性作用于运行时。对于引用，如果违反这些规则，会得到一个编译错误。而对于 `RefCell<T>`，违反这些规则会 panic!。
+* `RefCell<T>` 正是用于当你确信代码遵守借用规则，而编译器不能理解和确定的时候。
+* 类似于 `Rc<T>`，`RefCell<T>` 只能用于单线程场景
+
+如下为选择 Box<T>，Rc<T> 或 RefCell<T> 的理由：
+
+* Rc<T> 允许相同数据有多个所有者；Box<T> 和 RefCell<T> 有单一所有者。
+* Box<T> 允许在编译时执行不可变（或可变）借用检查；Rc<T>仅允许在编译时执行不可变借用检查；RefCell<T> 允许在运行时执行不可变（或可变）借用检查。
+* 因为 RefCell<T> 允许在运行时执行可变借用检查，所以我们可以在 **即便 RefCell<T> 自身是不可变的情况下修改其内部的值**(内部可变性模式)。
+
+
 
 
 

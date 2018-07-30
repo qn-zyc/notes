@@ -11,6 +11,7 @@
     - [panic、recover](#panicrecover)
     - [print、println](#printprintln)
     - [complex、real imag](#complexreal-imag)
+- [找出二进制文件是哪个Go版本编译的](#找出二进制文件是哪个go版本编译的)
 - [优化](#优化)
 
 <!-- /TOC -->
@@ -163,6 +164,13 @@ func main() {
 ## complex、real imag
 
 用于创建和操作复数
+
+
+
+# 找出二进制文件是哪个Go版本编译的
+
+* https://dave.cheney.net/2017/06/20/how-to-find-out-which-go-version-built-your-binary
+* https://github.com/rsc/goversion
 
 
 # 优化

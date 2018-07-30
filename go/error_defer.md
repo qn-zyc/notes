@@ -9,6 +9,7 @@
     - [看一下 json 包中的一段代码](#看一下-json-包中的一段代码)
 - [错误处理的冗余](#错误处理的冗余)
 - [提供更友好的错误提示](#提供更友好的错误提示)
+- [网络错误](#网络错误)
 
 <!-- /TOC -->
 
@@ -534,4 +535,8 @@ func viewRecord(w http.ResponseWriter, r *http.Request) *appError {
 ```
 
 
+## 网络错误
 
+* https://liudanking.com/network/go-%E4%B8%AD%E5%A6%82%E4%BD%95%E5%87%86%E7%A1%AE%E5%9C%B0%E5%88%A4%E6%96%AD%E5%92%8C%E8%AF%86%E5%88%AB%E5%90%84%E7%A7%8D%E7%BD%91%E7%BB%9C%E9%94%99%E8%AF%AF/
+
+![](pic/err01.jpg)

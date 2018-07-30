@@ -1,26 +1,27 @@
-<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+<!-- TOC -->
 
 - [测试用例](#测试用例)
-	- [代码覆盖率](#代码覆盖率)
+    - [代码覆盖率](#代码覆盖率)
 - [压力测试](#压力测试)
-	- [记录cpu占用](#记录cpu占用)
+    - [记录cpu占用](#记录cpu占用)
 - [例子用例](#例子用例)
 - [测试脚本](#测试脚本)
-	- [除vendor外的测试](#除vendor外的测试)
-	- [测试覆盖率](#测试覆盖率)
+    - [除vendor外的测试](#除vendor外的测试)
+    - [测试覆盖率](#测试覆盖率)
 - [测试技巧](#测试技巧)
-	- [子测试](#子测试)
-	- [表格驱动](#表格驱动)
-	- [测试用例的当前目录](#测试用例的当前目录)
-	- [flag](#flag)
-	- [Don’t export concurrency primitives](#dont-export-concurrency-primitives)
-	- [使用 net/http/httptest](#使用-nethttphttptest)
-	- [Use a separate test package](#use-a-separate-test-package)
-	- [TestMain](#testmain)
+    - [子测试](#子测试)
+    - [表格驱动](#表格驱动)
+    - [测试用例的当前目录](#测试用例的当前目录)
+    - [flag](#flag)
+    - [Don’t export concurrency primitives](#dont-export-concurrency-primitives)
+    - [使用 net/http/httptest](#使用-nethttphttptest)
+    - [Use a separate test package](#use-a-separate-test-package)
+    - [TestMain](#testmain)
+    - [helper 函数](#helper-函数)
+    - [testdata](#testdata)
 - [参考](#参考)
 
 <!-- /TOC -->
-
 
 # 测试用例
 
@@ -33,6 +34,11 @@
 - 执行当前目录下所有的单元测试: `go test -v ./...`。
 - 指定超时时间: `go test -v -run=XXX -timeout=10m`。
 
+忽略某些包: 
+
+```bash
+go test `go list ./... | grep -v 'package_name'`
+```
 
 
 ## 代码覆盖率
@@ -43,7 +49,6 @@
     - set: 每个语句是否执行到, 默认配置。
     - count: 每个语句执行了多少次。
     - atomic: 类似于 count, 但表示的是并行程序中的精确计数。
-
 
 
 # 压力测试
@@ -422,6 +427,29 @@ PASS
 2
 ```
 
+## helper 函数
+
+```go
+func testHelper(t *testing.T) {
+	t.Helper()
+	t.Log("hello in helper function")
+}
+```
+
+添加上 `t.Helper()` 之后, `t.Log` 打印的代码行数是调用 `testHelper` 的位置, 而不再是调用 `t.Log` 的位置.
+
+
+
+## testdata
+
+> Directory and file names that begin with “.” or “_” are ignored by the go tool, as are directories named “testdata”.
+> --- https://golang.org/cmd/go/#hdr-Package_lists
+
+可以将测试用的文件放到 testdata 目录下.
+
+
+
+
 
 
 # 参考
@@ -429,3 +457,4 @@ PASS
 - [5 Advanced Testing Techniques in Go](https://segment.com/blog/5-advanced-testing-techniques-in-go/)
 - [https://golang.org/pkg/testing/](https://golang.org/pkg/testing/)
 - [Go多个pkg的单元测试覆盖率](http://singlecool.com/2017/06/11/golang-test/)
+- [Go test your tests in Go with go test](https://deadbeef.me/2018/05/go-test)

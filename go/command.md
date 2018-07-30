@@ -1,28 +1,31 @@
-<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+<!-- TOC -->
 
 - [go generate](#go-generate)
-	- [一个简单的例子:mkdir](#一个简单的例子mkdir)
-- [在程序中执行命令 #](#在程序中执行命令-)
-- [go test #](#go-test-)
+    - [一个简单的例子:mkdir](#一个简单的例子mkdir)
+- [在程序中执行命令](#在程序中执行命令)
+- [go test](#go-test)
 - [go fmt](#go-fmt)
 - [goimports](#goimports)
 - [goreturns](#goreturns)
 - [golint](#golint)
 - [go install](#go-install)
 - [go build](#go-build)
-	- [交叉编译](#交叉编译)
-	- [ldflags](#ldflags)
-	- [gcflags](#gcflags)
+    - [交叉编译](#交叉编译)
+    - [ldflags](#ldflags)
+        - [编译时加版本号](#编译时加版本号)
+    - [gcflags](#gcflags)
+    - [条件编译](#条件编译)
 - [go list](#go-list)
 - [go tool objdump](#go-tool-objdump)
 - [go clean](#go-clean)
 - [go tool pprof](#go-tool-pprof)
 - [go tool trace](#go-tool-trace)
+    - [生成 trace 数据的方式](#生成-trace-数据的方式)
+    - [显示](#显示)
 - [-race 参数检查数据竞争](#-race-参数检查数据竞争)
 - [Makefile](#makefile)
 
 <!-- /TOC -->
-
 
 
 # go generate
@@ -180,31 +183,122 @@ GOOS=windows GOARCH=amd64 go build
 go tool compile -help
 ```
 
+### 编译时加版本号
+
+```go
+var Version = "unknown" // 使用小写 version 也可以。
+
+func main() {
+	fmt.Println("version:", Version)
+}
+```
+
+编译时：
+
+```bash
+go run -ldflags "-X main.Version=v1.0.0" main.go
+
+# 设置多个变量
+go run -ldflags "-X main.Version1=v1.0.0 -X main.Version2=v2.0.0" main.go
+
+# 使用 install
+go install -ldflags "-X main.Version1=v1.0.0 -X main.Version2=v2.0.0" -v ./...
+
+# 使用其他包
+go install -ldflags "-X github.com/aaa/test.Version=v1.0.0" -v ./...
+```
+
+`-X` 的文档可以在 https://golang.org/cmd/link/ 中查到。
+
+
+
 ## gcflags
 
 关闭编译器代码优化
 
-```go
+```bash
 go build -gcflags "-N" -o test test.go
 ```
 
 关闭函数内联
 
-```go
+```bash
 go build -gcflags "-l" -o test test.go
 ```
 
 同时制定
 
-```go
+```bash
 go build -gcflags "-N -l" -o test test.go
 ```
 
 查看编译优化信息
 
-```go
+```bash
+# 内存逃逸分析 
 go build -gcflags "-m" test.go
+go build -gcflags '-m -l' test.go    # 关闭函数内联
+go build -gcflags '-m -m -l' test.go # -m 越多分析的越细
 ```
+
+
+## 条件编译
+
+* https://golang.org/pkg/go/build/#hdr-Build_Constraints
+
+```go
+// +build linux,386 darwin,!cgo
+```
+
+`,` 对应的是 AND, 空格对应的是 OR, 所以上面对应的是 `(linux AND 386) OR (darwin AND (NOT cgo))`.
+
+`+build` 放到文件顶部, 后面需要跟一行空行.
+
+多行 build 之间使用 AND 联结, 比如:
+
+```go
+// +build linux darwin
+// +build 386
+```
+
+对应的意思是 `(linux OR darwin) AND 386`.
+
+build 后可以跟的词组:
+
+- the target operating system, as spelled by runtime.GOOS
+- the target architecture, as spelled by runtime.GOARCH
+- the compiler being used, either "gc" or "gccgo"
+- "cgo", if ctxt.CgoEnabled is true
+- "go1.1", from Go version 1.1 onward
+- "go1.2", from Go version 1.2 onward
+- "go1.3", from Go version 1.3 onward
+- "go1.4", from Go version 1.4 onward
+- "go1.5", from Go version 1.5 onward
+- "go1.6", from Go version 1.6 onward
+- "go1.7", from Go version 1.7 onward
+- "go1.8", from Go version 1.8 onward
+- "go1.9", from Go version 1.9 onward
+- "go1.10", from Go version 1.10 onward
+- any additional words listed in ctxt.BuildTags
+
+
+通过文件名来决定是否要编译:
+
+```go
+*_GOOS
+*_GOARCH
+*_GOOS_GOARCH
+```
+
+比如: `source_windows_amd64.go`.
+
+使一个文件不被编译: `// +build ignore`, 其他不满足的词都可以, 只是 ignore 更适合.
+
+
+build 后可以跟自定义的标签, 比如 `// +build mytag`, `// +build !mytag`, build 时使用 `go build -tags 'mytag'` 分开编译, 多个 tag 使用空格分隔.
+
+
+
 
 
 
@@ -295,6 +389,45 @@ TEXT main.test(SB) /Users/zhangyuchen/tmp/test.go
 
 
 # go tool trace
+
+* [深入浅出 Go trace](https://mp.weixin.qq.com/s/I9xSMxy32cALSNQAN8wlnQ)
+
+## 生成 trace 数据的方式
+
+在程序中使用下面的代码将数据输出到标准错误输出中：
+
+```go
+import (
+    "os"
+    "runtime/trace"
+)
+
+func main() {
+    trace.Start(os.Stderr)
+    defer trace.Stop()
+    ch := make(chan int)
+
+    go func() {
+        ch <- 42
+    }()
+    <-ch
+}
+```
+
+之后使用 `go run main.go 2> trace.out` 输出到 trace.out 文件中，再使用 `go tool trace trace.out` 读取 trace。（会打开浏览器显示，默认会随机分配端口，也可以指定：`go tool trace --http=':8080' trace.out`）
+
+
+## 显示
+
+**View Trace**
+
+* timeline 可以使用 WASD 来左右移动和放大缩小。
+* heap 显示内存分配和回收。
+* goroutines 显示正在运行的协程数和可运行的协程数。
+* threads 显示正在使用的 OS 线程和被 syscall 阻塞的。
+* Virtual Processors 虚拟处理器，数量由 GOMAXPROCS 控制。
+
+
 
 
 # -race 参数检查数据竞争

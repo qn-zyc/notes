@@ -1,28 +1,28 @@
-<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+<!-- TOC -->
 
 - [SOCKET](#socket)
-	- [基础知识](#基础知识)
-	- [IP IN GO](#ip-in-go)
-	- [TCP SOCKET](#tcp-socket)
-		- [TCP client](#tcp-client)
-		- [TCP server](#tcp-server)
-		- [控制TCP连接](#控制tcp连接)
-		- [TCP连接网站示例](#tcp连接网站示例)
-	- [UDP SOCKET](#udp-socket)
-	- [DIAL](#dial)
-	- [WebSocket](#websocket)
-		- [WebSocket原理](#websocket原理)
-		- [GO中的WebSocket](#go中的websocket)
-	- [更丰富的网络通信](#更丰富的网络通信)
-	- [工具函数](#工具函数)
-		- [验证IP地址有效性](#验证ip地址有效性)
-		- [创建子网掩码](#创建子网掩码)
-		- [IP地址的默认子网掩码](#ip地址的默认子网掩码)
-		- [根据域名获得IP地址](#根据域名获得ip地址)
-		- [获取本机地址](#获取本机地址)
+    - [基础知识](#基础知识)
+    - [IP IN GO](#ip-in-go)
+    - [TCP SOCKET](#tcp-socket)
+        - [TCP client](#tcp-client)
+        - [TCP server](#tcp-server)
+        - [控制TCP连接](#控制tcp连接)
+        - [TCP连接网站示例](#tcp连接网站示例)
+    - [UDP SOCKET](#udp-socket)
+    - [DIAL](#dial)
+    - [WebSocket](#websocket)
+        - [WebSocket原理](#websocket原理)
+        - [GO中的WebSocket](#go中的websocket)
+    - [更丰富的网络通信](#更丰富的网络通信)
+    - [工具函数](#工具函数)
+        - [验证IP地址有效性](#验证ip地址有效性)
+        - [创建子网掩码](#创建子网掩码)
+        - [IP地址的默认子网掩码](#ip地址的默认子网掩码)
+        - [根据域名获得IP地址](#根据域名获得ip地址)
+        - [获取本机地址](#获取本机地址)
+    - [gracefully restarting a Go program](#gracefully-restarting-a-go-program)
 
 <!-- /TOC -->
-
 
 # SOCKET
 ## 基础知识
@@ -607,3 +607,9 @@ for _, addr := range addrs {
 	}
 }
 ```
+
+
+## gracefully restarting a Go program
+
+* https://gravitational.com/blog/golang-ssh-bastion-graceful-restarts/
+

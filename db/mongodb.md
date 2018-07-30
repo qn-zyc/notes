@@ -18,11 +18,14 @@
         - [插入时间](#插入时间)
     - [Query Documents](#query-documents)
         - [查询 collection 中所有文档](#查询-collection-中所有文档)
+        - [limit query](#limit-query)
+        - [skip](#skip)
         - [指定等式条件](#指定等式条件)
         - [使用查询操作符](#使用查询操作符)
         - [AND 多个条件](#and-多个条件)
         - [OR 多个条件](#or-多个条件)
         - [混合 AND 和 OR](#混合-and-和-or)
+        - [只显示特定字段](#只显示特定字段)
     - [Update Documents](#update-documents)
         - [update](#update)
         - [updateOne](#updateone)
@@ -31,6 +34,7 @@
         - [Upsert Option](#upsert-option)
         - [inc 自增自减](#inc-自增自减)
         - [更新集合](#更新集合)
+        - [$setOnInsert](#setoninsert)
     - [Delete Documents](#delete-documents)
         - [删除所有文档](#删除所有文档)
         - [删除符合条件的文档](#删除符合条件的文档)
@@ -57,6 +61,8 @@
     - [WiredTiger](#wiredtiger)
 - [复制集](#复制集)
     - [操作secondary](#操作secondary)
+- [Go-mgo](#go-mgo)
+    - [使用 mongo 实现分布式锁](#使用-mongo-实现分布式锁)
 - [参考](#参考)
 
 <!-- /TOC -->
@@ -241,6 +247,7 @@ db.runCommand(
 * 只会修改并返回一个文档.
 
 模拟队列, 提取出 unix 最小的一条记录, 并锁定:
+
 ```js
 db.runCommand(
     {
@@ -301,6 +308,19 @@ db.col.insert({mark:2, mark_time:Date()})
 db.inventory.find( {} )
 ```
 
+### limit query
+
+```js
+db.table_name.find().limit(NUMBER)
+```
+
+### skip
+
+```js
+db.table_name.find().limit(NUMBER).skip(NUMBER)
+```
+
+
 ### 指定等式条件
 
 ```mongodb
@@ -344,6 +364,15 @@ db.inventory.find( {
 ```
 
 相当于：`SELECT * FROM inventory WHERE status = "A" AND ( qty < 30 OR item LIKE "p%")`
+
+
+### 只显示特定字段
+
+```js
+db.domain.find({}, {"name": true, "_id": false})
+```
+
+`_id` 需要显示设置为 false 才不显示.
 
 
 
@@ -429,7 +458,7 @@ db.inventory.replaceOne(
 )
 ```
 
-替换符合条件的**第一个**文档。
+替换符合条件的 **第一个** 文档。
 
 
 ### Upsert Option
@@ -505,6 +534,19 @@ db.queue.updateMany(
 * 如果想将数组中每个元素分开插入, 使用 `$each`: `{$addToSet: {set_name: {$each: ["a", "b"]}}}`
 
 
+### $setOnInsert
+
+```js
+db.collection.update(
+   <query>,
+   { $setOnInsert: { <field1>: <value1>, ... } },
+   { upsert: true }
+)
+```
+
+和 upsert 配合，如果执行的是插入操作， `$setOnInsert` 才会生效。
+
+
 
 ## Delete Documents
 
@@ -574,6 +616,53 @@ db.col.aggregate(
                 _id: null,
                 totalNum: { $sum: "$fieldName1" },
                 count: { $sum: 1 }  // 计算个数
+            }
+        }
+    ]
+)
+
+db.sales.aggregate(
+   [
+      {
+        $group : {
+           _id : { month: { $month: "$date" }, day: { $dayOfMonth: "$date" }, year: { $year: "$date" } },
+           totalPrice: { $sum: { $multiply: [ "$price", "$quantity" ] } }, // 多个字段相加
+           averageQuantity: { $avg: "$quantity" },
+           count: { $sum: 1 }
+        }
+      }
+   ]
+)
+
+// 使用 project 过滤/添加 字段
+db.kuaishoulog.aggregate(
+    [
+        {
+            $match: {
+                date: {$gte: 1526832000000, $lt: 1526918400000}
+            }
+        },
+        {
+            $project: {
+                filter_slow: {
+                    $cond: {if: {"$gte": ["$slow", 2.5]}, then: 1, else: 0}
+                },
+                noncompliance: {
+                    $cond: {if: {$gte: [{$add: ["$slow", "$fail"]}, 4.5]}, then: 1, else: 0}
+                },
+                success_count: 1, // 需要添加, 不然没有这个字段, 下同
+                fail_count: 1,
+                slow_count: 1
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                total_req_count: {$sum: {$add: ["$success_count", "$fail_count", "$slow_count"]}},
+                slow_sum_count: {$sum: "$slow_count"},
+                fail_sum_count: {$sum: "$fail_count"},
+                noncompliance_count: {$sum: "$noncompliance"},
+                slow_count: {$sum: "$filter_slow"}
             }
         }
     ]
@@ -683,7 +772,7 @@ db.colName.createIndex( { "createTime": 1 }, { expireAfterSeconds: 60*60 } )
 # 备份与恢复
 
 ```shell
-/usr/local/mongodb3.4.6/bin/mongodump -h=127.0.0.1:27017 -d kuaishoulog -o mongo_backup
+/usr/local/mongodb3.4.6/bin/mongodump -h=127.0.0.1:27017 -d db_name -o mongo_backup
 ```
 
 * `-d` 指定db.
@@ -691,7 +780,7 @@ db.colName.createIndex( { "createTime": 1 }, { expireAfterSeconds: 60*60 } )
 
 
 ```shell
-/usr/local/mongodb3.4.6/bin/mongorestore -h=127.0.0.1:27018 -d kuaishoulog --drop mongo_backup/kuaishoulog/
+/usr/local/mongodb3.4.6/bin/mongorestore -h=127.0.0.1:27018 -d db_name --drop mongo_backup/db_name/
 ```
 
 * `-d` 指定要恢复的数据库.
@@ -909,6 +998,55 @@ Cache: cache的大小极大的影响了wireTiger存储引擎的性能，默认�
 默认情况下，Secondary是不提供服务的，即不能读和写。会提示：`error: { "$err" : "not master and slaveOk=false", "code" : 13435 }`
 
 在特殊情况下需要读的话则需要：`rs.slaveOk()` ，只对当前连接有效。
+
+
+# Go-mgo
+
+
+## 使用 mongo 实现分布式锁
+
+```go
+// MongoLock 在数据库中添加锁，过期之后释放锁。
+func MongoLock(ctx context.Context, key string, timeout time.Duration) (bool, error) {
+	xl := xlog.FromContextSafe(ctx)
+	db, cf := MongoDB()
+	defer cf()
+
+	c := db.C(ColName)
+
+	// 清理过期的
+	t := time.Now().Add(-timeout)
+	info, err := c.RemoveAll(bson.M{"lockid": key, "locked_at": bson.M{"$lt": t}})
+	xl.Infof("remove expired lock, key: %s, time: %v, info: %+v, err: %v", key, t, info, err)
+
+	// 是否已经被锁了
+	count, err := c.Find(bson.M{"lockid": key}).Count()
+	if err != nil && err != mgo.ErrNotFound {
+		xl.Errorf("Failed to find lock, key: %s, err: %v", key, err)
+		return false, err
+	}
+	if count > 0 {
+		xl.Infof("Failed to lock, key: %s, count: %d", key, count)
+		return false, nil
+	}
+
+	// 没有被锁，尝试插入当前时间，如果已经存在 key 了则不会插入。
+	info, err = c.Upsert(bson.M{"lockid": key}, bson.M{"$setOnInsert": bson.M{"locked_at": time.Now()}})
+	if err != nil {
+		xl.Errorf("Failed to upsert, key: %s, info: %+v, err: %v", key, info, err)
+		// lockid 上创建了唯一索引，所以可能会返回重复的错误信息
+		if mgo.IsDup(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	xl.Infof("Success to upsert, info: %+v", info)
+
+	return info.UpsertedId != nil, nil
+}
+```
+
+
 
 
 # 参考

@@ -1,62 +1,66 @@
-<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+<!-- TOC -->
 
 - [概念](#概念)
-	- [epoll](#epoll)
+    - [epoll](#epoll)
 - [安装](#安装)
 - [hello world](#hello-world)
-	- [启动](#启动)
+    - [启动](#启动)
 - [lua ngx api](#lua-ngx-api)
-	- [ngx.var.VARIABLE](#ngxvarvariable)
-	- [时间](#时间)
-	- [查询参数](#查询参数)
-	- [请求body](#请求body)
-	- [worker](#worker)
-	- [timer](#timer)
-	- [header](#header)
-	- [ctx](#ctx)
-- [shared_dict](#shareddict)
-	- [获取字典对象](#获取字典对象)
-	- [ngx.shared.DICT.set](#ngxshareddictset)
-	- [ngx.shared.DICT.safe_set](#ngxshareddictsafeset)
-	- [ngx.shared.DICT.add](#ngxshareddictadd)
-	- [ngx.shared.DICT.safe_add](#ngxshareddictsafeadd)
-	- [ngx.shared.DICT.get](#ngxshareddictget)
-	- [ngx.shared.DICT.get_stale](#ngxshareddictgetstale)
-	- [ngx.shared.DICT.replace](#ngxshareddictreplace)
-	- [ngx.shared.DICT.delete](#ngxshareddictdelete)
-	- [ngx.shared.DICT.incr](#ngxshareddictincr)
-	- [ngx.shared.DICT.flush_all](#ngxshareddictflushall)
-	- [ngx.shared.DICT.flush_expired](#ngxshareddictflushexpired)
-	- [ngx.shared.DICT.get_keys](#ngxshareddictgetkeys)
+    - [ngx.var.VARIABLE](#ngxvarvariable)
+    - [时间](#时间)
+    - [Request](#request)
+        - [method](#method)
+        - [查询参数](#查询参数)
+        - [请求body](#请求body)
+    - [worker](#worker)
+    - [timer](#timer)
+    - [header](#header)
+    - [ctx](#ctx)
+- [shared_dict](#shared_dict)
+    - [获取字典对象](#获取字典对象)
+    - [ngx.shared.DICT.set](#ngxshareddictset)
+    - [ngx.shared.DICT.safe_set](#ngxshareddictsafe_set)
+    - [ngx.shared.DICT.add](#ngxshareddictadd)
+    - [ngx.shared.DICT.safe_add](#ngxshareddictsafe_add)
+    - [ngx.shared.DICT.get](#ngxshareddictget)
+    - [ngx.shared.DICT.get_stale](#ngxshareddictget_stale)
+    - [ngx.shared.DICT.replace](#ngxshareddictreplace)
+    - [ngx.shared.DICT.delete](#ngxshareddictdelete)
+    - [ngx.shared.DICT.incr](#ngxshareddictincr)
+    - [ngx.shared.DICT.flush_all](#ngxshareddictflush_all)
+    - [ngx.shared.DICT.flush_expired](#ngxshareddictflush_expired)
+    - [ngx.shared.DICT.get_keys](#ngxshareddictget_keys)
 - [json](#json)
 - [log](#log)
 - [redis](#redis)
-	- [scan keys](#scan-keys)
+    - [scan keys](#scan-keys)
 - [编码、加密](#编码加密)
-	- [base64](#base64)
-	- [hmac_sha1](#hmacsha1)
+    - [base64](#base64)
+    - [hmac_sha1](#hmac_sha1)
 - [负载均衡](#负载均衡)
-	- [动态负载均衡](#动态负载均衡)
-	- [获取使用的 upstream server 的信息](#获取使用的-upstream-server-的信息)
+    - [动态负载均衡](#动态负载均衡)
+    - [获取使用的 upstream server 的信息](#获取使用的-upstream-server-的信息)
 - [重定向](#重定向)
-	- [ngx.redirect](#ngxredirect)
+    - [ngx.redirect](#ngxredirect)
 - [原理](#原理)
-	- [请求的处理流程](#请求的处理流程)
+    - [请求的处理流程](#请求的处理流程)
 - [日志](#日志)
-	- [将日志打到远程服务](#将日志打到远程服务)
+    - [将日志打到远程服务](#将日志打到远程服务)
 - [性能](#性能)
-	- [性能测试](#性能测试)
-		- [注意点](#注意点)
+    - [性能测试](#性能测试)
+        - [注意点](#注意点)
 - [正则](#正则)
-	- [ngx.re](#ngxre)
-		- [ngx.re.match](#ngxrematch)
-		- [ngx.re.find](#ngxrefind)
-		- [ngx.re.gmatch](#ngxregmatch)
-		- [ngx.re.sub](#ngxresub)
-		- [ngx.re.gsub](#ngxregsub)
+    - [ngx.re](#ngxre)
+        - [ngx.re.match](#ngxrematch)
+        - [ngx.re.find](#ngxrefind)
+        - [ngx.re.gmatch](#ngxregmatch)
+        - [ngx.re.sub](#ngxresub)
+        - [ngx.re.gsub](#ngxregsub)
 - [参考](#参考)
 
 <!-- /TOC -->
+
+
 
 
 # 概念
@@ -89,6 +93,8 @@ Error: Formulae found in multiple taps:
 ```
 
 可以使用 `brew untap denji/nginx`。
+
+平滑升级: https://www.cnblogs.com/happlyp/p/6090409.html
 
 
 # hello world
@@ -168,15 +174,21 @@ ngx.var.request_id
 
 
 
-## 查询参数
+## Request
+
+### method
+
+```lua
+local request_method = string.upper(ngx.req.get_method())
+```
+
+### 查询参数
 
 - 使用 `ngx.var.arg_xxx` 的形式, 比如获取参数 a 的值: `ngx.var.arg_a`, 返回的是 string 类型.
 - 使用 `ngx.req.get_uri_args()["param_name"]` 的形式, 比如获取参数 a 的值: `ngx.req.get_uri_args()["a"]`, 如果 a 只有一个值, 那么返回 string 类型, 如果 a 有多个值, 返回一个 table.
 
 
-
-
-## 请求body
+### 请求body
 
 单个接口读取:
 

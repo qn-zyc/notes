@@ -332,7 +332,6 @@ create table newTable select * from oldTable;
 
 
 
-
 ### 2.6.3. 复制表结构
 
 ```bash

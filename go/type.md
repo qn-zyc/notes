@@ -23,6 +23,8 @@
     - [map](#map)
     - [Go数据底层的存储](#go数据底层的存储)
     - [指针](#指针)
+    - [类型别名](#类型别名)
+- [参考](#参考)
 
 <!-- /TOC -->
 
@@ -1628,5 +1630,44 @@ struct { s string; x int }{s:"abc", x:200}
 注意：GC 把 uintptr 当成普通整数对象，它无法阻止"关联"对象被回收。
 
 
+## 类型别名
+
+type aliases, Go1.9 加入的特性。
+
+```go
+type Base struct {
+	F1 int
+	f2 int
+}
+
+func (b *Base) Func() {
+	fmt.Printf("Base.Func: F1: %d, f2: %d\n", b.F1, b.f2)
+}
+
+type S1 = Base // S1 是 Base 的别名，拥有 Base 的字段和方法
+
+func main() {
+	s1 := &S1{F1: 2, f2: 3}
+	s1.Func()
+	fmt.Println(s1.F1, s1.f2)
+}
+```
+
+为函数定义别名： `type F = func()`。
+
+可以为其他包中的类型定义别名： `type T = time.Time`。 不能为 T 定义新的方法了，不在同一个包内。
+
+为 unexported 的类型定义一个 exported 的类型别名： `type T = t`。
+
+类型定义和类型别名的区别：
+* `type I int`: 类型定义是定义了新的类型，只有字段可以使用，方法不能使用，且和原类型之间需要强制类型转换才能互相赋值。
+* `type I = int`: 类型别名和原类型完全一样，字段和方法都是一样的。
 
 
+
+
+
+
+# 参考
+
+* [How the Go runtime implements maps efficiently (without generics)](https://dave.cheney.net/2018/05/29/how-the-go-runtime-implements-maps-efficiently-without-generics)

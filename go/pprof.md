@@ -1,20 +1,28 @@
-<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+<!-- TOC -->
 
 - [性能分析](#性能分析)
-	- [pprof](#pprof)
-		- [runtime/pprof](#runtimepprof)
-		- [net/http/pprof](#nethttppprof)
+    - [pprof](#pprof)
+        - [runtime/pprof](#runtimepprof)
+        - [net/http/pprof](#nethttppprof)
+        - [内存占用](#内存占用)
+        - [在 https 中使用 pprof](#在-https-中使用-pprof)
+- [死锁检测](#死锁检测)
+    - [debug/pprof](#debugpprof)
+    - [第三方包](#第三方包)
 - [优化代码](#优化代码)
-	- [二进制IP地址](#二进制ip地址)
+    - [二进制IP地址](#二进制ip地址)
+- [参考](#参考)
 
 <!-- /TOC -->
 
+
+
+------------------------------
 # 性能分析
 
 ## pprof
 
 - [文档](https://github.com/google/pprof/blob/master/doc/pprof.md)
-
 
 
 ### runtime/pprof
@@ -118,6 +126,9 @@ full goroutine stack dump
 - 查看 30s 的 CPU 采样信息: `go tool pprof http://127.0.0.1:4500/debug/pprof/profile`
 - 其他功能使用参见 官方 [net/http/pprof](https://golang.org/pkg/net/http/pprof/) 库
 
+可以先调用接口拿到数据保存在文件中, 比如 `curl "http://127.0.0.1:4500/debug/pprof/profile" -o profile`, 然后在使用 `go tool pprof ./profile` 来显示(适合线上没有 go 环境的情况).
+
+
 
 ### 内存占用
 
@@ -159,6 +170,39 @@ heap profile: 3190(inused objects): 77516056(inused bytes) [54762(alloc objects)
 ```
 
 
+### 在 https 中使用 pprof
+
+```bash
+go tool pprof https+insecure://localhost:8001/debug/pprof/heap
+```
+
+注意：go的版本要>=go1.8,具体查看go1.8的release信息 `https://tip.golang.org/doc/go1.8#tool_pprof`
+
+
+
+------------------------------
+# 死锁检测
+
+## debug/pprof
+
+`/debug/pprof/goroutine?debug=2` 返回当前时刻的 goroutine 瞬时信息, 如果出现以下状态的 goroutine, 则可能出现了死锁:
+
+* `goroutine 4 [semacquire, 2 minutes]:`
+* `goroutine 37 [chan send, 1 minutes]:`
+* `goroutine 38 [chan receive, 1 minutes]:`
+
+后面的分钟标记是在阻塞时间长的情况下才有.
+
+
+
+## 第三方包
+
+* `github.com/sasha-s/go-deadlock`: 性能不好, 不能用在线上代码.
+* `github.com/funny/debug/sync`: 需要加 `-tags deadlock` 才会生效, 这个不错.
+
+
+
+------------------------------
 # 优化代码
 
 ## 二进制IP地址
@@ -254,3 +298,12 @@ BenchmarkBinaryIP1-4   	 1000000	      1118 ns/op
 BenchmarkBinaryIP2-4   	 5000000	       393 ns/op
 BenchmarkBinaryIP3-4   	 5000000	       239 ns/op
 ```
+
+
+------------------------------
+
+# 参考
+
+* [golang在自定义的https服务器中启用pprof接口](https://sheepbao.github.io/post/golang_pprof_over_https)
+* [Fixing race conditions and deadlocks in Go](https://lincolnloop.com/blog/lesson-learned-while-debugging-botbotme/)
+* [Detecting Lock Contention in Go](https://stackimpact.com/blog/detecting-lock-contention-in-go/)

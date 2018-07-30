@@ -4,8 +4,13 @@
 - [逻辑](#逻辑)
     - [条件](#条件)
     - [遍历](#遍历)
+- [变量](#变量)
+    - [外部变量](#外部变量)
 - [结构体](#结构体)
     - [调用结构体的方法获取值](#调用结构体的方法获取值)
+- [函数](#函数)
+    - [内置函数](#内置函数)
+    - [添加自定义函数](#添加自定义函数)
 
 <!-- /TOC -->
 
@@ -13,6 +18,8 @@
 
 * <http://gohugo.io/templates/go-templates/>
 
+
+------------------------------
 # 逻辑 #
 
 ## 条件 ##
@@ -97,7 +104,39 @@ Example 2: Declaring key and value variable name
 {{ end }}
 ```
 
+------------------------------
+# 变量
 
+```go
+t := template.New("")
+t, err := t.Parse(`{{with $x := .v.x}}output: {{$x}}{{end}}`)
+if err != nil {
+	panic(err)
+}
+w := bytes.NewBuffer(nil)
+err = t.Execute(w, map[string]interface{}{
+	"v": map[string]interface{}{
+		"x": 123,
+	},
+})
+if err != nil {
+	panic(err)
+}
+fmt.Println(w.String()) // output: 123
+```
+
+## 外部变量
+
+在局部作用域内访问外部变量, 比如循环内.
+
+```go
+{{range .slice}}
+	{{$.GlobalVal}}
+{{end}}
+```
+
+
+------------------------------
 # 结构体
 
 ## 调用结构体的方法获取值
@@ -152,3 +191,42 @@ func main() {
     </div>
 ```
 
+
+
+------------------------------
+# 函数
+
+## 内置函数
+
+示例:
+
+```go
+// printf
+t, err := t.Parse(`{{printf "%.4f" .value}}`)
+```
+
+## 添加自定义函数
+
+* `Funcs` 需要在 `Parse` 之前调用.
+* 自定义函数可以有一个或者两个返回值, 如果有两个返回值, 第二个返回值应该是 error 类型, 当返回的 error 不为空时, 会将 error 通过 `Execute` 返回.
+
+```go
+t := template.New("")
+t.Funcs(template.FuncMap{
+	"myfunc": func(name string, value int) string {
+		return fmt.Sprintf("hello %s, value is %d", name, value)
+	},
+})
+t, err := t.Parse(`output: {{myfunc "name" .value}}`)
+if err != nil {
+	panic(err)
+}
+w := bytes.NewBuffer(nil)
+err = t.Execute(w, map[string]interface{}{
+	"value": 5,
+})
+if err != nil {
+	panic(err)
+}
+fmt.Println(w.String()) // output: hello name, value is 5
+```

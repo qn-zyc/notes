@@ -35,7 +35,7 @@
     - [访问](#访问-2)
     - [遍历](#遍历-2)
     - [更新](#更新-1)
-- [函数](#函数)
+- [函数 fn](#函数-fn)
     - [声明](#声明)
     - [函数指针](#函数指针)
     - [闭包](#闭包)
@@ -47,6 +47,8 @@
         - [类单元结构体(没有字段)](#类单元结构体没有字段)
     - [方法](#方法)
         - [关联函数](#关联函数)
+    - [在结构体中使用 trait](#在结构体中使用-trait)
+    - [状态模拟](#状态模拟)
 - [枚举](#枚举)
     - [定义](#定义)
     - [在枚举上定义方法](#在枚举上定义方法)
@@ -55,6 +57,10 @@
 - [分支](#分支)
     - [if](#if)
     - [match](#match)
+        - [匹配守卫(match guard)](#匹配守卫match-guard)
+        - [@绑定](#绑定)
+        - [模式匹配](#模式匹配)
+            - [使用 ref 和 mut ref 创建引用](#使用-ref-和-mut-ref-创建引用)
         - [if let](#if-let)
 - [循环](#循环)
     - [loop](#loop)
@@ -95,6 +101,13 @@
     - [测试的组织结构](#测试的组织结构)
         - [单元测试](#单元测试)
         - [集成测试](#集成测试)
+- [并发 concurrency](#并发-concurrency)
+    - [使用 spawn 创建新线程](#使用-spawn-创建新线程)
+    - [使用 join 等待线程结束](#使用-join-等待线程结束)
+    - [线程与 move 闭包](#线程与-move-闭包)
+    - [使用 channel 在线程间传递数据](#使用-channel-在线程间传递数据)
+    - [互斥器 mutex](#互斥器-mutex)
+        - [多个线程间使用 mutex 访问数据](#多个线程间使用-mutex-访问数据)
 
 <!-- /TOC -->
 
@@ -387,6 +400,8 @@ let world = &s[6..11];
 字符串字面值就是 slice: `let s = "hello";`, s 的类型是 `&str`, 指向二进制程序特定位置的 slice.
 
 
+------------------------------
+
 # 数组
 
 - 数组长度是固定的, 一旦创建就不能再更改长度.
@@ -403,7 +418,7 @@ let arr = [1, 2, 3];
 let arr = ["a", "b", "c"];
 ```
 
-数组的类型是 `[T, N]`, T 是泛型, N 是长度, 编译时常量.
+数组的类型是 `[T; N]`, T 是泛型, N 是长度, 编译时常量.
 
 `[0; 3]` 表示初始化一个数组, 长度为 3, 所有元素都为 0.
 
@@ -711,7 +726,7 @@ println!("{:?}", map);
 
 
 ------------------------------
-# 函数
+# 函数 fn
 
 - 命名规范: snake case, 字母都是小写并使用下划线分割单词.
 - 当函数体中没有返回值时, 默认返回空元组 `()`.
@@ -751,6 +766,21 @@ fn f() -> (i32, i32) {
 
 - 必须为函数参数声明类型.
 - 返回值使用 `return` 时是一个语句, 不使用 `return` 则是一个表达式, 而表达式后面不加分号.
+
+
+在参数中使用解构:
+
+```rust
+fn print_coordinates(&(x, y): &(i32, i32)) {
+    println!("Current location: ({}, {})", x, y);
+}
+
+fn main() {
+    let point = (3, 5);
+    print_coordinates(&point);
+}
+```
+
 
 
 
@@ -871,7 +901,7 @@ fn main() {
 
 闭包可以通过三种方式捕获其环境，他们直接对应函数的三种获取参数的方式：获取所有权，不可变借用和可变借用。这三种捕获值的方式被编码为如下三个 Fn trait：
 
-* `FnOnce` 消费从周围作用域捕获的变量，闭包周围的作用域被称为其 环境，environment。为了消费捕获到的变量，闭包必须获取其所有权并在定义闭包时将其移动进闭包。其名称的 Once 部分代表了闭包不能多次获取相同变量的所有权的事实，所以它只能被调用一次。
+* `FnOnce` 消费从周围作用域捕获的变量，闭包周围的作用域被称为其环境，environment。为了消费捕获到的变量，闭包必须获取其所有权并在定义闭包时将其移动进闭包。其名称的 Once 部分代表了闭包不能多次获取相同变量的所有权的事实，所以它只能被调用一次。
 * `Fn` 从其环境不可变的借用值
 * `FnMut` 可变的借用值所以可以改变其环境
 
@@ -1081,6 +1111,175 @@ impl Rectangle {
 调用: `let sq = Rectangle::square(3);`.
 
 
+## 在结构体中使用 trait
+
+```rust
+pub trait Draw {
+    fn draw(&self);
+}
+
+pub struct Screen {
+    pub components: Vec<Box<Draw>>, // 直接用 Draw 不能在编译器确定大小
+}
+
+impl Screen {
+    pub fn run(&self) {
+        for component in self.components.iter() {
+            component.draw();
+        }
+    }
+}
+
+pub struct Button {
+    pub width: u32,
+    pub height: u32,
+    pub label: String,
+}
+
+impl Draw for Button {
+    fn draw(&self) {
+        println!("draw a Button");
+    }
+}
+
+pub struct SelectBox {
+    pub width: u32,
+    pub height: u32,
+    pub options: Vec<String>,
+}
+
+impl Draw for SelectBox {
+    fn draw(&self) {
+        println!("draw a SelectBox");
+    }
+}
+
+fn main() {
+    let screen = Screen {
+        components: vec![
+            Box::new(Button {
+                width: 10,
+                height: 20,
+                label: String::from("OK"),
+            }),
+            Box::new(SelectBox {
+                width: 23,
+                height: 10,
+                options: vec![
+                    String::from("Yes"),
+                    String::from("Maybe"),
+                    String::from("No"),
+                ],
+            }),
+        ],
+    };
+
+    screen.run();
+}
+```
+
+
+## 状态模拟
+
+```rust
+trait State {
+    // 只对这个类型的 Box 有效. 获取 Box<Self> 的所有权, 使老状态无效, 返回新的状态.
+    // 请求审核博文时的状态
+    fn request_review(self: Box<Self>) -> Box<State>;
+    // 博文审核通过的状态
+    fn approve(self: Box<Self>) -> Box<State>;
+    // 返回博文内容
+    fn content<'a>(&self, _: &'a Post) -> &'a str {
+        ""
+    }
+}
+
+struct Draft {}
+
+impl State for Draft {
+    fn request_review(self: Box<Self>) -> Box<State> {
+        Box::new(PendingReview {})
+    }
+    fn approve(self: Box<Self>) -> Box<State> {
+        self
+    }
+}
+
+struct PendingReview {}
+
+impl State for PendingReview {
+    fn request_review(self: Box<Self>) -> Box<State> {
+        self
+    }
+    fn approve(self: Box<Self>) -> Box<State> {
+        Box::new(Published {})
+    }
+}
+
+struct Published {}
+
+impl State for Published {
+    fn request_review(self: Box<Self>) -> Box<State> {
+        self
+    }
+    fn approve(self: Box<Self>) -> Box<State> {
+        self
+    }
+    fn content<'a>(&self, post: &'a Post) -> &'a str {
+        &post.content
+    }
+}
+
+pub struct Post {
+    state: Option<Box<State>>,
+    content: String,
+}
+
+impl Post {
+    pub fn new() -> Post {
+        Post {
+            state: Some(Box::new(Draft {})),
+            content: String::new(),
+        }
+    }
+
+    pub fn add_text(&mut self, text: &str) {
+        self.content.push_str(text);
+    }
+
+    pub fn content(&self) -> &str {
+        // as_ref() 会返回 Option<&Box<State>>
+        self.state.as_ref().unwrap().content(&self)
+    }
+
+    pub fn request_review(&mut self) {
+        // take() 会返回带所有权的 Box<State>, 并且 self.state 为 None.
+        if let Some(s) = self.state.take() {
+            self.state = Some(s.request_review())
+        }
+    }
+
+    pub fn approve(&mut self) {
+        if let Some(s) = self.state.take() {
+            self.state = Some(s.approve())
+        }
+    }
+}
+
+fn main() {
+    let mut post = Post::new();
+
+    post.add_text("I ate a salad for lunch today");
+    println!("content: {}", post.content());
+
+    post.request_review();
+    println!("content: {}", post.content());
+
+    post.approve();
+    println!("content: {}", post.content());
+}
+```
+
 
 
 
@@ -1289,7 +1488,32 @@ let y = match x {
 };
 ```
 
-解构：
+使用 `...` 匹配范围:
+
+```rust
+let x = 5;
+
+match x {
+    1 ... 5 => println!("one through five"), // 匹配 1-5
+    _ => println!("something else"),
+}
+```
+
+范围只允许用于数字或 char 值，因为编译器会在编译时检查范围不为空。char 和 数字值是 Rust 唯一知道范围是否为空的类型。
+
+```rust
+let x = 'c';
+
+match x {
+    'a' ... 'j' => println!("early ASCII letter"),
+    'k' ... 'z' => println!("late ASCII letter"),
+    _ => println!("something else"),
+}
+```
+
+
+
+解构结构体:
 
 ```rust
 let p = Point { x: 45, y: 90 };
@@ -1316,6 +1540,22 @@ match p {
 }
 ```
 
+匹配特定值:
+
+```rust
+fn main() {
+    let p = Point { x: 0, y: 7 };
+
+    match p {
+        Point { x, y: 0 } => println!("On the x axis at {}", x), // 当 y = 0 时匹配
+        Point { x: 0, y } => println!("On the y axis at {}", y), // 当 x = 0 时匹配
+        Point { x, y } => println!("On neither axis: ({}, {})", x, y),
+    }
+}
+```
+
+
+
 匹配 Option:
 
 ```rust
@@ -1330,6 +1570,114 @@ let five = Some(5);
 let six = plus_one(five);
 let none = plus_one(None);
 ```
+
+
+
+### 匹配守卫(match guard)
+
+匹配守卫（match guard）是一个指定与 match 分支模式之后的额外 if 条件，它也必须被满足才能选择此分支。匹配守卫用于表达比单独的模式所能允许的更为复杂的情况。
+
+```rust
+let num = Some(4);
+
+match num {
+    Some(x) if x < 5 => println!("less than five: {}", x),
+    Some(x) => println!("{}", x),
+    None => (),
+}
+
+
+let x = 4;
+let y = false;
+
+match x {
+    4 | 5 | 6 if y => println!("yes"), // 作用于 4,5,6
+    _ => println!("no"),
+
+```
+
+
+### @绑定
+
+at 运算符 @ 允许我们在创建一个存放值的变量的同时测试其值是否匹配模式。
+
+```rust
+enum Message {
+    Hello { id: i32 },
+}
+
+let msg = Message::Hello { id: 5 };
+
+match msg {
+    Message::Hello { id: id_variable @ 3...7 } => {
+        println!("Found an id in range: {}", id_variable)
+    },
+    Message::Hello { id: 10...12 } => {
+        println!("Found an id in another range")
+    },
+    Message::Hello { id } => {
+        println!("Found some other id: {}", id)
+    },
+}
+```
+
+第一个分支限定 id 的值在 3-7, 并且将值绑定到 `id_variable`, 这样在 println 中就可以使用 `id_variable` 了.
+
+第二个分支限定 id 的值在 10-12, 但没有绑定变量, 所以在 println 不能使用 id 的值.
+
+第三个分支使用了结构体字段简写, 没有限定范围.
+
+
+
+
+
+
+### 模式匹配
+
+
+#### 使用 ref 和 mut ref 创建引用
+
+```rust
+let robot_name = Some(String::from("Bors"));
+
+match robot_name {
+    Some(name) => println!("Found a name: {}", name),
+    None => (),
+}
+
+println!("robot_name is: {:?}", robot_name);
+```
+
+上例将编译失败, 因为 `robot_name` 的部分所有权被转移到 name 中了, 所以 println 就获取不到所有权了.
+
+```rust
+let robot_name = Some(String::from("Bors"));
+
+match robot_name {
+    Some(ref name) => println!("Found a name: {}", name),
+    None => (),
+}
+
+println!("robot_name is: {:?}", robot_name);
+```
+
+使用 `ref name`, name 只是获取了引用而没有获取所有权.
+
+```rust
+let mut robot_name = Some(String::from("Bors"));
+
+match robot_name {
+    Some(ref mut name) => *name = String::from("Another name"),
+    None => (),
+}
+
+println!("robot_name is: {:?}", robot_name);
+```
+
+使用 `ref mut name` 创建了一个可变引用.
+
+
+
 
 
 
@@ -1374,9 +1722,33 @@ if let Coin::Quarter(state) = coin {
 }
 ```
 
+更复杂些的例子:
 
+```rust
+fn main() {
+    let favorite_color: Option<&str> = None;
+    let is_tuesday = false;
+    let age: Result<u8, _> = "34".parse();
 
+    if let Some(color) = favorite_color {
+        println!("Using your favorite color, {}, as the background", color);
+    } else if is_tuesday {
+        println!("Tuesday is green day!");
+    } else if let Ok(age) = age {
+        if age > 30 {
+            println!("Using purple as the background color");
+        } else {
+            println!("Using orange as the background color");
+        }
+    } else {
+        println!("Using blue as the background color");
+    }
+}
+```
 
+不能将模式匹配和判断组合为 `if let Ok(age) = age && age > 30`, 因为 age 直到大括号开始时才生效.
+
+if let 表达式的缺点在于其穷尽性没有为编译器所检查，而 match 表达式则检查了。
 
 
 
@@ -1406,6 +1778,22 @@ while !done {
     if i == 5 { done = true; }
 }
 ```
+
+`while let` 只要模式匹配就一直进行循环. 下例中展示打印栈中的所有值:
+
+```rust
+let mut stack = Vec::new();
+
+stack.push(1);
+stack.push(2);
+stack.push(3);
+
+while let Some(top) = stack.pop() {
+    println!("{}", top);
+}
+```
+
+
 
 ## for
 
@@ -2619,3 +3007,261 @@ fn it_adds_two() {
     assert_eq!(4, adder::add_two(2));
 }
 ```
+
+
+# 并发 concurrency
+
+并发编程（Concurrent programming），代表程序的不同部分相互独立的执行，而 并行编程（parallel programming）代表程序不同部分于同时执行.
+
+编程语言有一些不同的方法来实现线程。很多操作系统提供了创建新线程的 API。这种由编程语言调用操作系统 API 创建线程的模模型有时被称为 1:1，一个 OS 线程对应一个语言线程。
+
+很多编程语言提供了自己特殊的线程实现。编程语言提供的线程被称为 绿色（green）线程，使用绿色线程的语言会在不同数量的 OS 线程中执行它们。为此，绿色线程模式被称为 M:N 模型：M 个绿色线程对应 N 个 OS 线程，这里 M 和 N 不必相同。
+
+
+## 使用 spawn 创建新线程
+
+```rust
+use std::thread;
+use std::time::Duration;
+
+fn main() {
+    thread::spawn(|| {
+        for i in 1..10 {
+            println!("number {} from the spawned thread!", i);
+            thread::sleep(Duration::from_millis(1));
+        }
+    });
+
+    for i in 1..5 {
+        println!("number {} from the main thread!", i);
+        thread::sleep(Duration::from_millis(1));
+    }
+}
+```
+
+主线程结束时子线程也结束了, 不管其有没有执行完.
+
+
+## 使用 join 等待线程结束
+
+```rust
+use std::thread;
+use std::time::Duration;
+
+fn main() {
+    let handle = thread::spawn(|| {
+        for i in 1..10 {
+            println!("number {} from the spawned thread!", i);
+            thread::sleep(Duration::from_millis(1));
+        }
+    });
+
+    for i in 1..5 {
+        println!("number {} from the main thread!", i);
+        thread::sleep(Duration::from_millis(1));
+    }
+
+    handle.join().unwrap();
+}
+```
+
+spawn 返回的类型是 JoinHandle, JoinHandle 是一个拥有所有权的值. join() 会等待线程执行完毕才返回.
+
+
+## 线程与 move 闭包
+
+```rust
+use std::thread;
+
+fn main() {
+    let v = vec![1, 2, 3];
+
+    let handle = thread::spawn(|| {
+        println!("Here's a vector: {:?}", v);
+    });
+
+    handle.join().unwrap();
+}
+```
+
+上面的例子会报错. Rust 会推断如何捕获 v，因为 println! 只需要 v 的引用，闭包尝试借用 v。然而这有一个问题：Rust 不知道这个新建线程会执行多久，所以无法知晓 v 的引用是否一直有效。
+
+正确的做法是在闭包前加 move, 这样 v 的所有权就被转移到闭包内了:
+
+```rust
+use std::thread;
+
+fn main() {
+    let v = vec![1, 2, 3];
+
+    let handle = thread::spawn(move || {
+        println!("Here's a vector: {:?}", v);
+    });
+
+    handle.join().unwrap();
+}
+```
+
+
+## 使用 channel 在线程间传递数据
+
+```rust
+use std::sync::mpsc;
+
+fn main() {
+    let (tx, rx) = mpsc::channel();
+}
+```
+
+使用 `mpsc::channel` 函数创建一个新的通道；mpsc 是 **多个生产者，单个消费者（multiple producer, single consumer）** 的缩写。
+
+mpsc::channel 函数返回一个元组：第一个元素是发送端，而第二个元素是接收端。由于历史原因，tx 和 rx 通常作为 发送者（transmitter）和 接收者（receiver）的缩写.
+
+```rust
+use std::thread;
+use std::sync::mpsc;
+
+fn main() {
+    let (tx, rx) = mpsc::channel();
+
+    thread::spawn(move || {
+        let val = String::from("hi");
+        tx.send(val).unwrap(); // 如果接收端被丢弃了将返回结果, 这里会 panic.
+        // println!("val is {}", val); // 会报错, val 的所有权已经被转移了.
+    });
+
+    let received = rx.recv().unwrap();
+    println!("Got {}", received);
+}
+```
+
+`rx.recv()` 会阻塞线程直到有值或者出错. `rx.try_recv()` 则不会阻塞.
+
+`tx.send(val)` 会获取 val 的所有权, 所以在这之后就不能再次使用 val 了.
+
+发送多个值:
+
+```rust
+use std::thread;
+use std::sync::mpsc;
+use std::time::Duration;
+
+fn main() {
+    let (tx, rx) = mpsc::channel();
+
+    thread::spawn(move || {
+        let vals = vec![
+            String::from("hi"),
+            String::from("from"),
+            String::from("the"),
+            String::from("thread"),
+        ];
+        for val in vals {
+            tx.send(val).unwrap();
+            thread::sleep(Duration::from_secs(1));
+        }
+    });
+
+    for received in rx {
+        println!("Got {}", received);
+    }
+}
+```
+
+
+多个生产者:
+
+```rust
+use std::thread;
+use std::sync::mpsc;
+use std::time::Duration;
+
+fn main() {
+    let (tx, rx) = mpsc::channel();
+
+    let tx1 = mpsc::Sender::clone(&tx); // 复制通道
+    thread::spawn(move || {
+        let vals = vec![
+            String::from("hi"),
+            String::from("from"),
+            String::from("the"),
+            String::from("thread"),
+        ];
+        for val in vals {
+            tx1.send(val).unwrap();
+            thread::sleep(Duration::from_secs(1));
+        }
+    });
+
+    thread::spawn(move || {
+        let vals = vec![
+            String::from("hi"),
+            String::from("from"),
+            String::from("the"),
+            String::from("thread"),
+        ];
+        for val in vals {
+            tx.send(val).unwrap();
+            thread::sleep(Duration::from_secs(1));
+        }
+    });
+
+    for received in rx {
+        println!("Got {}", received);
+    }
+}
+```
+
+## 互斥器 mutex
+
+互斥器（mutex）是 “mutual exclusion” 的缩写，也就是说，任意时刻，其只允许一个线程访问某些数据。
+
+```rust
+use std::sync::Mutex;
+
+fn main() {
+    let m = Mutex::new(5);
+    {
+        let mut num = m.lock().unwrap();
+        *num = 6;
+    }
+    println!("m = {:?}", m);
+}
+```
+
+lock 会阻塞当前线程, 直到我们获取了锁. 如果另一个线程拥有锁，并且那个线程 panic 了，则 lock 调用会失败。在这种情况下，没人能够再获取锁，所以这里选择 unwrap 并在遇到这种情况时使线程 panic。
+
+一旦获取了锁，就可以将返回值（在这里是num）视为一个其内部数据的可变引用了。
+
+`Mutex<T>` 是一个智能指针。更准确的说，lock 调用返回一个叫做 `MutexGuard` 的智能指针。这个智能指针实现了 `Deref` 来指向其内部数据；其也提供了一个 `Drop` 实现当 MutexGuard 离开作用域时自动释放锁。为此，我们不会冒忘记释放锁并阻塞互斥器为其它线程所用的风险，因为锁的释放是自动发生的。
+
+
+### 多个线程间使用 mutex 访问数据
+
+```rust
+use std::sync::{Arc, Mutex};
+use std::thread;
+
+fn main() {
+    let counter = Arc::new(Mutex::new(0));
+    let mut handles = vec![];
+
+    for _ in 0..10 {
+        let counter = Arc::clone(&counter);
+        let handle = thread::spawn(move || {
+            let mut num = counter.lock().unwrap();
+            *num += 1;
+        });
+        handles.push(handle);
+    }
+    for handle in handles {
+        handle.join().unwrap();
+    }
+    println!("result is {}", *counter.lock().unwrap());
+}
+```
+
+Mutex 需要在多个线程中保留所有权, 因此这里使用 Arc 来允许有多个所有者. Arc 是 atomic Rc, 可以在多个线程中使用.
+
+
+

@@ -61,6 +61,12 @@ curl --data-urlencode "value 1" http://hostname.com
 curl -x localhost:80 -X POST -H "Content-Type: applecation/json" 'http://example.com/path' --data-binary '{"json":true}'
 ```
 
+发送换行符： 
+
+```bash
+curl "http://localhost" -d $'line1\r\nline2\r\nline3'
+```
+
 
 ## 指定方法
 

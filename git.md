@@ -1,31 +1,36 @@
-<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+<!-- TOC -->
 
 - [git](#git)
-	- [概念](#概念)
-	- [配置](#配置)
-		- [别名](#别名)
-		- [输出](#输出)
-	- [命令简介](#命令简介)
-	- [git add](#git-add)
-	- [git status](#git-status)
-	- [git stash 储藏](#git-stash-储藏)
-	- [git diff](#git-diff)
-	- [git reset](#git-reset)
-	- [git checkout](#git-checkout)
-	- [git ls-tree](#git-ls-tree)
-	- [git ls-files](#git-ls-files)
-	- [git rm](#git-rm)
-	- [git clean](#git-clean)
-	- [git log](#git-log)
+    - [概念](#概念)
+    - [配置](#配置)
+        - [别名](#别名)
+        - [输出](#输出)
+    - [命令简介](#命令简介)
+    - [git add](#git-add)
+    - [git branch](#git-branch)
+    - [git status](#git-status)
+    - [git stash 储藏](#git-stash-储藏)
+    - [git diff](#git-diff)
+    - [git reset](#git-reset)
+    - [git checkout](#git-checkout)
+    - [git ls-tree](#git-ls-tree)
+    - [git ls-files](#git-ls-files)
+    - [git rm](#git-rm)
+    - [git clean](#git-clean)
+    - [git log](#git-log)
+    - [git remote](#git-remote)
+    - [git fetch](#git-fetch)
+    - [git pull](#git-pull)
+    - [git push](#git-push)
 - [.gitignore](#gitignore)
 - [github](#github)
-	- [更新fork项目](#更新fork项目)
-	- [开启二次验证，如何上传下载代码](#开启二次验证如何上传下载代码)
-	- [拉取远程库的pr到本地分支](#拉取远程库的pr到本地分支)
+    - [更新fork项目](#更新fork项目)
+    - [开启二次验证，如何上传下载代码](#开启二次验证如何上传下载代码)
+    - [拉取远程库的pr到本地分支](#拉取远程库的pr到本地分支)
+    - [拉取远程分支, 并创建本地分支](#拉取远程分支-并创建本地分支)
 - [参考](#参考)
 
 <!-- /TOC -->
-
 
 
 # git
@@ -74,6 +79,15 @@ git config --global alias.ci "commit -s"
 
 - `git add -f filename`: 强制将 filename 的修改添加到暂存区（一般用于 filename 被忽略的情况下）
 
+
+## git branch
+
+* `git branch`: 查看本地分支。
+* `git branch -r`: 查看远程分支。
+* `git branch -a`: 查看所有分支。
+* `git branch new_branch_name`: 创建新分支。
+* `git branch -d branch_name`: 删除本地分支。
+* `git branch -D branch_name`: 强制删除本地分支，不管有没有 merge。
 
 
 
@@ -127,6 +141,7 @@ git config --global alias.ci "commit -s"
 - `git checkout <commit> -- <paths>`: 用指定提交的文件覆盖暂存区和工作区对应的文件。
 - `git checkout <branch>`: 切换到指定分支，这会改变 HEAD 头指针的指向。
 - `git checkout`: 对工作区进行状态检查，汇总显示工作区、暂存区与 HEAD 的差异。
+- `git checkout -b new_branch_name`: 创建新分支并切换到新分支。
 
 
 ## git ls-tree
@@ -167,6 +182,42 @@ git config --global alias.ci "commit -s"
 - `git log --oneline <filename>`: 查看某个文件的修改历史，获取到 id 后可用 `git show <id>` 查看详细情况。
 
 
+## git remote
+
+* `git remote`: 列出所有远程主机。
+* `git remote -v`: 显示主机的地址。
+* `git remote show <主机>`: 查看主机的详细信息。
+* `git remote add <主机名> <网址>`: 添加远程主机。
+* `git remote rm <主机名>`: 删除远程主机。
+* `git remote rename <原主机名> <新主机名>`: 重命名远程主机。
+
+
+## git fetch
+
+* `git fetch <远程主机名>`: 将远程主机的更新全部取回本地。
+* `git fetch <远程主机名> <分支名>`: 取回特定分支的更新到本地。比如 `git fetch origin master`。
+
+使用 `git checkout -b newBranch origin/master` 在 `origin/master` 的基础上创建一个新的分支。
+
+使用 `git merge origin/master` 或者 `git rebase origin/master` 在当前分支上合并 `origin/master` 上。
+
+
+## git pull
+
+* `git pull <远程主机名> <远程分支名>:<本地分支名>`: 取回远程分支的更新并与本地分支合并。
+* `git pull <远程主机名> <远程分支名>`: 取回远程分支的更新并与当前分支合并，等同于 `git fetch + git merge`。
+
+如果本地分支与远程分支有追踪关系(tracking, 可以使用 `git branch --set-upstream master origin/next` 手动建立追踪关系)，`git pull` 可以省略远程分支名： `git pull origin`，表示本地分支自动与对应的 origin 分支合并。
+
+
+## git push
+
+* `git push <远程主机名> <本地分支名>:<远程分支名>`: 将本地分支的更新推送到远程主机。 如果本地分支与远程分支存在追踪关系，可以省略远程分支名，比如 `git push origin master`， 如果远程分支不存在则会创建。
+* `git push <远程主机名> :<远程分支名>`: 如果省略本地分支名，则表示删除指定的远程分支名。相当于推送空的本地分支。比如 `git push origin :master` 等同于 `git push origin --delete master`。
+* `git push <远程主机名>`: 如果本地分支与远程分支存在追踪关系，本地分支名与远程分支名都可以忽略。比如 `git push origin`。
+
+
+注意，分支推送顺序的写法是 `<来源地>:<目的地>`，所以 `git pull` 是 `<远程分支>:<本地分支>`，而 `git push` 是 `<本地分支>:<远程分支>`。
 
 
 # .gitignore
@@ -275,6 +326,21 @@ git checkout review1122
 ```
 
 上面的 origin 换成 upstream 也可以。
+
+
+## 拉取远程分支, 并创建本地分支
+
+```bash
+git checkout -b 本地分支名x origin/远程分支名x  # 会自动切换到新分支
+```
+
+采用此种方法建立的本地分支会和远程分支建立映射关系。
+
+```bash
+git fetch origin 远程分支名x:本地分支名x # 不会自动切换到新分支
+```
+
+采用此种方法建立的本地分支不会和远程分支建立映射关系。
 
 
 

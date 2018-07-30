@@ -23,6 +23,8 @@
     - [order](#order)
         - [order by time desc](#order-by-time-desc)
     - [limit](#limit)
+    - [tag](#tag)
+        - [tag values](#tag-values)
 
 <!-- /TOC -->
 
@@ -66,6 +68,7 @@ brew install influxdb
 * 时间戳格式化: `influx -precision rfc3339`
 
 ## 保留策略 retention policy
+
 创建保留策略: `CREATE RETENTION POLICY "two_hours" ON "food_data" DURATION 2h REPLICATION 1 DEFAULT`
 * `two_hours` 是策略名, `food_data` 是数据库名.
 * `DURATION 2h` 数据保留2个小时.
@@ -73,8 +76,15 @@ brew install influxdb
 * `DEFAULT` 设置为默认保留策略.
 * 当创建数据库 `food_data` 时, influxDB 会创建一个名为 `autogen` 的默认保留策略, 这个策略 has an infinite retention period.
 
-create a non-DEFAULT RP: `CREATE RETENTION POLICY "a_year" ON "food_data" DURATION 52w REPLICATION 1`
-* `52w` 52周.
+create a non-DEFAULT RP: `CREATE RETENTION POLICY "a_year" ON "food_data" DURATION 52w REPLICATION 1` (`52w` 52周, 1年)
+
+查询保留策略： `SHOW RETENTION POLICIES ON mydb`。
+
+修改保留策略： `ALTER RETENTION POLICY "ks_dialy" ON "mydb" DURATION 52w REPLICATION 1`。
+
+删除保留策略： `DROP RETENTION POLICY "ks_dialy" ON "mydb"`
+
+如果需要的策略不是默认策略时，需要显示指定。(TODO: 怎么指定？)
 
 
 # 配置
@@ -229,6 +239,8 @@ conditional_expression: `field_key <operator> ['string' | boolean | float | inte
 
 supported operators: `= <> != > >= < <=`
 
+Q: `where tagName="tagValue"` 查询不出来，换成单引号就可以了: `where tagName='tagValue'`???
+
 ## group
 Syntax: `SELECT_clause FROM_clause [WHERE_clause] GROUP BY [* | <tag_key>[,<tag_key]]`
 
@@ -251,3 +263,23 @@ Syntax: `SELECT_clause [INTO_clause] FROM_clause [WHERE_clause] [GROUP_BY_clause
 ## limit
 Syntax: `SELECT_clause [INTO_clause] FROM_clause [WHERE_clause] [GROUP_BY_clause] [ORDER_BY_clause] LIMIT <N>`
 
+
+## tag
+
+### tag values
+
+* https://docs.influxdata.com/influxdb/v1.2/query_language/schema_exploration#show-tag-values
+
+Syntax:
+
+```
+SHOW TAG VALUES [ON <database_name>][FROM_clause] WITH KEY [ [<operator> "<tag_key>" | <regular_expression>] | [IN ("<tag_key1>","<tag_key2")]] [WHERE <tag_key> <operator> ['<tag_value>' | <regular_expression>]] [LIMIT_clause] [OFFSET_clause]
+```
+
+
+示例：
+
+```bash
+SHOW TAG VALUES ON "NOAA_water_database" WITH KEY = "randtag"
+SHOW TAG VALUES FROM "<measurement_name>" WITH KEY = "<tag_name>"
+```

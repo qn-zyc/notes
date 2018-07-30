@@ -87,6 +87,16 @@ Parse是按照UTC来解析的。
 如果想按照本地时区来解析的话使用：`time.ParseInLocation("20060102150405", s, time.Local)`
 
 
+指定时区:
+
+```go
+loc, err := time.LoadLocation("Asia/Shanghai")
+if err != nil {
+	loc = time.FixedZone("Asia/Shanghai", 8*3600)
+}
+t = t.In(loc)
+```
+
 
 # 定时器Timer
 

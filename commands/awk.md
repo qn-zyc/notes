@@ -1017,6 +1017,11 @@ mktime(datespec)    返回 datespec 自 1970-01-01 00:00:00 UTC 以来的秒数�
 strftime([format [, timestamp]]) 将日期时间格式化为字符串,format 见 date --help,如:%Y-%m-%d %H:%M:%S
 ```
 
+```bash
+echo "" | awk '{print systime();}'
+echo "" | awk '{print strftime("%Y-%m-%d %H:%M:%S");}'
+```
+
 ### 5.8.5. 内置位函数
 
 ```bash

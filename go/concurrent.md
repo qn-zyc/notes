@@ -1,33 +1,38 @@
-<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+<!-- TOC -->
 
 - [goroutine](#goroutine)
-	- [当前goroutine id](#当前goroutine-id)
+    - [当前goroutine id](#当前goroutine-id)
 - [并发通信](#并发通信)
-	- [共享数据](#共享数据)
-	- [消息机制](#消息机制)
+    - [共享数据](#共享数据)
+    - [消息机制](#消息机制)
 - [channel](#channel)
-	- [channel示例](#channel示例)
-	- [基本语法](#基本语法)
-	- [select](#select)
-	- [缓冲机制](#缓冲机制)
-		- [有缓冲和无缓冲的区别](#有缓冲和无缓冲的区别)
-		- [带缓冲带channel怎样使用](#带缓冲带channel怎样使用)
-	- [超时机制](#超时机制)
-	- [channel传递](#channel传递)
-	- [单向channel](#单向channel)
+    - [channel示例](#channel示例)
+    - [基本语法](#基本语法)
+    - [select](#select)
+    - [缓冲机制](#缓冲机制)
+        - [有缓冲和无缓冲的区别](#有缓冲和无缓冲的区别)
+        - [带缓冲带channel怎样使用](#带缓冲带channel怎样使用)
+    - [超时机制](#超时机制)
+    - [channel传递](#channel传递)
+    - [单向channel](#单向channel)
+    - [Why are there nil channels in Go?](#why-are-there-nil-channels-in-go)
+    - [操作各种状态的 channel 的结果](#操作各种状态的-channel-的结果)
+    - [多个 ch 中有一个返回结果就退出 or channel](#多个-ch-中有一个返回结果就退出-or-channel)
+    - [用 bridge channel 简化 channel in channel 的消费代码](#用-bridge-channel-简化-channel-in-channel-的消费代码)
 - [锁](#锁)
-	- [sync.Mutex 互斥锁](#syncmutex-互斥锁)
-	- [sync.RWMutex读写互斥锁](#syncrwmutex读写互斥锁)
-	- [golang中sync.RWMutex和sync.Mutex区别](#golang中syncrwmutex和syncmutex区别)
+    - [sync.Mutex 互斥锁](#syncmutex-互斥锁)
+    - [sync.RWMutex读写互斥锁](#syncrwmutex读写互斥锁)
+    - [golang中sync.RWMutex和sync.Mutex区别](#golang中syncrwmutex和syncmutex区别)
+    - [锁的粒度越大执行的机会越多](#锁的粒度越大执行的机会越多)
+    - [sync.Cond 条件锁](#synccond-条件锁)
 - [actomic](#actomic)
-	- [actomic.Value](#actomicvalue)
+    - [actomic.Value](#actomicvalue)
 - [WaitGroup](#waitgroup)
 - [协程的优劣](#协程的优劣)
-	- [公平调度引发的问题](#公平调度引发的问题)
+    - [公平调度引发的问题](#公平调度引发的问题)
 - [参考](#参考)
 
 <!-- /TOC -->
-
 
 
 # goroutine
@@ -328,6 +333,19 @@ close(ch)
 ```
 
   channel不像文件之类的，不需要经常去关闭，只有当你确实没有任何发送数据了，或者你想显式的结束range循环之类的
+
+
+---------------
+
+**长度**
+
+```go
+len(c) // 返回的是 c 中未被读取的元素个数。
+cap(c) // 返回的是缓存的长度，比如 c := make(chan bool, 3), 返回的就是 3.
+```
+
+
+
 
 ## select
 
@@ -695,10 +713,142 @@ func Parse(ch <-chan int) {
 
 
 
+## 操作各种状态的 channel 的结果
+
+![](pic/close_chan.png)
+
+
+## 多个 ch 中有一个返回结果就退出 or channel
+
+```go
+	var or func(chs ...chan interface{}) chan interface{}
+	or = func(chs ...chan interface{}) chan interface{} {
+		if len(chs) == 0 {
+			return nil
+		}
+
+		if len(chs) == 1 {
+			return chs[0]
+		}
+
+		orDone := make(chan interface{})
+
+		go func() {
+			defer close(orDone)
+			switch len(chs) {
+			case 2:
+				select {
+				case <-chs[0]:
+				case <-chs[1]:
+				}
+			default: // len(chs) > 2
+				select {
+				case <-chs[0]:
+				case <-chs[1]:
+				case <-chs[2]:
+				case <-or(append(chs[3:], orDone)...):
+				}
+			}
+		}()
+
+		return orDone
+	}
+
+	start := time.Now()
+
+	sig := func(after time.Duration) chan interface{} {
+		ch := make(chan interface{})
+
+		go func() {
+			defer close(ch)
+			time.Sleep(after)
+		}()
+
+		return ch
+	}
+	<-or(
+		sig(time.Second),
+		sig(time.Second*2),
+		sig(time.Minute),
+	)
+	fmt.Println(time.Since(start))
+```
+
+
+## 用 bridge channel 简化 channel in channel 的消费代码
+
+```go
+	orDone := func(done, c <-chan interface{}) <-chan interface{} {
+		valStream := make(chan interface{})
+		go func() {
+			defer close(valStream)
+			for {
+				select {
+				case <-done:
+					return
+				case v, ok := <-c:
+					if ok == false {
+						return
+					}
+					select {
+					case valStream <- v:
+					case <-done:
+					}
+				}
+			}
+		}()
+		return valStream
+	}
+	bridge := func(
+		done <-chan interface{},
+		chanStream <-chan <-chan interface{},
+	) <-chan interface{} {
+		valStream := make(chan interface{}) // <1>
+		go func() {
+			defer close(valStream)
+			for { // <2>
+				var stream <-chan interface{}
+				select {
+				case maybeStream, ok := <-chanStream:
+					if ok == false {
+						return
+					}
+					stream = maybeStream
+				case <-done:
+					return
+				}
+				for val := range orDone(done, stream) { // <3>
+					select {
+					case valStream <- val:
+					case <-done:
+					}
+				}
+			}
+		}()
+		return valStream
+	}
+	genVals := func() <-chan <-chan interface{} {
+		chanStream := make(chan (<-chan interface{}))
+		go func() {
+			defer close(chanStream)
+			for i := 0; i < 10; i++ {
+				stream := make(chan interface{}, 1)
+				stream <- i
+				close(stream)
+				chanStream <- stream
+			}
+		}()
+		return chanStream
+	}
+
+	for v := range bridge(nil, genVals()) {
+		fmt.Printf("%v ", v)
+	}
+```
 
 
 
-
+------------------------------
 # 锁
 
 ## sync.Mutex 互斥锁
@@ -917,6 +1067,131 @@ fatal error: all goroutines are asleep - deadlock!
 所以在go1.3版本中，运行过程中允许RUnLock早于RLock一个，也只能早于１个（注：虽然代码允许，但是强烈不推荐使用），并且在早于之后必须利用RLock进行加锁才可以继续使用．
 
 
+## 锁的粒度越大执行的机会越多
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+func main() {
+	var wg sync.WaitGroup
+	var sharedLock sync.Mutex
+	const runtime = 1 * time.Second
+
+	greedyWorker := func() {
+		defer wg.Done()
+
+		var count int
+		for begin := time.Now(); time.Since(begin) <= runtime; {
+			sharedLock.Lock()
+			time.Sleep(3 * time.Nanosecond)
+			sharedLock.Unlock()
+			count++
+		}
+
+		fmt.Printf("Greedy worker was able to execute %v work loops\n", count)
+	}
+
+	politeWorker := func() {
+		defer wg.Done()
+
+		var count int
+		for begin := time.Now(); time.Since(begin) <= runtime; {
+			sharedLock.Lock()
+			time.Sleep(1 * time.Nanosecond)
+			sharedLock.Unlock()
+
+			sharedLock.Lock()
+			time.Sleep(1 * time.Nanosecond)
+			sharedLock.Unlock()
+
+			sharedLock.Lock()
+			time.Sleep(1 * time.Nanosecond)
+			sharedLock.Unlock()
+
+			count++
+		}
+
+		fmt.Printf("Polite worker was able to execute %v work loops.\n", count)
+	}
+
+	wg.Add(2)
+	go greedyWorker()
+	go politeWorker()
+
+	wg.Wait()
+}
+```
+
+可能得到以下结果：
+
+```
+Greedy worker was able to execute 507672 work loops
+Polite worker was able to execute 297669 work loops.
+```
+
+锁的粒度大，会得到更多的运行时间，而导致其它 goroutine 获得的执行机会变少。
+
+
+## sync.Cond 条件锁
+
+```go
+	condition := false // 条件不满足
+	var mu sync.Mutex
+	cond := sync.NewCond(&mu)
+	// 让例程去创造条件
+	go func() {
+		mu.Lock()
+		condition = true // 更改条件
+		cond.Signal()    // 发送通知：条件已经满足，随机唤醒一个 goroutine.
+		mu.Unlock()
+	}()
+	mu.Lock()
+	// 检查条件是否满足，避免虚假通知，同时避免 Signal 提前于 Wait 执行。
+	for !condition {
+		// 等待条件满足的通知，如果收到虚假通知，则循环继续等待。
+		cond.Wait() // 等待时 mu 处于解锁状态，唤醒时重新锁定。
+	}
+	fmt.Println("条件满足，开始后续动作...")
+	mu.Unlock()
+```
+
+```go
+	gidExited := make(chan int, 1)
+	m := &sync.Mutex{}
+	c := sync.NewCond(m)
+	gidToExit := -1 // 需要退出的 goroutine id.
+	for i := 0; i < 10; i++ {
+		go func(i int) {
+			m.Lock()
+			for gidToExit != i {
+				c.Wait()
+			}
+			m.Unlock()
+			fmt.Printf("G%d exit.\n", i)
+			gidExited <- i
+		}(i)
+	}
+
+	for i := 0; i < 10; i++ {
+		m.Lock()
+		gidToExit = i
+		c.Broadcast() // 唤醒所有的 goroutine, 如果用 Signal 会导致死锁。
+		m.Unlock()
+		gid := <-gidExited
+		fmt.Printf("goroutine %d exits.", gid)
+	}
+```
+
+
+
+
+
 # actomic
 
 ## actomic.Value
@@ -1081,5 +1356,10 @@ func main() {
 协程被调度时是需要尽量公平的，这意味着协程没有优先级的概念，不可以抢占。如果某个 goroutine 比其他 goroutine 重要，当这个 goroutine 准备好执行时，可能 CPU 正被其他 goroutine 占用，这是重要的 goroutine 就只能等着，什么时候被调用是不确定的。当其他 goroutine 依赖这个重要的 goroutine 时，就会造成延迟。
 
 
+
+
+
 # 参考
 - [记一次latency问题排查：谈Go的公平调度的缺陷](http://www.zenlife.tk/go-scheduler-pitfall.md)
+- [concurrency in go 读书笔记](http://xargin.com/concurrency-in-go-notes/)
+- [通过插图学习Go的并发](http://szpzs.oschina.io/2018/06/23/learning-gos-concurrency-through-illustrations/)
