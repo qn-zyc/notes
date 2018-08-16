@@ -25,6 +25,7 @@
     - [golang中sync.RWMutex和sync.Mutex区别](#golang中syncrwmutex和syncmutex区别)
     - [锁的粒度越大执行的机会越多](#锁的粒度越大执行的机会越多)
     - [sync.Cond 条件锁](#synccond-条件锁)
+    - [sync.Pool](#syncpool)
 - [actomic](#actomic)
     - [actomic.Value](#actomicvalue)
 - [WaitGroup](#waitgroup)
@@ -1188,6 +1189,11 @@ Polite worker was able to execute 297669 work loops.
 	}
 ```
 
+
+
+## sync.Pool
+
+为什么 sync.Pool 的性能高？sync.Pool 提供 runtime 级别的绑定到 Processor 的对象池，每个 P 都有自己的池，在调度时不会和其他 P 发生竞争，而用户自己实现的则会在多个 P 之间发生竞争关系。
 
 
 

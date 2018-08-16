@@ -126,7 +126,7 @@ full goroutine stack dump
 - 查看 30s 的 CPU 采样信息: `go tool pprof http://127.0.0.1:4500/debug/pprof/profile`
 - 其他功能使用参见 官方 [net/http/pprof](https://golang.org/pkg/net/http/pprof/) 库
 
-可以先调用接口拿到数据保存在文件中, 比如 `curl "http://127.0.0.1:4500/debug/pprof/profile" -o profile`, 然后在使用 `go tool pprof ./profile` 来显示(适合线上没有 go 环境的情况).
+可以先调用接口拿到数据保存在文件中, 比如 `curl "http://127.0.0.1:4500/debug/pprof/profile" -o profile`, 然后再使用 `go tool pprof ./profile` 来显示(适合线上没有 go 环境的情况).
 
 
 
@@ -298,6 +298,13 @@ BenchmarkBinaryIP1-4   	 1000000	      1118 ns/op
 BenchmarkBinaryIP2-4   	 5000000	       393 ns/op
 BenchmarkBinaryIP3-4   	 5000000	       239 ns/op
 ```
+
+
+
+
+
+
+
 
 
 ------------------------------

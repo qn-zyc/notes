@@ -387,6 +387,10 @@ TEXT main.test(SB) /Users/zhangyuchen/tmp/test.go
 
 # go tool pprof
 
+* `top30` 前30.
+* `top -cum` 按 cum 排序。
+* `web Lock`: 调用 Lock 函数的图。
+
 
 # go tool trace
 

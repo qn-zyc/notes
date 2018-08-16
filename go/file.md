@@ -410,3 +410,10 @@ func copyFile(dst, src string) error {
 	return nil
 }
 ```
+
+
+# 临时目录
+
+```go
+os.TempDir()
+```
