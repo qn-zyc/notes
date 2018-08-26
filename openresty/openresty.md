@@ -16,6 +16,7 @@
     - [timer](#timer)
     - [header](#header)
     - [ctx](#ctx)
+    - [exit](#exit)
 - [shared_dict](#shared_dict)
     - [获取字典对象](#获取字典对象)
     - [ngx.shared.DICT.set](#ngxshareddictset)
@@ -250,6 +251,10 @@ ngx.req.get_headers()["name"]
 ngx.ctx.name = "value
 ```
 
+
+## exit
+
+exit(code) 当 code >= 200 时 code 当做状态码返回，并结束整个请求流程。当 code 为 0 时，结束当前 phrase，进入下一个 phrase。
 
 
 

@@ -22,6 +22,10 @@
     - [二维切片](#二维切片)
     - [map](#map)
     - [Go数据底层的存储](#go数据底层的存储)
+        - [map](#map-1)
+            - [访问](#访问)
+            - [扩容](#扩容)
+            - [删除操作](#删除操作)
     - [指针](#指针)
     - [类型别名](#类型别名)
 - [参考](#参考)
@@ -466,12 +470,35 @@ real(value1), imag(value1)
 - str[i]的方式只对纯 ASCII 码的字符串有效。
 - 和字符串有关的包：strings, strconv, unicode
 
+字符串的内部结构：
+
+![](pic/type01.jpeg)
+
+比如下面的代码：
+
 ```go
-	var str string      // 声明一个字符串变量
-	str = "Hello world" // 字符串赋值
-	ch := str[0]        // 取字符串的第一个字符
-	fmt.Printf("The length of \"%s\" is %d \n", str, len(str))
-	fmt.Printf("The first character of \"%s\" is %c.\n", str, ch)
+s := "hello"
+// 16 5
+fmt.Println(unsafe.Sizeof(s), len(s))
+```
+
+两个指针各占用 8 个字节，共 16 字节。
+
+为什么字符串是不可变类型？
+* 减少相同字符串的副本数量。
+* 提供字符串比较的效率，计算 hash code, 相同 hash code 的再比较字符串值。
+* 安全，防止恶意篡改。
+
+
+
+--------------------
+
+```go
+var str string      // 声明一个字符串变量
+str = "Hello world" // 字符串赋值
+ch := str[0]        // 取字符串的第一个字符
+fmt.Printf("The length of \"%s\" is %d \n", str, len(str))
+fmt.Printf("The first character of \"%s\" is %c.\n", str, ch)
 ```
 
 输出结果为：
@@ -531,6 +558,9 @@ s := "hello" + " world " + string(31) // 正确，但不会输出31
 ```
 
 +的并不是最高效的做法，使用strings.Join()和bytes.Buffer更好些。
+
+字符串拼接时是将字符串复制到一块内存中，然后转换成字符串返回，只有一个内存分配。
+
 
 【字符串遍历】
 
@@ -1314,7 +1344,7 @@ map和其他基本型别不同，它不是thread-safe，在多个go-routine存�
 【变量声明】
 
 ```go
-	var person map[string] string
+var person map[string] string
 ```
 
 []内是键的类型，后面是值类型
@@ -1324,30 +1354,30 @@ map和其他基本型别不同，它不是thread-safe，在多个go-routine存�
 【创建】
 
 ```go
-	person = make(map[string]string)
+person = make(map[string]string)
 ```
 
 声明加+创建：
 
 ```go
-	var person map[string]string = make(map[string]string)
-	person := make(map[string]string)
+var person map[string]string = make(map[string]string)
+person := make(map[string]string)
 ```
 
 指定该map的初始存储能力：
 
 ```go
-	person = make(map[string]string, 100)
+person = make(map[string]string, 100)
 ```
 
 创建并初始化map：
 
 ```go
-	var person map[string]string
-	person = map[string]string{
-		"a": "haha",
-		"b": "ni", // 最后的逗号是必须的
-	}
+var person map[string]string
+person = map[string]string{
+	"a": "haha",
+	"b": "ni", // 最后的逗号是必须的
+}
 ```
 
 ---------------
@@ -1355,8 +1385,8 @@ map和其他基本型别不同，它不是thread-safe，在多个go-routine存�
 【元素赋值/添加元素】
 
 ```go
-	var person map[string]string = make(map[string]string)
-	person["1"] = "abc"
+var person map[string]string = make(map[string]string)
+person["1"] = "abc"
 ```
 
 ```go
@@ -1371,7 +1401,7 @@ m["a"]++
 【元素删除】
 
 ```go
-	delete(person, "1")
+delete(person, "1")
 ```
 
 如果传入的map是nil，则报错，如果键不存在，则什么都不发生
@@ -1381,12 +1411,12 @@ m["a"]++
 【元素查找】
 
 ```go
-	value, ok := person["2"]
-	if ok {
-		fmt.Println(value)
-	} else {
-		fmt.Println("does not find!")
-	}
+value, ok := person["2"]
+if ok {
+	fmt.Println(value)
+} else {
+	fmt.Println("does not find!")
+}
 ```
 
 或者：
@@ -1402,13 +1432,13 @@ if value, ok := person["2"]; ok {
 即便是nil也是可以查找的：
 
 ```go
-	var m map[string]int = nil
-	if v, ok := m["a"]; ok {
-		fmt.Println(v)
-	} else {
-		fmt.Println("!ok")
-	}
-	// 输出!ok
+var m map[string]int = nil
+if v, ok := m["a"]; ok {
+	fmt.Println(v)
+} else {
+	fmt.Println("!ok")
+}
+// 输出!ok
 ```
 
 map中的元素不会出现nil的现象（很神奇）：
@@ -1424,11 +1454,11 @@ type entry struct {
 }
 ```
 
-m[“a”]返回的并不是nil，而是{}，如果map的元素是指针，则是nil
+`m["a"]` 返回的并不是nil，而是{}，如果map的元素是指针，则是nil
 
 ```go
-	m := make(map[string]*entry)
-	fmt.Println(m["a"] == nil) // true
+m := make(map[string]*entry)
+fmt.Println(m["a"] == nil) // true
 ```
 
 -------------
@@ -1436,9 +1466,9 @@ m[“a”]返回的并不是nil，而是{}，如果map的元素是指针，则�
 【遍历】
 
 ```go
-	for k, v := range person {
-		fmt.Println("key=", k, "value=", v)
-	}
+for k, v := range person {
+	fmt.Println("key=", k, "value=", v)
+}
 ```
 
 map也是一种引用类型，如果两个map同时指向一个底层，那么一个改变，另一个也相应的改变：
@@ -1455,15 +1485,15 @@ m1["Hello"] = "Salut"  // 现在m["hello"]的值已经是Salut了
 【清空map】
 
 ```go
-	for k, _ := range m {
-		delete(m, k)
-	}
+for k, _ := range m {
+	delete(m, k)
+}
 ```
 
 或者重新赋值：
 
 ```go
-	m = make(map[string]string)
+m = make(map[string]string)
 ```
 
 ------------
@@ -1477,24 +1507,24 @@ m1["Hello"] = "Salut"  // 现在m["hello"]的值已经是Salut了
 直接对map对象使用[]操作符获得的对象不能直接修改状态：
 
 ```go
-	type Person struct {
-		age int
-	}
-	m := map[string]Person{"c": {10}}
-	m["c"].age = 100 // 编译错误：cannot assign to m["c"].age
+type Person struct {
+	age int
+}
+m := map[string]Person{"c": {10}}
+m["c"].age = 100 // 编译错误：cannot assign to m["c"].age
 ```
 
 通过查询map获得的对象是个拷贝，对此对象的修改不影响原有对象的状态：
 
 ```go
-	type Person struct {
-		age int
-	}
-	m := map[string]Person{"c": {10}}
-	p := m["c"]
-	p.age = 20
-	fmt.Println(p.age)      // 20
-	fmt.Println(m["c"].age) // 10
+type Person struct {
+	age int
+}
+m := map[string]Person{"c": {10}}
+p := m["c"]
+p.age = 20
+fmt.Println(p.age)      // 20
+fmt.Println(m["c"].age) // 10
 ```
 
 **解决方法**
@@ -1502,28 +1532,28 @@ m1["Hello"] = "Salut"  // 现在m["hello"]的值已经是Salut了
 1. map中存储指针而不是结构体
 
 ```go
-	type Person struct {
-		age int
-	}
-	m := map[string]*Person{"c": {10}}
-	p := m["c"]
-	p.age = 20
-	fmt.Println(p.age)      // 20
-	fmt.Println(m["c"].age) // 20
+type Person struct {
+	age int
+}
+m := map[string]*Person{"c": {10}}
+p := m["c"]
+p.age = 20
+fmt.Println(p.age)      // 20
+fmt.Println(m["c"].age) // 20
 ```
 
 2. 修改了对象状态以后重新加到map里
 
 ```go
-	type Person struct {
-		age int
-	}
-	m := map[string]Person{"c": {10}}
-	p := m["c"]
-	p.age = 20
-	fmt.Println(p.age) // 20
-	m["c"] = p
-	fmt.Println(m["c"].age) // 20
+type Person struct {
+	age int
+}
+m := map[string]Person{"c": {10}}
+p := m["c"]
+p.age = 20
+fmt.Println(p.age) // 20
+m["c"] = p
+fmt.Println(m["c"].age) // 20
 ```
 
 【分拆map】
@@ -1538,6 +1568,142 @@ m1["Hello"] = "Salut"  // 现在m["hello"]的值已经是Salut了
 下面这张图来源于Russ Cox Blog中一篇介绍Go数据结构的文章，大家可以看到这些基础类型底层都是分配了一块内存，然后存储了相应的值。
 
 ![](pic/basic08.png)
+
+
+### map
+
+`runtime/hashmap.go` 定义了 map 的基本结构和方法， `runtime/hashmap_fast.go` 提供了一些快速操作 map 的方法。
+
+底层结构是 hmap，声明如下：
+
+```go
+type hmap struct {
+	count     int    // 元素个数
+	flags     uint8
+	B         uint8  // log_2 of # of buckets (can hold up to loadFactor * 2^B items)
+	noverflow uint16 // 溢出的 bucket 的个数
+	hash0     uint32 // hash seed
+
+	buckets    unsafe.Pointer // array of 2^B Buckets. may be nil if count==0.
+	oldbuckets unsafe.Pointer // 扩容时复制的数组。previous bucket array of half the size, non-nil only when growing
+	nevacuate  uintptr        // 已经搬迁的 bucket 数。
+
+	extra *mapextra // optional fields
+}
+```
+
+* 由 bucket 数组组成，每个 bucket 存放 8 个 pair，当超过 8 个元素存放在某个 bucket 中时，会使用 extra 中的 overflow 扩展这个 bucket。
+* key 和 value 的最大大小都是 128.
+* buckets 个数应该是 2^B 个，这样实际可存储 `2*B*8` 个 pair(8 是 bucket 中可存储的个数), 不过在数量达到 `loadFactor(6.5) * 2^B` 时就会扩容。
+* (TODO: 待确认)B 初始时的大小和 hint 有关(hint 是 `make(map, hint)` 是指定的)，如果没有指定 hint, 那么 B 就是 0， hmap 中就只有一个 bucket.
+
+bucket 的结构如下：
+
+```go
+type bmap struct {
+	// tophash generally contains the top byte of the hash value
+	// for each key in this bucket. If tophash[0] < minTopHash,
+	// tophash[0] is a bucket evacuation state instead.
+	tophash [bucketCnt]uint8
+	// Followed by bucketCnt keys and then bucketCnt values.
+	// NOTE: packing all the keys together and then all the values together makes the
+	// code a bit more complicated than alternating key/value/key/value/... but it allows
+	// us to eliminate padding which would be needed for, e.g., map[int64]int8.
+	// Followed by an overflow pointer.
+}
+```
+
+* tophash 用于记录 8 个 key 的哈希值的高 8 位，在查找的时候先使用 tophash 快速查找，然后才比较字符串，这样可以加快查找速度。
+* 除了 tophash 外还有其他字段，只是没有显示定义，而是通过指针运算来访问的。 tophash 后面跟着的是 kv 和一个 overflow 指针。
+* kv 的存储形式是 `k0k1k2...k7v1v2...v7`。这样做的好处是：在 key 和 value 的长度不同的时候，节省 padding 空间。比如，在 `map[int64]int8` 中，4 个相邻的int8 可以存储在同一个内存单元中。如果使用 kv 交错存储的话，每个 int8 都会被 padding 占用单独的内存单元（为了提高寻址速度）。
+
+hashmap 的结构如图：
+
+![](pic/type02.png)
+
+
+#### 访问
+
+以 mapaccess1 为例，无关代码已删除：
+
+```go
+func mapaccess1(t *maptype, h *hmap, key unsafe.Pointer) unsafe.Pointer {
+	// ...
+
+	// 是否在并发读写
+	if h.flags&hashWriting != 0 {
+		throw("concurrent map read and map write")
+	}
+	// 计算 key 的 hash 值
+	alg := t.key.alg
+	hash := alg.hash(key, uintptr(h.hash0))
+	// 元素个数-1
+	m := uintptr(1)<<h.B - 1
+	// 在 buckets 中查找 key 对应的 bucket. hash&m == hash % size
+	b := (*bmap)(add(h.buckets, (hash&m)*uintptr(t.bucketsize)))
+	// 如果正在迁移，则需要去老的 buckets 中查找。
+	if c := h.oldbuckets; c != nil {
+		// 老的 buckets 的长度一般是现在的 buckets 的长度的一半, 所以需要除以 2
+		if !h.sameSizeGrow() {
+			// There used to be half as many buckets; mask down one more power of two.
+			m >>= 1
+		}
+		oldb := (*bmap)(add(c, (hash&m)*uintptr(t.bucketsize)))
+		// oldb 还没有被迁移走，可以使用它
+		if !evacuated(oldb) {
+			b = oldb
+		}
+	}
+	// hash 值的高 8 位
+	top := uint8(hash >> (sys.PtrSize*8 - 8))
+	if top < minTopHash {
+		top += minTopHash
+	}
+	for {
+		// 遍历 bucket, 在 8 个 pair 中查找。 先比较 tophash, 在比较 key.
+		for i := uintptr(0); i < bucketCnt; i++ {
+			if b.tophash[i] != top {
+				continue
+			}
+			// 这里是通过指针访问 key 的位置。
+			k := add(unsafe.Pointer(b), dataOffset+i*uintptr(t.keysize))
+			if t.indirectkey {
+				k = *((*unsafe.Pointer)(k))
+			}
+			// key 一样的话返回 value
+			if alg.equal(key, k) {
+				v := add(unsafe.Pointer(b), dataOffset+bucketCnt*uintptr(t.keysize)+i*uintptr(t.valuesize))
+				if t.indirectvalue {
+					v = *((*unsafe.Pointer)(v))
+				}
+				return v
+			}
+		}
+		// 没有找到的话需要在 overflow 中查找
+		b = b.overflow(t)
+		if b == nil {
+			return unsafe.Pointer(&zeroVal[0])
+		}
+	}
+}
+```
+
+
+#### 扩容
+
+扩容是在 `hashGrow` 中实现的。大小变为原来的 2 倍。原来的 buckets 被移动到 oldbuckets 下。`hashGrow` 并不移动元素，而是在插入和删除该 bucket 时调用 `growWork` 进行移动, 每次移动一小部分 pair。 kv 被 rehash 到新的 buckets 后并没有删除，而是在 tophash 中设置成了特殊值(1、2这样的)。 访问时不会去判断这个 pair 是不是已经搬迁了，因为 tophash 已经不一样了。整个 bucket 如果都被搬迁了，会在 tophash[0] 中设置特殊值。
+
+
+#### 删除操作
+
+删除操作并不会将 pair 删除，而是将 tophash 置为 empty(搬迁的时候会置为 evacuatedEmpty, 但并不搬迁).
+
+如果想回收内存的话可以将 `map = nil`。 如果只是将 map 中所有元素都 delete, 内存是不会被释放的。或者新建一个新的 map，主动复制到新的 map 中，然后再将原来的 map 设置为 nil。
+
+
+
+
+
 
 
 ## 指针
@@ -1671,3 +1837,6 @@ func main() {
 # 参考
 
 * [How the Go runtime implements maps efficiently (without generics)](https://dave.cheney.net/2018/05/29/how-the-go-runtime-implements-maps-efficiently-without-generics)
+* [golang map源码详解](https://juejin.im/entry/5a1e4bcd6fb9a045090942d8)
+* [Golang map 的底层实现](https://www.jianshu.com/p/aa0d4808cbb8)
+* [Go Hashmap内存布局和实现](https://studygolang.com/articles/11979)

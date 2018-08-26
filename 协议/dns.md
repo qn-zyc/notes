@@ -27,6 +27,7 @@
         - [Configure as a Caching DNS Server](#configure-as-a-caching-dns-server)
         - [Configure as a Forwarding DNS Server](#configure-as-a-forwarding-dns-server)
         - [Test your Configuration and Restart Bind](#test-your-configuration-and-restart-bind)
+- [胶水记录](#胶水记录)
 - [参考](#参考)
 
 <!-- /TOC -->
@@ -408,6 +409,12 @@ sudo named-checkconf
 
 
 
+
+# 胶水记录
+
+NS 名和 NS 的 A 记录一起返回。
+
+作用：防止死循环。 比如 b.com 的 NS 是 a.b.com，拿到 a.b.com 后需要先知道 b.com 的 IP，这是就会出现循环，所以再查 b.com 的 NS 时需要将 IP 记录已一块返回。
 
 
 
