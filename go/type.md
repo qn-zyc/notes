@@ -1594,7 +1594,7 @@ type hmap struct {
 
 * 由 bucket 数组组成，每个 bucket 存放 8 个 pair，当超过 8 个元素存放在某个 bucket 中时，会使用 extra 中的 overflow 扩展这个 bucket。
 * key 和 value 的最大大小都是 128.
-* buckets 个数应该是 2^B 个，这样实际可存储 `2*B*8` 个 pair(8 是 bucket 中可存储的个数), 不过在数量达到 `loadFactor(6.5) * 2^B` 时就会扩容。
+* buckets 个数应该是 2^B 个，这样实际可存储 `2^B*8` 个 pair(8 是 bucket 中可存储的个数), 不过在数量达到 `loadFactor(6.5) * 2^B` 时就会扩容。
 * (TODO: 待确认)B 初始时的大小和 hint 有关(hint 是 `make(map, hint)` 是指定的)，如果没有指定 hint, 那么 B 就是 0， hmap 中就只有一个 bucket.
 
 bucket 的结构如下：
